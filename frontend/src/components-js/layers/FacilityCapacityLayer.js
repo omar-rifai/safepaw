@@ -36,6 +36,6 @@ export function FacilityCapacityLayer({ capacities }) {
 
 export function getFacilityCapacityToolTip(info) {
     return {
-        text: `${info.object.properties.facility_id} \n(nbr lits ${parseInt(info.object.properties.capacities["beds"])})`
+        text: `${info.object.properties.facility_id} \n(beds: ${parseInt(info.object.properties.capacities["beds"])})`
     };
 }

@@ -62,6 +62,6 @@ export function getFacilityToolTip(info) {
         text: `Facility: ${info.object.properties.facility_id}\n
         Patients: ${Math.round(load)}\n
         beds: ${capacity / 365} + ${delta_plus / 365} - ${delta_minus / 365} \n 
-        Usage(%): ${usage} `
+        Usage(%): ${usage.toPrecision(3)} `
     };
 }
