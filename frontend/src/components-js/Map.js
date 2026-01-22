@@ -3,7 +3,7 @@ import { FlyToInterpolator } from '@deck.gl/core';
 import { Map } from 'react-map-gl/maplibre';
 import { useMemo, useRef, useState, useEffect, useContext } from 'react';
 import { getInitializeViewFromGeoJSON, useRegionGeoJSON } from '../utils/mapInitializer';
-import { DataContext, UIContext} from "../App";
+import { DataContext, UIContext } from "../App";
 import { Box, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
 import PatientsTransfersLayer from './layers/PatientsTransfersLayer';
 import { RegionFacilityLoadLayer, getRegionFacilityToolTip } from './layers/RegionFacilityLoadLayer';
@@ -141,27 +141,29 @@ export default function customMap() {
 
   return (
     <Box sx={{ height: "100%" }} ref={containerRef} >
-      <FormGroup row>
-        {
-          layers.map((layer, i) => (
-            <FormControlLabel
-              key={layer.id}
-              control=
-              {
-                <Checkbox
-                  checked={!!visibleLayers[layer.id]}
-                  onChange={(e) =>
-                    setVisibleLayers(prev => ({
-                      ...prev,
-                      [layer.id]: e.target.checked,
-                    }))
-                  }
-                />
-              }
-              label={layer?.id}>
-            </FormControlLabel>))
-        }
-      </FormGroup>
+      {false &&
+        <FormGroup row>
+          {
+            layers.map((layer, i) => (
+              <FormControlLabel
+                key={layer.id}
+                control=
+                {
+                  <Checkbox
+                    checked={!!visibleLayers[layer.id]}
+                    onChange={(e) =>
+                      setVisibleLayers(prev => ({
+                        ...prev,
+                        [layer.id]: e.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label={layer?.id}>
+              </FormControlLabel>))
+          }
+        </FormGroup>
+      }
       <Box sx={{ height: "90%", position: "relative" }} >
         <DeckGL
           viewState={viewState}
@@ -169,7 +171,7 @@ export default function customMap() {
           controller={true}
           layers={renderedLayers}
           getTooltip={getTooltip}
-          onClick={({object})=> {if (!object)  {setDeckGLData({})}}}
+          onClick={({ object }) => { if (!object) { setDeckGLData({}) } }}
         >
           <Map
             reuseMaps
