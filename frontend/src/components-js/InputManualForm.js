@@ -1,7 +1,7 @@
 
 import './forms.css'
 import { useState, useEffect, useContext, useMemo } from 'react'
-import { FormControl, InputLabel, Select, MenuItem, Box, Button } from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem, Box, Button, CircularProgress } from "@mui/material";
 import { DynamicSlider } from './SliderForm';
 import { DataContext } from '../App';
 
@@ -14,6 +14,7 @@ export default function ManualInputForm() {
     const [selectedDepartment, setSelectedDepartment] = useState("")
     const [selectedRegion, setSelectedRegion] = useState("")
     const [error, setError] = useState([])
+    const [loading, setLoading] = useState(false)
     const [demand, setDemand] = useState(0)
     const [transfers, setTransfers] = useState(1)
     const [global_capacity, setGlobalCapacity] = useState(0)
@@ -48,6 +49,7 @@ export default function ManualInputForm() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
+        setLoading(true)
 
         const payloadData = {
             dict_instance: inputData.dict_instance,
@@ -80,6 +82,9 @@ export default function ManualInputForm() {
         catch {
             setError("Network error");
         }
+        finally {
+            setLoading(false)
+        }
     };
 
     useEffect(() => {
@@ -97,13 +102,13 @@ export default function ManualInputForm() {
         if (!selectedRegion) return;
         const payload = selectedDepartment
             ? { region: selectedRegion, department: selectedDepartment }
-            : {region: selectedRegion};
+            : { region: selectedRegion };
 
         fetch("/api/read_maternites", {
-                method: "POST",
-                body: JSON.stringify(payload),
-                headers: { "Content-Type": "application/json" }
-            })
+            method: "POST",
+            body: JSON.stringify(payload),
+            headers: { "Content-Type": "application/json" }
+        })
             .then(res => res.json())
             .then(data => {
                 setInputData(data);
@@ -147,7 +152,7 @@ export default function ManualInputForm() {
             <DynamicSlider label={inputData.capacity_total ? `Capacity (beds): ${inputData.capacity_total}` : `Global capacity`} value={global_capacity} SetValue={setGlobalCapacity} dict_key="global_capacity" ></DynamicSlider>
             <DynamicSlider label={"Max Transfers (%): " + transfers} value={transfers} SetValue={setTransfers} frac={true} dict_key="max_transfers" ></DynamicSlider>
 
-            <Box sx={{ display: 'flex', borderRadius: 2, mt: 5 }}>
+            <Box sx={{ display: 'flex', borderRadius: 2, mt: 3,  mb :4 }}>
                 <Button
                     variant="contained"
                     component="label"
@@ -157,7 +162,9 @@ export default function ManualInputForm() {
                 >
                     Submit
                 </Button>
+                {loading && <CircularProgress sx={{ ml: 4 }} /> }
             </Box>
+            
         </Box>
     );
 }
