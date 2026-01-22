@@ -50,7 +50,10 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, params_system):
                                 for i in range(len(params_system["G"])) 
                                     for j in range(params_system["K_g"][i])]) + params_system["alpha"][0] * lpSum([params_system["D"][0] * P[g2][k2][r2][a2][h2] * params_system["w_rh"][r2][h2]  
                                         for g2 in range(len(params_system["G"])) for k2 in range(params_system["K_g"][g2]) 
-                                            for r2 in params_system["R"] for a2 in range(params_system["A_gk"][g2][k2]) for h2 in range(len(params_system["H"]))]) 
+                                            for r2 in params_system["R"] for a2 in range(params_system["A_gk"][g2][k2]) for h2 in range(len(params_system["H"]))]) \
+                                                -  1e-8*lpSum([Delta_plus[h][l] for h in params_system["H"] for l in params_system["L"]])\
+                                                    -  1e-8*lpSum([Delta_minus[h][l] for h in params_system["H"] for l in params_system["L"]])
+
 
 
 
