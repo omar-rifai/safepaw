@@ -33,7 +33,7 @@ function App() {
             <Box component="img" src="logo_polytech.png" sx={{ height: 50, width: "auto" }}></Box>
             <Box component="img" src="logo_emse.png" sx={{ height: 50, width: "auto" }}></Box>
           </Box>
-          <Divider textAlign="left" sx={{ my: 2 }}>  <Typography variant="body1"> Parameters</Typography> </Divider>
+          <Divider textAlign="left" sx={{ my: 2, '&::before': { width: '5%' }  }}>  <Typography variant="body1"> France's Maternity Facilities</Typography> </Divider>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Box sx={{ width: '20%', position: 'relative' }}>
               <InputForm />

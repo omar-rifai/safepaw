@@ -18,8 +18,8 @@ export default function inputForms() {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', ml:2 }}>
             <Tabs value={activeTab} onChange={handleChange}>
-                <Tab label="Manual" value="manual"></Tab>
-                <Tab label="Custom" value="custom"></Tab>
+                <Tab label="Parameters" value="manual"></Tab>
+
             </Tabs>
 
             <Box sx={{ flex: 1, overflowY: 'auto', pr: 3 }}>

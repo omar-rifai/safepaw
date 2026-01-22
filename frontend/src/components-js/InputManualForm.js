@@ -117,7 +117,7 @@ export default function ManualInputForm() {
 
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pl: 2 }} >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pl: 2, mt: 1 }} >
             <FormControl fullWidth sx={{ maxWidth: 300 }} margin="normal">
                 <InputLabel id={regionID}> Regions </InputLabel>
                 <Select label="Regions" labelId={regionID} value={selectedRegion} onChange={
@@ -133,7 +133,7 @@ export default function ManualInputForm() {
                     ))}
                 </Select>
             </FormControl>
-            <FormControl fullWidth sx={{ maxWidth: 300 }} margin="normal">
+            <FormControl fullWidth sx={{ maxWidth: 300}} margin="normal">
                 <InputLabel id={departmentID}> Departements </InputLabel>
                 <Select label="Departments" labelId={departmentID} value={selectedDepartment} onChange={
                     e => {
@@ -152,7 +152,7 @@ export default function ManualInputForm() {
             <DynamicSlider label={inputData.capacity_total ? `Capacity (beds): ${inputData.capacity_total}` : `Global capacity`} value={global_capacity} SetValue={setGlobalCapacity} dict_key="global_capacity" ></DynamicSlider>
             <DynamicSlider label={"Max Transfers (%): " + transfers} value={transfers} SetValue={setTransfers} frac={true} dict_key="max_transfers" ></DynamicSlider>
 
-            <Box sx={{ display: 'flex', borderRadius: 2, mt: 3,  mb :4 }}>
+            <Box sx={{ display: 'flex', borderRadius: 2, mt: 5,  mb :4 }}>
                 <Button
                     variant="contained"
                     component="label"
