@@ -78,11 +78,11 @@ def get_maternite_dashboard(df_maternites):
 
     #nbr accouchements moyen par année 
     avg_births_year = df_maternites["deliveries_per_facility"].mean()
-    dashboard_stats["Avg births / facility"] = round(avg_births_year)
+    dashboard_stats["Average yearly births / facility"] = round(avg_births_year)
 
     #nbr accouchements moyen par lit / année
     avg_births_bed = (df_maternites["deliveries_per_facility"] / df_maternites["beds"]).mean()
-    dashboard_stats["Avg birth / bed"] =  round(avg_births_bed)
+    dashboard_stats["Average yearly births / bed"] =  round(avg_births_bed)
 
    
     return dashboard_stats
