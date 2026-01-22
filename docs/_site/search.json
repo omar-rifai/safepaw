@@ -1,0 +1,72 @@
+[
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "authors: Polytech (ROOT team) / EMSE (I4S team)"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Safepaw-opt Documentation",
+    "section": "",
+    "text": "SAFEPAW-opt is an optimization platform developed within the SAFEPAW project designed to support healthcare territorial planning."
+  },
+  {
+    "objectID": "index.html#data-sources",
+    "href": "index.html#data-sources",
+    "title": "Safepaw Documentation",
+    "section": "",
+    "text": "Several open data sources were used to construct instances for our optimization problem.\n\nDataset of french maternity wards [DREES (2025)]. This dataset contains yearly (10 years) info on deliveries_per_facility and the number of beds per facility. The type of maternity ward is also recorded (type 1, 2a, 2b, or 3).\nThe french national directory of health establishements list[Ministère Santé (2025)]. We use this dataset mainly to extract the coordinates of each maternity ward.\nStatistics on number of births by commune [INSEE (2025)]. This dataset allows us to set the lower bounds \\(d_{gr}\\) on our model’s demand.\nAdditional open data for precise coordinates of the regions, departments and communes in France.\n\nThe data sources have been synthesized in our project as two files:\n\nsummary_maternity_capacity.csv which we can see a sample below\n\n\n\n\n\n\n\n\n\n\nUnnamed: 0\nyear\nnofinesset\nfacility_name\nregion_name\ndep_code\ndep_name\ncomm_code\ncomm_name\ncoords\ndeliveries_per_facility\nbeds\n\n\n\n\n0\n0\n2020\n010005239\nCH DU HAUT BUGEY - GEOVREISSET\nAuvergne-Rhône-Alpes\n01\nAin\n01283\nOYONNAX\n(5.627347689975507, 46.275058914989415)\n672\n20\n\n\n1\n1\n2023\n010005239\nCH DU HAUT BUGEY - GEOVREISSET\nAuvergne-Rhône-Alpes\n01\nAin\n01283\nOYONNAX\n(5.627347689975507, 46.275058914989415)\n531\n17\n\n\n2\n2\n2018\n010780203\nHOPITAL PRIVE D'AMBERIEU\nAuvergne-Rhône-Alpes\n01\nAin\n01004\nAMBERIEU-EN-BUGEY\n(5.359568064201492, 45.95839397363716)\n747\n15\n\n\n3\n3\n2013\n020000162\nCENTRE HOSPITALIER DE SAINT-QUENTIN\nHauts-de-France\n02\nAisne\n02691\nSAINT-QUENTIN\n(3.26978107668703, 49.8621539595793)\n1360\n38\n\n\n4\n4\n2021\n020000535\nCH CHAUNY\nHauts-de-France\n02\nAisne\n02173\nCHAUNY\n(3.2194773828381718, 49.6155560205392)\n525\n16\n\n\n\n\n\n\n\n\nsummary_maternity_labours.csv to summarize the demand by commune\n\n\n\n\n\n\n\n\n\n\nUnnamed: 0\nyear\ncomm_code\ndep_code\nregion_code\ncoordinates\ndeliveries_per_comm\n\n\n\n\n0\n0\n2010\n01283\n01\n76\n('44.93911771041438', ' 1.884464767586863')\n1.0\n\n\n1\n1\n2024\n01283\n01\n76\n('44.67919532138512', ' 1.7677276261276595')\n1.0\n\n\n2\n2\n2019\n01004\n01\n76\n('44.631483659881155', ' 1.7753257988258189')\n1.0\n\n\n3\n3\n2014\n02691\n02\n76\n('44.28685341199275', ' 1.4239767763513673')\n15.0\n\n\n4\n4\n2015\n02173\n02\n76\n('44.54456027096039', ' 1.970988122486078')\n0.0"
+  },
+  {
+    "objectID": "instances.html",
+    "href": "instances.html",
+    "title": "Maternity Instances",
+    "section": "",
+    "text": "Our main testing instance for demo purpose uses open data from the French maternity wards. Below we detail how the datasets were curated and the hypothese made to fit the datasets to our optimization model."
+  },
+  {
+    "objectID": "instances.html#footnotes",
+    "href": "instances.html#footnotes",
+    "title": "Maternity Instances",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nType 1: Obstetrics only; Type 2a: Obstetrics and neonatology; Type 2b: Obstetrics, neonatology, and neonatal intensive care; Type 3: Obstetrics, neonatology, neonatal intensive care, and neonatal resuscitation.↩︎\nFor the department the maternity ward is situated in, this affinity score is set to 10 arbitrarity to reflect a high affinity.↩︎\nThe resource unit considered is bed/days per facility per year↩︎\nA resource transfer is considered definitive for the planning horizon↩︎"
+  },
+  {
+    "objectID": "instances.html#hypotheses",
+    "href": "instances.html#hypotheses",
+    "title": "Maternity Instances",
+    "section": "Hypotheses",
+    "text": "Hypotheses\nSome hypotheses are made to convert our datasets into our model parameters\n\n\n\n\n\n\n\n\nParameter\nMeaning\n\n\n\n\n\n\\(G\\)\nPatients groups\nFour groups corresponding to maternity types 1 (1,2a,2b,3)\n\n\n\\(K\\)\nAvailable pathways\nOne pathway per group\n\n\n\\(A_{gk}\\)\nNumber of activities for group \\(g\\) pathway \\(k\\)\nOne activity per pathway\n\n\n\\(R\\)\nRegions\nFrench departments\n\n\n\\(H\\)\nFacilities\nFacilities are the maternity wards\n\n\n\\(L\\)\nResources\nOne resource (=bed/days) from summary_maternity_capacity.csv\n\n\n\\(U_g\\)\nQuality levels for group \\(g\\)\nOne quality level\n\n\n\\(I_{gu}\\)\nPathways available for group \\(g\\) quality level \\(u\\)\nTrivial as we have one unique pathway and quality level\n\n\n\\(O_{gk}\\)\nFacilities able to handle deliveries of type \\(g\\)\nExtracted from facility type in summary_maternity_capacity.csv\n\n\n\\(J_h\\)\nFacilities transferable to from facility \\(h\\)\nAll facilities of the same type\n\n\n\\(N_{gka2}\\)\nNext activity\nTrivial as only one activity\n\n\n\\(N_{gka1}\\)\nAll activities considered for potential transfer\nTrivial as only one activity\n\n\n\\(D\\)\nTotal demand over service area\nTotal deliveries across the service area\n\n\n\\(d_{gr}\\)\nMinimum deliveries of type \\(g\\) in region \\(r\\)\nCalculated from summary_maternity_labours.csv (as explained below) (parameterizable)\n\n\n\\(w_{rh}\\)\nPreference for patients from region \\(r\\) to deliver in facility \\(h\\)\nAffinities between regions (french departments) and maternity wards are calculated as \\(\\frac{1}{distance (km)}\\) from the maternity ward to the center of the center of the department 2\n\n\n\\(\\underline{q}_g\\) / \\(\\overline{q}_g\\)\nMinimum and maximum proportions of group \\(g\\) to be treated\nNot constrained\n\n\n\\(\\underline{q}_{gu}\\) / \\(\\overline{q}_{gu}\\)\nMinimum and maximum proportions of group \\(g\\) to be treated under quality \\(u\\)\nNot constrained\n\n\n\\(c_{gk}\\)\nBenefit score of assigning a patient from group \\(g\\) with the care pathway \\(k\\)\nTrivial as only one pathway\n\n\n\\(m_{hl}\\)\nTotal capacity of resource type l in healthcare facilities h\nNumber of beds per facility times 365 3\n\n\n\\(t_{gkal}\\)\nConsumption of resource \\(l=bed/days\\) required to perform labour of group \\(g\\)\naverage length of stay for a delivery 4.6 [DREES (2021)]\n\n\n\\(\\delta_l\\)\ntransfer unit between healthcare facilities for each resource (bed/days)\n365 4\n\n\n\\(b_{hl_{in}}\\) \\(b_{hl_{out}}\\)\nMaximum proportions of resource type l transferable in and out of facility \\(h\\)\n1 (parameterizable)\n\n\n\\(f\\)\nMaximum allowable percentage of patients who may be transferred between facilities\n1\n\n\n\\(\\alpha\\)\nweight of objective function\n1 (parameterizable)\n\n\n\n\nDemand per region\nUsing the values \\(L_{r,y}\\) (deliveries in region \\(r\\) year \\(y\\)), we calcuate the fraction \\(d_{gr}\\) as follows:\n\\[\\begin{equation}\n\\bar{L}_r = \\frac{1}{Y} \\sum_{y=1}^{Y} L_{r,y}\n\\end{equation}\\]\n\\[\\begin{equation}\nd_{gr} = \\frac{\\bar{L}_r}{\\sum_{r} \\bar{L}_r}\n\\end{equation}\\]\nThis demand is global for all patient groups. As we do not have detailed info on the demand per pation group, we multiplyby the obtained global demands by the statistics on delivery type [DREES (2021)].\n\n\n\nDelivery type\nfraction\n\n\n\n\n1\n0.20\n\n\n2a\n0.28\n\n\n2b\n0.23\n\n\n3\n0.29"
+  },
+  {
+    "objectID": "instances.html#pseudocode-with-math-equations-get-demand-lower-bounds",
+    "href": "instances.html#pseudocode-with-math-equations-get-demand-lower-bounds",
+    "title": "Maternity Instances",
+    "section": "Pseudocode with Math Equations: Get Demand Lower Bounds",
+    "text": "Pseudocode with Math Equations: Get Demand Lower Bounds\nLet:\n- ( L_{r,y} ) = number of deliveries in region ( r ) in year ( y )\n- ( {L}r ) = average yearly deliveries in region ( r )\n- ( d{gr} ) = lower bound fraction of patients assigned to region ( r )\nfunction get_demand_lower_bounds(): # Compute yearly deliveries per region L_{r,y} = sum_deliveries(region=r, year=y)"
+  },
+  {
+    "objectID": "instances.html#demand-lower-bounds-per-patient-group-and-region",
+    "href": "instances.html#demand-lower-bounds-per-patient-group-and-region",
+    "title": "Maternity Instances",
+    "section": "Demand Lower Bounds per Patient Group and Region",
+    "text": "Demand Lower Bounds per Patient Group and Region\nWe want to compute (d_{gr}), the lower bound fraction of patients assigned to each region (r).\n\nDefinitions\nLet:\n\n(L_{r,y}) = number of deliveries in region (r) in year (y)\n\n(Y) = total number of years\n\n({L}_r) = average yearly deliveries in region (r)\n\n(L_{}) = total average deliveries across all regions\n\n(d_{gr}) = lower bound fraction of patients assigned to region (r)\n\n\n\nEquations\n\nYearly deliveries per region:\n\n[ L_{r,y} = r y ]\n\nAverage yearly deliveries per region:\n\n[ {L}r = {y=1}^{Y} L_{r,y} ]\n\nTotal average deliveries across all regions:\n\n[ L_{} = _{r} {L}_r ]\n\nLower bound fraction per region:\n\n[ d_{gr} = r ]\n\n\nPseudocode\nfunction get_demand_lower_bounds():\n    # Compute L_{r,y} for all regions r and years y\n    L_r_y = sum_deliveries_per_region_per_year()\n\n    # Compute average deliveries per region\n    L_bar_r = average_over_years(L_r_y)\n\n    # Compute total average deliveries\n    L_total = sum_over_regions(L_bar_r)\n\n    # Compute lower bound fractions\n    d_gr = [L_bar_r[r] / L_total for each region r]\n\n    return d_gr"
+  },
+  {
+    "objectID": "instances.html#sec:demand-per-region",
+    "href": "instances.html#sec:demand-per-region",
+    "title": "Maternity Instances",
+    "section": "Demand per region",
+    "text": "Demand per region\nUsing the values \\(L_{r,y}\\) (deliveries in region \\(r\\) year \\(y\\)), we calcuate the fraction \\(d_{gr}\\) as follows:\n\\[\\begin{equation}\n\\bar{L}_r = \\frac{1}{Y} \\sum_{y=1}^{Y} L_{r,y}\n\\end{equation}\\]\n\\[\\begin{equation}\nd_{gr} = \\frac{\\bar{L}_r}{\\sum_{r} \\bar{L}_r}\n\\end{equation}\\]\nThis demand is global for all patient groups. As we do not have detailed info on the demand per pation group, we multiplyby the obtained global demands by the statistics on delivery type [DREES (2021)]."
+  },
+  {
+    "objectID": "instances.html#data-sources",
+    "href": "instances.html#data-sources",
+    "title": "Maternity Instances",
+    "section": "Data Sources",
+    "text": "Data Sources\nSeveral open data sources were used to construct instances for our optimization problem.\n\nDataset of french maternity wards [DREES (2025)]. This dataset contains yearly (10 years) info on deliveries_per_facility and the number of beds per facility. The type of maternity ward is also recorded (type 1, 2a, 2b, or 3).\nThe french national directory of health establishements list[Ministère Santé (2025)]. We use this dataset mainly to extract the coordinates of each maternity ward.\nStatistics on number of births by commune [INSEE (2025)]. This dataset allows us to set the lower bounds \\(d_{gr}\\) on our model’s demand.\nAdditional open data for precise coordinates of the regions, departments and communes in France.\n\nThe data sources have been synthesized in our project as two files 📄 summary_maternity_capacity.csv for the capacity in beds by facility and 📄 summary_maternity_labours.csv to extract the demand by commune. Sample rows are shown below.\n\n\n\n\n\n\n\n\n\nyear\nnofinesset\nfacility_name\ntype\nregion_code\nregion_name\ndep_code\ndep_name\ncomm_code\ncomm_name\ncoords\ndeliveries_per_facility\nbeds\n\n\n\n\n0\n2020\n010005239\nCH DU HAUT BUGEY - GEOVREISSET\n1\n84\nAuvergne-Rhône-Alpes\n01\nAin\n01283\nOYONNAX\n(5.627347689975507, 46.275058914989415)\n672\n20\n\n\n1\n2023\n010005239\nCH DU HAUT BUGEY - GEOVREISSET\n1\n84\nAuvergne-Rhône-Alpes\n01\nAin\n01283\nOYONNAX\n(5.627347689975507, 46.275058914989415)\n531\n17\n\n\n2\n2018\n010780203\nHOPITAL PRIVE D'AMBERIEU\n1\n84\nAuvergne-Rhône-Alpes\n01\nAin\n01004\nAMBERIEU-EN-BUGEY\n(5.359568064201492, 45.95839397363716)\n747\n15\n\n\n3\n2013\n020000162\nCENTRE HOSPITALIER DE SAINT-QUENTIN\n2b\n32\nHauts-de-France\n02\nAisne\n02691\nSAINT-QUENTIN\n(3.26978107668703, 49.8621539595793)\n1360\n38\n\n\n4\n2021\n020000535\nCH CHAUNY\n1\n32\nHauts-de-France\n02\nAisne\n02173\nCHAUNY\n(3.2194773828381718, 49.6155560205392)\n525\n16\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nyear\ncomm_code\ndep_code\nregion_code\ncoordinates\ndeliveries_per_comm\n\n\n\n\n0\n2010\n46117\n46\n76\n('44.93911771041438', ' 1.884464767586863')\n1.0\n\n\n1\n2024\n46090\n46\n76\n('44.67919532138512', ' 1.7677276261276595')\n1.0\n\n\n2\n2019\n46094\n46\n76\n('44.631483659881155', ' 1.7753257988258189')\n1.0\n\n\n3\n2014\n46103\n46\n76\n('44.28685341199275', ' 1.4239767763513673')\n15.0\n\n\n4\n2015\n46116\n46\n76\n('44.54456027096039', ' 1.970988122486078')\n0.0\n\n\n\n\n\n\n\n\nVerifying compatibility\nWe made sure that the two data sources were coherent by summing the number of deliveries by region across 10 years."
+  }
+]

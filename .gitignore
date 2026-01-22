@@ -1,0 +1,25 @@
+# dependencies
+frontend/node_modules/
+
+# production build
+build/
+
+# misc
+backend/data/open_data/communes-france.csv
+*.pyc
+*.ipynb_checkpoints
+node_modules/*
+output/
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.vscode/
+.idea/
+*.ipynb
+
+# Mac system files
+.DS_Store

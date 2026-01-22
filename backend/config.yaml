@@ -1,0 +1,15 @@
+# config.yaml
+
+paths:
+  sample_input_file: "./data/params_toy.json"
+  real_input_file: "./data/params_ptg_pth.json"
+  maternity_path: "./data/open_data/summary_maternity_capacity.csv"
+
+data_maternity:
+  alpha: 1
+  allowed_transfer_fraction: 1
+  min_fraction_to_be_treated: 0
+  max_fraction_to_be_treated: 1
+  avg_length_of_stay: 4.6
+  resource_transfer_unit: 365
+  labour_types_distribution : {"1": 0.50, "2a": 0.2, "2b": 0.2, "3": 0.1}

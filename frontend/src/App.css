@@ -1,0 +1,14 @@
+.app-container {
+    padding: 20px;
+}
+
+.forms-wrapper {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.form-panel {
+    flex: 1 1 300px;
+    min-width: 300px;
+}

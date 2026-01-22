@@ -1,0 +1,19 @@
+# dependencies
+node_modules/*
+
+# misc
+*.pyc
+*.ipynb_checkpoints
+output/
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+# Mac system files
+.DS_Store
+
+
+

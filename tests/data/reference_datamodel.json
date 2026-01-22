@@ -1,0 +1,2516 @@
+{
+  "regions": [
+    {
+      "region_id": "0",
+      "region_lbl": null,
+      "coordinates": [],
+      "facilities_affinity": {
+        "0": 0.9,
+        "1": 0.63
+      }
+    },
+    {
+      "region_id": "1",
+      "region_lbl": null,
+      "coordinates": [],
+      "facilities_affinity": {
+        "0": 0.71,
+        "1": 1.07
+      }
+    },
+    {
+      "region_id": "2",
+      "region_lbl": null,
+      "coordinates": [],
+      "facilities_affinity": {
+        "0": 0.34,
+        "1": 0.53
+      }
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "0",
+      "resource_type": "0",
+      "associated_facility": null
+    },
+    {
+      "resource_id": "1",
+      "resource_type": "1",
+      "associated_facility": null
+    },
+    {
+      "resource_id": "2",
+      "resource_type": "2",
+      "associated_facility": null
+    },
+    {
+      "resource_id": "3",
+      "resource_type": "3",
+      "associated_facility": null
+    },
+    {
+      "resource_id": "4",
+      "resource_type": "4",
+      "associated_facility": null
+    }
+  ],
+  "facilities": [
+    {
+      "facility_id": "0",
+      "region": null,
+      "coordinates": [],
+      "resources_capacity": {
+        "0": 11858,
+        "1": 10380,
+        "2": 16932,
+        "3": 16938,
+        "4": 13532
+      },
+      "available_pathways": [
+        "g0_0",
+        "g0_1",
+        "g0_2",
+        "g0_3",
+        "g1_0",
+        "g1_1",
+        "g1_2",
+        "g1_3",
+        "g2_0",
+        "g2_1",
+        "g2_2",
+        "g2_3",
+        "g2_4",
+        "g3_0",
+        "g3_1",
+        "g3_2",
+        "g3_3",
+        "g4_0",
+        "g4_1"
+      ],
+      "linked_facilities": [
+        "1"
+      ],
+      "max_transferable_in": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "max_transferable_out": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      }
+    },
+    {
+      "facility_id": "1",
+      "region": null,
+      "coordinates": [],
+      "resources_capacity": {
+        "0": 11858,
+        "1": 10380,
+        "2": 16932,
+        "3": 16938,
+        "4": 13532
+      },
+      "available_pathways": [
+        "g0_0",
+        "g0_1",
+        "g0_2",
+        "g0_3",
+        "g1_0",
+        "g1_1",
+        "g1_2",
+        "g1_3",
+        "g2_0",
+        "g2_1",
+        "g2_2",
+        "g2_3",
+        "g2_4",
+        "g3_0",
+        "g3_1",
+        "g3_2",
+        "g3_3",
+        "g4_0",
+        "g4_1"
+      ],
+      "linked_facilities": [
+        "0"
+      ],
+      "max_transferable_in": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "max_transferable_out": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      }
+    }
+  ],
+  "patients": [
+    {
+      "group_id": "0",
+      "group_lbl": null,
+      "possible_pathways": [
+        "g0_0",
+        "g0_1",
+        "g0_2",
+        "g0_3"
+      ]
+    },
+    {
+      "group_id": "1",
+      "group_lbl": null,
+      "possible_pathways": [
+        "g1_0",
+        "g1_1",
+        "g1_2",
+        "g1_3"
+      ]
+    },
+    {
+      "group_id": "2",
+      "group_lbl": null,
+      "possible_pathways": [
+        "g2_0",
+        "g2_1",
+        "g2_2",
+        "g2_3",
+        "g2_4"
+      ]
+    },
+    {
+      "group_id": "3",
+      "group_lbl": null,
+      "possible_pathways": [
+        "g3_0",
+        "g3_1",
+        "g3_2",
+        "g3_3"
+      ]
+    },
+    {
+      "group_id": "4",
+      "group_lbl": null,
+      "possible_pathways": [
+        "g4_0",
+        "g4_1"
+      ]
+    }
+  ],
+  "pathways": [
+    {
+      "pathway_id": "g0_0",
+      "associated_group_id": "0",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "group_benefit": 1.4963414634146337,
+      "list_next": [
+        1,
+        2,
+        4,
+        0,
+        5,
+        6,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g0_1",
+      "associated_group_id": "0",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "group_benefit": 1.0,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g0_2",
+      "associated_group_id": "0",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "group_benefit": 1.1646341463414633,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g0_3",
+      "associated_group_id": "0",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "group_benefit": 1.1402439024390243,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g1_0",
+      "associated_group_id": "1",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "group_benefit": 1.9972602739726026,
+      "list_next": [
+        1,
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g1_1",
+      "associated_group_id": "1",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "group_benefit": 1.0,
+      "list_next": [
+        1,
+        2,
+        3,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g1_2",
+      "associated_group_id": "1",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "group_benefit": 1.5068493150684932,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g1_3",
+      "associated_group_id": "1",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "group_benefit": 1.5534246575342463,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g2_0",
+      "associated_group_id": "2",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "group_benefit": 1.4165792235047223,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g2_1",
+      "associated_group_id": "2",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "group_benefit": 1.3966421825813222,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g2_2",
+      "associated_group_id": "2",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "group_benefit": 1.485834207764953,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g2_3",
+      "associated_group_id": "2",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "group_benefit": 1.0,
+      "list_next": [
+        1,
+        2,
+        4,
+        0,
+        5,
+        6,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g2_4",
+      "associated_group_id": "2",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "group_benefit": 1.203567681007345,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g3_0",
+      "associated_group_id": "3",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "group_benefit": 1.0,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g3_1",
+      "associated_group_id": "3",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "group_benefit": 1.0610376398779244,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g3_2",
+      "associated_group_id": "3",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "group_benefit": 1.1159715157680568,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g3_3",
+      "associated_group_id": "3",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "group_benefit": 1.0152594099694812,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g4_0",
+      "associated_group_id": "4",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "group_benefit": 1.821316614420063,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ]
+    },
+    {
+      "pathway_id": "g4_1",
+      "associated_group_id": "4",
+      "quality_level": "0",
+      "list_activities": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "group_benefit": 1.0,
+      "list_next": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ]
+    }
+  ],
+  "activities": [
+    {
+      "activity_id": "0",
+      "associated_pathway": "0",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.78,
+        "3": 1.36,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "0",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.89,
+        "3": 0.0,
+        "4": 1.33
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "0",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.04,
+        "3": 0.0,
+        "4": 0.73
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "0",
+      "associated_group": "0",
+      "transferable": false,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 1.06,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.57,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "0",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.25,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "0",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.35,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "0",
+      "associated_group": "0",
+      "transferable": false,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.13,
+        "2": 0.78,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "1",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.12
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "1",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.19,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "1",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 1.3,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "1",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.27
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "1",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.02,
+        "2": 0.91,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "1",
+      "associated_group": "0",
+      "transferable": false,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.39,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "2",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.66,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "2",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.96,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.66
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "2",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.05,
+        "2": 0.0,
+        "3": 1.24,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "2",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 1.46,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.74
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "2",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.61,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "2",
+      "associated_group": "0",
+      "transferable": false,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.8,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "3",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.61,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "3",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.45
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "3",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.84,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.6
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "3",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.32,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "3",
+      "associated_group": "0",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.84,
+        "3": 0.93,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "3",
+      "associated_group": "0",
+      "transferable": false,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.74,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "0",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 1.33,
+        "1": 0.0,
+        "2": 0.79,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "0",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.46,
+        "3": 0.93,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "0",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.67,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "0",
+      "associated_group": "1",
+      "transferable": false,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.49
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "1",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.63,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "1",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.07,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "1",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.95,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "1",
+      "associated_group": "1",
+      "transferable": false,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "2",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.81,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "2",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.57,
+        "3": 0.55,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "2",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.92,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.73,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "2",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.56,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "2",
+      "associated_group": "1",
+      "transferable": false,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.36,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "3",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.57,
+        "2": 0.54,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "3",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.04,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "3",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 1.22,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "3",
+      "associated_group": "1",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.75
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "3",
+      "associated_group": "1",
+      "transferable": false,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.95,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.9,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.03,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.19,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.5
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.38
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.7
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 1.14,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "7",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.15,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "7",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "8",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.15,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "8",
+      "associated_pathway": "0",
+      "associated_group": "2",
+      "transferable": false,
+      "transfer_to": "8",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.35
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.89,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.22,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.13,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.52,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.75
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.49,
+        "2": 0.0,
+        "3": 0.85,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.87,
+        "1": 0.53,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "7",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.91
+      }
+    },
+    {
+      "activity_id": "7",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "8",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.78
+      }
+    },
+    {
+      "activity_id": "8",
+      "associated_pathway": "1",
+      "associated_group": "2",
+      "transferable": false,
+      "transfer_to": "8",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.02,
+        "4": 1.3
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.2,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.98,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.2,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.75,
+        "1": 0.0,
+        "2": 0.53,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.07
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.79,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 1.04,
+        "1": 0.58,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "7",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.03,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.73
+      }
+    },
+    {
+      "activity_id": "7",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "8",
+      "required_resources": {
+        "0": 0.88,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "8",
+      "associated_pathway": "2",
+      "associated_group": "2",
+      "transferable": false,
+      "transfer_to": "8",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.04,
+        "3": 0.0,
+        "4": 1.4
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "3",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 1.2,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "3",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 1.25,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "3",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.51,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "3",
+      "associated_group": "2",
+      "transferable": false,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.66,
+        "2": 1.43,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "3",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.37
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "3",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 1.0,
+        "1": 1.41,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "3",
+      "associated_group": "2",
+      "transferable": false,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.7,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "4",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 1.17,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "4",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.19,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "4",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.64,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "4",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.52,
+        "1": 0.66,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "4",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.94,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "4",
+      "associated_group": "2",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.2,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.09
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "4",
+      "associated_group": "2",
+      "transferable": false,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.44,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "0",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.8,
+        "2": 0.0,
+        "3": 0.94,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "0",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.49,
+        "3": 0.54,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "0",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.06,
+        "3": 0.58,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "0",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.89
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "0",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 1.34,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "0",
+      "associated_group": "3",
+      "transferable": false,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.15
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "1",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.57,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.48,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "1",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.63,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "1",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.61,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.68
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "1",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.89,
+        "3": 1.38,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "1",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.53,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "1",
+      "associated_group": "3",
+      "transferable": false,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 1.2,
+        "1": 1.18,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "2",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.09,
+        "3": 0.63,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "2",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.04,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "2",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.93,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "2",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.37,
+        "3": 0.75,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "2",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.34,
+        "4": 0.85
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "2",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 1.19
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "2",
+      "associated_group": "3",
+      "transferable": false,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.11,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "3",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.04,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "3",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.39,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "3",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.95,
+        "2": 0.0,
+        "3": 1.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "3",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.66,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "3",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.12,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "3",
+      "associated_group": "3",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.72,
+        "1": 0.0,
+        "2": 1.33,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "3",
+      "associated_group": "3",
+      "transferable": false,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 1.07,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.7
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "0",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.58,
+        "4": 1.48
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "0",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.56,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "0",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.14,
+        "3": 1.03,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "0",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.03,
+        "3": 0.0,
+        "4": 0.75
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "0",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.89,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "0",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 1.05,
+        "2": 0.0,
+        "3": 1.22,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "0",
+      "associated_group": "4",
+      "transferable": false,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.76,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "0",
+      "associated_pathway": "1",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "1",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.84,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "1",
+      "associated_pathway": "1",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "2",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.04,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "2",
+      "associated_pathway": "1",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "3",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.81,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "3",
+      "associated_pathway": "1",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "4",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 1.23,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "4",
+      "associated_pathway": "1",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "5",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.97,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "5",
+      "associated_pathway": "1",
+      "associated_group": "4",
+      "transferable": true,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.59,
+        "4": 0.0
+      }
+    },
+    {
+      "activity_id": "6",
+      "associated_pathway": "1",
+      "associated_group": "4",
+      "transferable": false,
+      "transfer_to": "6",
+      "required_resources": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.9,
+        "3": 0.0,
+        "4": 0.0
+      }
+    }
+  ],
+  "instance": {
+    "d_total": 10000,
+    "d_gr": [
+      [
+        0.15,
+        0.09,
+        0.06
+      ],
+      [
+        0.15,
+        0.09,
+        0.06
+      ],
+      [
+        0.075,
+        0.045,
+        0.03
+      ],
+      [
+        0.075,
+        0.045,
+        0.03
+      ],
+      [
+        0.05,
+        0.03,
+        0.02
+      ]
+    ],
+    "under_q_g": [
+      0.3071,
+      0.2929,
+      0.1381,
+      0.1619,
+      0.1
+    ],
+    "over_q_g": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "under_q_gu": [
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "over_q_gu": [
+      [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0
+      ],
+      [
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "p_transf": 1.0,
+    "delta_l": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "alpha": 0.0125
+  }
+}

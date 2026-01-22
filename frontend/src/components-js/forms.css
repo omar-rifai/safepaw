@@ -1,0 +1,87 @@
+.form-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.error-message {
+    color: red;
+}
+
+.form-label {
+    width: 200px;
+    font-weight: bold;
+}
+
+
+
+.dashboard-container {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.dashboard-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.dashboard-panel {
+    flex: 1 1 300px;
+    /* grow/shrink with min width */
+    min-width: 300px;
+}
+
+
+.dashboard-list li {
+    margin: 0.5rem 0;
+}
+
+
+.histogram-bars-wrapper {
+    width: 400px;
+    /* fixed width panel */
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+}
+
+.histogram-bars {
+    display: flex;
+    gap: 8px;
+    height: 150px;
+    align-items: flex-end;
+    min-width: 0;
+    /* prevent forcing overflow */
+}
+
+.bar-container {
+    flex: 1 1 40px;
+    /* grow and shrink */
+    min-width: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: relative;
+    height: 150px;
+}
+
+.bar {
+    width: 100%;
+    background-color: #007bff;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: height 0.3s;
+    color: white;
+    font-size: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 24px;
+}

@@ -1,0 +1,78 @@
+﻿secteur,champ,signification_fr,meaning_en,confiance
+MCO,BOR,Type d’activité (ex. MCO : Médecine-Chirurgie-Obstétrique),Activity type,★★★
+MCO,AN,Année d’exercice,Year,★★★
+MCO,420,Code d’établissement (interne / FINESS géographique abrégé),Establishment code,★★
+MCO,FI_EJ,Code FINESS juridique ou identifiant établissement PMSI,Legal FINESS ID,★★
+MCO,LIT_MED,Nombre de lits en Médecine,Beds (Medicine),★★★
+MCO,JLI_MED,Journées en lit en Médecine (bed-days),Bed-days (Medicine),★★★
+MCO,SEJHC_MED,Séjours hospitalisation complète – Médecine,Full inpatient stays (Medicine),★★★
+MCO,SEJ0_MED,Séjours de jour – Médecine,Day stays (Medicine),★★★
+MCO,JOU_MED,Journées – Médecine,Hospital days (Medicine),★★★
+MCO,LIT_CHI,Lits – Chirurgie,Beds (Surgery),★★★
+MCO,JLI_CHI,Journées en lit – Chirurgie,Bed-days (Surgery),★★★
+MCO,SEJHC_CHI,Séjours hospitalisation complète – Chirurgie,Full inpatient stays (Surgery),★★★
+MCO,SEJ0_CHI,Séjours de jour – Chirurgie,Day stays (Surgery),★★★
+MCO,JOU_CHI,Journées – Chirurgie,Hospital days (Surgery),★★★
+MCO,LIT_OBS,Lits – Obstétrique,Beds (Obstetrics),★★★
+MCO,JLI_OBS,Journées en lit – Obstétrique,Bed-days (Obstetrics),★★★
+MCO,SEJHC_OBS,Séjours hospitalisation complète – Obstétrique,Full inpatient stays (Obstetrics),★★★
+MCO,SEJ0_OBS,Séjours de jour – Obstétrique,Day stays (Obstetrics),★★★
+MCO,JOU_OBS,Journées – Obstétrique,Hospital days (Obstetrics),★★★
+MCO,LIT_MCO,Lits totaux – MCO,Total beds (MCO),★★★
+MCO,JLI_MCO,Journées en lit – MCO,Bed-days (MCO),★★★
+MCO,SEJHC_MCO,Séjours hospitalisation complète – MCO,Full inpatient stays (MCO),★★★
+MCO,SEJ0_MCO,Séjours de jour – MCO,Day stays (MCO),★★★
+MCO,JOU_MCO,Journées – MCO,Hospital days (MCO),★★★
+MCO,PLA_MED,Places hospitalisation partielle – Médecine,Partial hospitalization places (Medicine),★★
+MCO,SEJHP_MED,Séjours hospitalisation partielle – Médecine,Partial hospital stays (Medicine),★★★
+MCO,PLAN_MED,Places planifiées – Médecine,Planned places (Medicine),★★
+MCO,SEJN_MED,Séjours de nuit – Médecine,Night stays (Medicine),★★
+MCO,SEA_MED,Séances – Médecine,Sessions (Medicine),★★★
+MCO,PLA_CHI,Places hospitalisation partielle – Chirurgie,Partial hospitalization places (Surgery),★★
+MCO,SEJHP_CHI,Séjours hospitalisation partielle – Chirurgie,Partial hospital stays (Surgery),★★★
+MCO,PLA_OBS,Places hospitalisation partielle – Obstétrique,Partial hospitalization places (Obstetrics),★★
+MCO,SEJHP_OBS,Séjours hospitalisation partielle – Obstétrique,Partial hospital stays (Obstetrics),★★★
+MCO,PLAN_OBS,Places planifiées – Obstétrique,Planned places (Obstetrics),★★
+MCO,SEJN_OBS,Séjours de nuit – Obstétrique,Night stays (Obstetrics),★★
+MCO,PLA_MCO,Places hospitalisation partielle – MCO,Partial hospitalization places (MCO),★★
+MCO,SEJHP_MCO,Séjours hospitalisation partielle – MCO,Partial hospital stays (MCO),★★★
+MCO,PLAN_MCO,Places planifiées – MCO,Planned places (MCO),★★
+MCO,SEJN_MCO,Séjours de nuit – MCO,Night stays (MCO),★★
+MCO,SEA_MCO,Séances – MCO,Sessions (MCO),★★★
+MCO,PCAR,Activité cardiologie,Cardiology activity,★★
+MCO,PDER,Activité dermatologie,Dermatology activity,★★
+MCO,PEND,Activité endocrinologie,Endocrinology activity,★★
+MCO,PGAS,Activité gastro-entérologie,Gastroenterology activity,★★
+MCO,PNEU,Activité pneumologie,Pulmonology activity,★★
+MCO,PPED,Activité pédiatrie,Pediatrics activity,★★
+MCO,PPNE,Activité périnatalité / néonatologie,Perinatal / Neonatology activity,★★
+MCO,PRHU,Activité rhumatologie,Rheumatology activity,★★
+MCO,POPH,Activité ophtalmologie,Ophthalmology activity,★★
+MCO,DEND,Diagnostic / actes d’endocrinologie,Diagnostic acts – Endocrinology,★
+MCO,DNEU,Diagnostic / actes neurologie,Diagnostic acts – Neurology,★
+MCO,DPED,Diagnostic / actes pédiatrie,Diagnostic acts – Pediatrics,★
+MCO,DOPH,Diagnostic / actes ophtalmologie,Diagnostic acts – Ophthalmology,★
+MCO,ACTCLI_PM,Activité clinique (PM = production médicale),Clinical activity (PM),★★
+MCO,ACTCLI_SAG,Activité clinique (SAG = structure agrégée ?),Clinical activity (SAG),★
+MCO,ACTTEC_PM,Activité technique (PM),Technical activity (PM),★★
+MCO,ACTTEC_DEN,Activité technique – dentaire (DEN),Technical activity – dental,★
+MCO,ACTTEC_SAG,Activité technique (SAG),Technical activity (SAG),★
+MCO,ACTTEC_PNM,Activité technique – non médicalisée / paramédicale,Technical activity – non-medical,★
+SSR,BOR,Type d’activité (SSR = Soins de Suite et de Réadaptation),Activity type (SSR),★★★
+SSR,AN,Année d’exercice,Year,★★★
+SSR,FI,Code FINESS géographique de l’établissement,FINESS geographic code,★★★
+SSR,FI_EJ,Code FINESS juridique,Legal FINESS code,★★★
+SSR,GDE,Grande discipline d’exercice (ex. SSR_A = affections locomotrices),Major specialty (SSR_A = locomotor rehab),★★★
+SSR,AUT,Autorisation spécifique (si applicable),Specific authorization,★★
+SSR,LIT,Nombre de lits hospitalisation complète,Beds (full inpatient),★★★
+SSR,PLA,Nombre de places hospitalisation de jour / partielle,Places (day/partial hospitalization),★★★
+SSR,APEC,Activité permanente d’équipe de coordination,Coordination team activity indicator,★
+SSR,SEJHC,Séjours hospitalisation complète,Full inpatient stays,★★★
+SSR,JOUHC,Journées hospitalisation complète,Inpatient days,★★★
+SSR,SEJ3M,Séjours de plus de 3 mois,Long stays (>3 months),★★★
+SSR,JOUHP,Journées hospitalisation partielle,Partial-hospitalization days,★★★
+SSR_AGG,BEN_RES_DPT,Département de résidence du bénéficiaire (code INSEE à 2 chiffres),Patient residence department code,★★★
+SSR_AGG,sej_type,Type de séjour (ex. PTH = Prothèse Totale de Hanche),Type of stay (e.g. Total Hip Replacement),★★★
+SSR_AGG,type_parcours,Type de parcours patient (ex. CSC = court séjour complet),Patient care pathway type,★★
+SSR_AGG,SSR_TYPE,Type d’établissement SSR (ex. DOM = Domiciliaire),Type of SSR unit (e.g. domiciliary),★★
+SSR_AGG,nb,Nombre de séjours ou cas comptabilisés,Number of stays / cases,★★★

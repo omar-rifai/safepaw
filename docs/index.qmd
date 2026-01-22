@@ -1,0 +1,8 @@
+---
+title: "Safepaw-opt Documentation"
+---
+
+SAFEPAW-opt is an optimization  platform developed within the [SAFEPAW](https://lifat.univ-tours.fr/lifat-english-version/projects/recent/root/2023-2027-safepaw-societal-assets-for-e-healthcare-patient-pathways) 
+project designed to support healthcare territorial planning. 
+
+

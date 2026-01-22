@@ -1,0 +1,26 @@
+project:
+  type: website
+
+bibliography: references.bib
+
+website:
+  title: "SAFEPAW Documentation"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: instances.qmd
+        text: Instances
+      - about.qmd
+      
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+    css: styles.css
+    toc: true
+
+
+

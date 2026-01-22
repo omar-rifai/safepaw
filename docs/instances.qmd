@@ -1,0 +1,147 @@
+
+---
+title: Maternity Instances
+---
+
+Our main testing instance for demo purpose uses open data from the French maternity wards. Below we detail how the datasets were curated and the hypothese
+made to fit the datasets to our optimization model.
+
+## Data Sources
+Several open data sources were used to construct  instances for our optimization problem.
+
+-  Dataset of french maternity wards \[@maternity2000\]. This dataset contains yearly (10 years) info on `deliveries_per_facility` and the number of `beds` per facility. 
+The type of maternity ward is also recorded (type 1, 2a, 2b, or 3). 
+- The french national directory of health establishements list\[@finess2025\]. We use this dataset mainly to extract the coordinates of each maternity ward.
+- Statistics on number of births by commune \[@insee_births_communal\]. This dataset allows us to set the lower bounds $d_{gr}$ on our model's demand.
+- Additional open data for precise coordinates of the regions, departments and communes in France.
+
+
+The data sources have been synthesized in our project as two files 📄 [*summary_maternity_capacity.csv*](https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_capacity.csv?ref_type=heads)  for the capacity 
+in `beds` by facility and 📄 [*summary_maternity_labours.csv*](https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_labours.csv?ref_type=heads) to extract the demand by commune. Sample rows are shown below.
+
+
+```{python}
+#| echo: false
+#| results: asis
+
+from IPython.display import display, Markdown
+import pandas as pd
+df= pd.read_csv("../data/open_data/summary_maternity_capacity.csv")
+df_mat =df.loc[:, ~df.columns.str.contains("^Unnamed")]
+
+display(df_mat.head())
+
+
+from IPython.display import display, Markdown
+import pandas as pd
+df = pd.read_csv("../data/open_data/summary_maternity_labours.csv", low_memory=False)
+df_labours = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+display(df_labours.head())
+```
+
+#### Verifying compatibility
+We made sure that the two data sources were coherent by summing the number of deliveries by region across 10 years.
+
+
+```{python}
+#| echo: false
+#| results: asis
+
+from IPython.display import display, Markdown
+
+import numpy as np
+import pandas as pd
+
+df_materinity = pd.read_csv("../data/open_data/summary_maternity_capacity.csv", low_memory=False)
+df_labours = pd.read_csv("../data/open_data/summary_maternity_labours.csv", low_memory=False)
+
+years_cap = list(np.sort(df_materinity["year"].unique()))
+regions_cap = list(np.sort(df_materinity["region_code"].unique()))
+df_materinity = df_materinity.groupby(["region_code"]).agg(summary_maternity_capacity_csv=("deliveries_per_facility", "sum")).reset_index()
+
+
+df_labours = df_labours[(df_labours["year"].isin(years_cap)) & (df_labours["region_code"].isin(regions_cap))]
+df_labours = df_labours.groupby(["region_code"]).agg(summary_maternity_labours_csv=("deliveries_per_comm","sum")).reset_index()
+import matplotlib.pyplot as plt
+import logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+
+fig, ax = plt.subplots()
+
+df_materinity.plot.bar(x="region_code", y="summary_maternity_capacity_csv", color="red", ax=ax, alpha=0.3)
+df_labours.plot.bar(x="region_code", y="summary_maternity_labours_csv", color="blue", ax=ax, alpha=0.3)
+
+ax.set_xlabel("French Region Code")
+ax.set_ylabel("Number of Deliveries")
+ax.set_title("Comparison of number of deliveries per region in two datasources")
+ax.legend()  # shows the labels
+
+plt.xlabel
+
+plt.show()
+
+```
+
+## Hypotheses
+
+Some hypotheses are made to convert our datasets into our model parameters
+
+
+|Parameter   | Meaning | |Value              |
+|------------|---------|----------------------|
+|$G$ | Patients groups | Four groups corresponding to maternity types [^1] (1,2a,2b,3)|
+|$K$  | Available pathways | One pathway per group           |
+|$A_{gk}$ | Number of activities for group $g$ pathway $k$ | One activity per pathway            |
+|$R$ | Regions | French departments |
+|$H$  | Facilities | Facilities are the maternity wards |
+|$L$ | Resources | One resource (=bed/days) from *summary_maternity_capacity.csv* |
+|$U_g$ | Quality levels for group $g$ | One quality level             |
+|$I_{gu}$  | Pathways available for group $g$ quality level $u$ |Trivial as we have one unique pathway  and quality level          |
+|$O_{gk}$ | Facilities able to handle deliveries of type $g$ | Extracted from facility `type` in *summary_maternity_capacity.csv*       |
+|$J_h$  | Facilities transferable to from facility $h$ |All facilities of the same `type`            |
+|$N_{gka2}$ | Next activity | Trivial as only one activity             |
+|$N_{gka1}$ | All activities considered for potential transfer | Trivial as only one activity             |
+|$D$   | Total demand over service area | Total deliveries across the service area             |
+|$d_{gr}$ | Minimum deliveries of type $g$ in region $r$ | Calculated from *summary_maternity_labours.csv* (as explained below)  (parameterizable)         |
+|$w_{rh}$ | Preference for patients from region $r$ to deliver in facility $h$ | Affinities between regions (french departments) and maternity wards are calculated as $\frac{1}{distance (km)}$ from the maternity ward to the center of the center of the department [^2]              |
+|$\underline{q}_g$ / $\overline{q}_g$ | Minimum and maximum proportions of group $g$ to be treated | Not constrained   |
+|$\underline{q}_{gu}$ / $\overline{q}_{gu}$ |Minimum and maximum proportions of group $g$ to be treated under quality $u$ | Not constrained            |
+|$c_{gk}$ |  Benefit score of assigning a patient from group $g$ with the care pathway $k$ |Trivial as only one pathway              |
+|$m_{hl}$  |Total capacity of resource type l in healthcare facilities h | Number of `beds` per facility times 365  [^3]          |
+|$t_{gkal}$  | Consumption of resource $l=bed/days$ required to perform labour  of group $g$ | average length of stay for a delivery 4.6   \[@DREES2021_naissance_accouchements\]      |
+|$\delta_l$  | transfer unit between healthcare facilities for each resource (bed/days) |  365 [^4]    |
+|$b_{hl_{in}}$ $b_{hl_{out}}$  |  Maximum proportions of resource type l transferable in and out of facility $h$ | 1 (parameterizable)     |
+|$f$  |Maximum allowable percentage of patients who may be transferred between facilities |  1  |
+|$\alpha$ | weight of objective function | 1 (parameterizable)   |
+
+### Demand per region {#sec:demand-per-region}
+
+Using the values $L_{r,y}$ (deliveries in region $r$  year  $y$), we calcuate the fraction $d_{gr}$ as follows:
+
+
+\begin{equation}
+\bar{L}_r = \frac{1}{Y} \sum_{y=1}^{Y} L_{r,y} 
+\end{equation}
+
+\begin{equation}
+ d_{gr} = \frac{\bar{L}_r}{\sum_{r} \bar{L}_r}
+\end{equation}
+
+
+This demand is global for all patient groups. As we do not have detailed info on the demand per pation group,
+ we multiplyby the obtained global demands by the statistics on delivery type  \[@DREES2021_naissance_accouchements\].
+
+
+|Delivery type | fraction|
+|--------------|----------|
+| 1 | 0.20 |
+| 2a | 0.28 |
+| 2b | 0.23|
+| 3 | 0.29|
+
+
+
+[^1]: Type 1: Obstetrics only; Type 2a: Obstetrics and neonatology; Type 2b: Obstetrics, neonatology, and neonatal intensive care; Type 3: Obstetrics, neonatology, neonatal intensive care, and neonatal resuscitation.
+[^2]: For the department the maternity ward is situated in, this affinity score is set to 10 arbitrarity to reflect a high affinity. 
+[^3]: The resource unit considered is bed/days per facility per year
+[^4]: A resource transfer is considered definitive for the planning horizon
