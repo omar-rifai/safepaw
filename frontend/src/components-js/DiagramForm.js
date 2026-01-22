@@ -1,5 +1,6 @@
 import {
-  BarChart,
+  ComposedChart,
+  Area,
   Bar,
   XAxis,
   YAxis,
@@ -26,12 +27,13 @@ export default function HospitalResourcesChart() {
    ({
       resource: f.properties.facility_id,
       capacity: f.properties?.capacities[0],
+      load : Math.round(f.properties?.load*4.6),
       imported: f.properties?.transfers_in[0],
       exported: f.properties?.transfers_out[0]
    }));
 
   return (
-    <BarChart
+    <ComposedChart
       width={600}
       height={300}
       data={facilities_data}
@@ -39,18 +41,15 @@ export default function HospitalResourcesChart() {
     >
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis dataKey="resource" tick={false} />
-      <YAxis dataKey="capacity" />
+      <YAxis width="auto" />
       <Tooltip />
       <Legend />
-
-      {/* Base capacity */}
       <Bar dataKey="capacity" stackId="a" fill="#88adc8ff" />
-
-      {/* Imported stacked on top */}
       <Bar dataKey="imported" stackId="a" fill="#baecb4ff" />
-
-      {/* Exported stacked on top (semi-transparent) */}
       <Bar dataKey="exported" stackId="a" fill="rgba(248, 98, 98, 0.7)" />
-    </BarChart>
+
+      <Area type="monotone" dataKey="load" fill="#46e9ffff" />
+
+    </ComposedChart>
   );
 }
