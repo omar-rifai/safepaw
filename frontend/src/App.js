@@ -18,10 +18,21 @@ function App() {
 
   return (
     <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData }}>
-      <UIContext.Provider value={{deckGLData, setDeckGLData}}>
+      <UIContext.Provider value={{ deckGLData, setDeckGLData }}>
         <div style={{ padding: 20 }}>
-          <h2>SAFEPAW</h2>
-          <h3>Optimizing Patients Health Pathways</h3>
+          <Box
+            sx={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 2,
+              padding: "8px 16px", backgroundColor: "#f2f4f6ff", color: "black", 
+            }}>
+            <Box component="img" src="logo-safepaw.jpg" sx={{ height: 50, width: "auto", ml: -50 }}></Box>
+            <Typography variant="h4" sx={{
+              mx: 2, fontFamily: "'Montserrat', sans-serif", fontWeight: 700,
+              letterSpacing: "0.05em", color: "#333333"
+            }}>SAFEPAW</Typography>
+            <Box component="img" src="logo_polytech.png" sx={{ height: 50, width: "auto" }}></Box>
+            <Box component="img" src="logo_emse.png" sx={{ height: 50, width: "auto" }}></Box>
+          </Box>
           <Divider textAlign="left" sx={{ my: 2 }}>  <Typography variant="body1"> Parameters</Typography> </Divider>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Box sx={{ width: '20%', position: 'relative' }}>
