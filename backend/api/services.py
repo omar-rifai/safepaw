@@ -28,12 +28,13 @@ def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) ->
     print("Starting optimization driver...")
     status, objective, results = run_driver(params_system)
     print("Optimization driver finished with status:", status)
-    objective_str = f"{objective:.2f}" if objective is not None else "N/A"
-    list_patient_transfers = create_patientTransfers(results, params_system, params_metadata)
-    list_facility_load = create_facilityStats(results, params_system, params_metadata)
-    list_facility_load_regions = create_facilityStats(results, params_system, params_metadata, by_region=True)
-    
-    return status, objective_str, list_patient_transfers, list_facility_load, list_facility_load_regions, params_metadata["regions"]
+    if objective is None:
+        return status, "N/A", [], [], [], params_metadata["regions"]
+    else:
+        list_patient_transfers = create_patientTransfers(results, params_system, params_metadata) if objective is not None else []
+        list_facility_load = create_facilityStats(results, params_system, params_metadata) if objective is not None else []
+        list_facility_load_regions = create_facilityStats(results, params_system, params_metadata, by_region=True) if objective is not None else []
+    return status, f"{objective:.2f}", list_patient_transfers, list_facility_load, list_facility_load_regions, params_metadata["regions"]
 
 
 
