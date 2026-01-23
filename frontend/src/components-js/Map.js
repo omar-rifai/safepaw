@@ -6,6 +6,7 @@ import { getInitializeViewFromGeoJSON, useRegionGeoJSON } from '../utils/mapInit
 import { DataContext, UIContext } from "../App";
 import { Box, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
 import PatientsTransfersLayer from './layers/PatientsTransfersLayer';
+import Legend from './layers/Legend';
 import { RegionFacilityLoadLayer, getRegionFacilityToolTip } from './layers/RegionFacilityLoadLayer';
 import { FacilityLoadLayer, getFacilityToolTip } from './layers/FacilityLoadLayer'
 import { FacilityCapacityLayer, getFacilityCapacityToolTip } from './layers/FacilityCapacityLayer'
@@ -179,6 +180,7 @@ export default function customMap() {
             style={{ width: '100%', height: '100%' }}
             attributionControl={false}
           />
+          <Legend layers={renderedLayers} />
         </DeckGL>
       </Box>
     </Box>
