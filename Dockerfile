@@ -50,5 +50,3 @@ EXPOSE 5000
 
 # Default command
 CMD ["poetry", "run", "uvicorn", "backend.run:app", "--host", "0.0.0.0", "--port", "5000"]
-
-

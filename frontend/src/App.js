@@ -40,14 +40,12 @@ function App() {
               <InputForm />
             </Box>
             <Box sx={{ width: '40%', height: '100%', position: 'relative' }}>
-              <CustomMap inputData={inputData} outputData={outputData} />
+              <CustomMap />
             </Box>
             <Box sx={{ width: '40%', height: '100%', position: 'relative' }}>
-              <DashboardForm
-                inputData={inputData}
-              />
+              <DashboardForm/>
               <Divider textAlign="left" sx={{ my: 2 }}> <Typography variant="body1"> Results </Typography>  </Divider>
-              <ResultsForm outputData={outputData} />
+              <ResultsForm />
             </Box>
           </Box>
 

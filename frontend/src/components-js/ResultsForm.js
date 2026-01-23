@@ -3,7 +3,7 @@ import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 import { DataContext } from '../App';
 import { useContext } from 'react';
-import ComposedChart from './DiagramForm'
+import HospitalResourcesChart from './DiagramForm'
 
 export default function ResultsForm() {
   const { outputData} = useContext(DataContext);
@@ -21,7 +21,7 @@ export default function ResultsForm() {
         <Typography><strong>Objective:</strong> {obj_val}</Typography>
       </Card>
       <Box  sx={{height: '100%'}}  >
-        <ComposedChart/>
+        <HospitalResourcesChart/>
       </Box>
     </Box>
   );
