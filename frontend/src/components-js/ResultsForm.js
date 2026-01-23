@@ -3,7 +3,7 @@ import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 import { DataContext } from '../App';
 import { useContext } from 'react';
-import Example from './DiagramForm'
+import ComposedChart from './DiagramForm'
 
 export default function ResultsForm() {
   const { outputData} = useContext(DataContext);
@@ -15,13 +15,13 @@ export default function ResultsForm() {
   console.log("outputData in ResultForm: ", outputData)
 
   return (
-    <Box sx={{ minWidth: 275 }}>
+    <Box sx={{ minWidth: 275, height: '100%' }}>
       <Card variant="outlined" sx={{ textAlign: 'left', p: 2, mb: 2 }}>
         <Typography><strong>Status:</strong> {status}</Typography>
         <Typography><strong>Objective:</strong> {obj_val}</Typography>
       </Card>
-      <Box>
-        <Example/>
+      <Box  sx={{height: '100%'}}  >
+        <ComposedChart/>
       </Box>
     </Box>
   );
