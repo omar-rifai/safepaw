@@ -16,7 +16,7 @@ export default function ManualInputForm() {
     const [error, setError] = useState([])
     const [loading, setLoading] = useState(false)
     const [demand, setDemand] = useState(0)
-    const [transfers, setTransfers] = useState(1)
+    const [transfers, setTransfers] = useState(0)
     const [global_capacity, setGlobalCapacity] = useState(0)
 
     const regionID = "region-label";
@@ -35,7 +35,7 @@ export default function ManualInputForm() {
         setOutputData(null)
         setDemand(0);
         setGlobalCapacity(0);
-        setTransfers(1);
+        setTransfers(0);
     };
 
     const handleDepartmentChange = (dep) => {
@@ -43,7 +43,7 @@ export default function ManualInputForm() {
         setOutputData(null)
         setDemand(0);
         setGlobalCapacity(0);
-        setTransfers(1);
+        setTransfers(0);
     }
 
     const handleSubmit = async (e) => {
@@ -117,7 +117,7 @@ export default function ManualInputForm() {
 
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pl: 2, mt: 1 }} >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pl: 2, pr: 2, mt: 5}} >
             <FormControl fullWidth sx={{ maxWidth: 300 }} margin="normal">
                 <InputLabel id={regionID}> Regions </InputLabel>
                 <Select label="Regions" labelId={regionID} value={selectedRegion} onChange={

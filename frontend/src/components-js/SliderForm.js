@@ -36,7 +36,7 @@ export function DynamicSlider({ label, value, SetValue, frac = false, dict_key})
     };
 
     useEffect(() => {
-        frac? SetValue(1): SetValue(0);
+        frac? SetValue(0): SetValue(0);
     }, [inputData.department]);
 
     return (
