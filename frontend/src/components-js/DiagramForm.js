@@ -1,55 +1,94 @@
-import {
-  ComposedChart,
-  Area,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend } from 'chart.js';
+import { Chart } from 'react-chartjs-2';
+import { useContext } from 'react';
 import { DataContext, UIContext } from '../App';
-import { useContext } from "react";
 
+// Register required Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip, Legend);
 
-export default function HospitalResourcesChart() {
-
+export default function ComposedChart() {
   const { outputData } = useContext(DataContext);
   const { deckGLData } = useContext(UIContext);
 
-  console.log("in Diagram, object selected:", deckGLData)
-
-  const filtered_output = deckGLData.properties?.facility_id ?
-    outputData.list_facility_load?.filter(item => item.properties.facility_id == deckGLData.properties?.facility_id)
+  const filtered_output = deckGLData.properties?.facility_id
+    ? outputData.list_facility_load?.filter(
+        (item) => item.properties.facility_id === deckGLData.properties?.facility_id
+      )
     : outputData.list_facility_load;
 
-  const facilities_data = filtered_output.flatMap(f =>
-   ({
-      resource: f.properties.facility_id,
-      capacity: f.properties?.capacities[0] - f.properties?.transfers_out[0],
-      load : Math.round(f.properties?.load*4.6),
-      imported: f.properties?.transfers_in[0],
-      exported: f.properties?.transfers_out[0]
-   }));
+  const facilities_data = filtered_output.map((f) => ({
+    resource: f.properties.facility_id,
+    capacity: f.properties?.capacities[0] - f.properties?.transfers_out[0],
+    load: Math.round(f.properties?.load * 4.6),
+    imported: f.properties?.transfers_in[0],
+    exported: f.properties?.transfers_out[0],
+  }));
 
-  return (
-    <ComposedChart
-      width={600}
-      height={300}
-      data={facilities_data}
-      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-    >
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="resource" tick={false} />
-      <YAxis width="auto" />
-      <Tooltip />
-      <Legend />
-      <Bar dataKey="capacity" stackId="a" fill="#88adc8ff" />
-      <Bar dataKey="imported" stackId="a" fill="#baecb4ff" />
-      <Bar dataKey="exported" stackId="a" fill="rgba(248, 98, 98, 0.7)" />
+  // Chart.js data structure
+  const data = {
+    labels: facilities_data.map(d => d.resource),
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Capacity',
+        data: facilities_data.map(d => d.capacity),
+        backgroundColor: '#88adc8ff',
+        stack: 'stack1',
+        order:2
+      },
+      {
+        type: 'bar',
+        label: 'Imported',
+        data: facilities_data.map(d => d.imported),
+        backgroundColor: '#baecb4ff',
+        stack: 'stack1',
+        order:2
+      },
+      {
+        type: 'bar',
+        label: 'Exported',
+        data: facilities_data.map(d => d.exported),
+        backgroundColor: 'rgba(248,98,98,0.7)',
+        stack: 'stack1',
+        order:2
+      },
+      {
+        type: 'line',
+        label: 'Load',
+        data: facilities_data.map(d => d.load),
+        borderColor: '#0b6a8aff',
+        spanGaps: true,
+        borderWidth: 2,
+        tension: 0.4,
+        backgroundColor: 'transparent',
+        pointRadius: 3,
+        order:1
+      },
+    ],
+  };
 
-      <Area type="monotone" dataKey="load" fill="#46e9ffff" />
+  // Chart.js options
+  const options = {
+    responsive: true,
+    plugins: {
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      },
+      legend: {
+        position: 'bottom',
+      },
+    },
+    scales: {
+      x: {
+        stacked: true,
+        ticks: { display : false}
+      },
+      y: {
+        stacked: true,
+      },
+    },
+  };
 
-    </ComposedChart>
-  );
+  return <Chart type="bar" data={data} options={options} />;
 }
