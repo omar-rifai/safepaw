@@ -42,6 +42,7 @@ export function FacilityLoadLayer({ loads, setDeckGLData }) {
             radiusUnits: 'pixels',
             pickable: true,
             onClick: info => {
+                console.log("info on click", info.object)
                 if (info.object) {
                     setDeckGLData(info.object);
                 }

@@ -53,26 +53,26 @@ async def optimize_maternite(payload = Body(...)) -> JSONResponse:
     from backend.api.services import run_optimization_maternite
     import pandas as pd 
     import traceback
-
+    df_instance = pd.DataFrame(payload.get("dict_instance"))
+    transfers = float(payload.get("transfers"))
+    if "3" not in df_instance["type"].unique():
+        return {
+            "status": "Infeasible",
+            "details": "Missing facility of type 3",
+            "results": None
+        }
     try:
-        df_instance = pd.DataFrame(payload.get("dict_instance"))
-        transfers = float(payload.get("transfers"))
-
         status, objective_str, list_patient_transfers, list_facility_load, list_facility_load_regions, regions =\
               run_optimization_maternite(df_instance, transfers)
 
-        return JSONResponse(
-            status_code=200,
-            content={
+        return {
                 "status": status,
-                "obj_val": objective_str,
-                "list_patient_transfers": [pt.as_geojson_feature() for pt in list_patient_transfers],
-                "list_facility_load": [pt.as_geojson_feature() for pt in list_facility_load],
-                "list_facility_load_regions" : [pt.as_geojson_feature() for pt in list_facility_load_regions],
-                "regions": regions
-            },
-        )
-
+                "results": {"obj_val": objective_str,
+                        "list_patient_transfers": [pt.as_geojson_feature() for pt in list_patient_transfers],
+                        "list_facility_load": [pt.as_geojson_feature() for pt in list_facility_load],
+                        "list_facility_load_regions" : [pt.as_geojson_feature() for pt in list_facility_load_regions],
+                        "regions": regions}
+            }
     except ExecutableNotFound as e:
         raise HTTPException(status_code=500, detail=str(e))
 

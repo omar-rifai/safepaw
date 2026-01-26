@@ -19,7 +19,7 @@ export default function customMap() {
 
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
-  const regions = useMemo(() => outputData?.regions || [], [outputData]);
+  const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
   const regionGeoJSON = useRegionGeoJSON(inputData?.region)
 
   const [viewState, setViewState] = useState({
@@ -58,48 +58,48 @@ export default function customMap() {
 
   const output_layers = useMemo(() => {
 
-    const results = []
+    const list_layers = []
 
-    if (outputData?.list_facility_load) {
+    if (outputData?.results?.list_facility_load) {
       const layer_facilityLoads = FacilityLoadLayer({
-        loads: outputData.list_facility_load,
+        loads: outputData.results.list_facility_load,
         setDeckGLData: setDeckGLData,
       });
-      results.push(layer_facilityLoads)
+      list_layers.push(layer_facilityLoads)
     }
 
-    if (outputData?.list_facility_load && outputData.regions) {
+    if (outputData?.results?.list_facility_load && outputData.results.regions) {
       const layer_regionFacilityLoads = RegionFacilityLoadLayer({
-        loads: outputData.list_facility_load_regions,
-        regions: outputData.regions,
+        loads: outputData.results.list_facility_load_regions,
+        regions: outputData.results.regions,
         selectedItem: deckGLData
       });
-      results.push(layer_regionFacilityLoads)
+      list_layers.push(layer_regionFacilityLoads)
     }
 
 
-    if (outputData?.list_patient_transfers) {
+    if (outputData?.results?.list_patient_transfers) {
       const layer_patientsTransfers = PatientsTransfersLayer({
-        transfers: outputData.list_patient_transfers,
+        transfers: outputData.results.list_patient_transfers,
       });
-      results.push(layer_patientsTransfers)
+      list_layers.push(layer_patientsTransfers)
     }
 
-    return results;
+    return list_layers;
   }, [outputData, deckGLData]);
 
 
   const input_layers = useMemo(() => {
 
-    const results = []
+    const list_layers = []
 
     if (inputData?.list_facility_load) {
       const layer_facilityLoads = FacilityCapacityLayer({
         capacities: inputData.list_facility_load,
       });
-      results.push(layer_facilityLoads)
+      list_layers.push(layer_facilityLoads)
     }
-    return results;
+    return list_layers;
 
   }, [inputData]);
 

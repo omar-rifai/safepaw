@@ -4,19 +4,21 @@ export function RegionFacilityLoadLayer({ loads, regions, selectedItem }) {
 
     if (!selectedItem.properties) { return null }
 
-
+    const tolerance = 0.0001;
     const maxLoad = loads.reduce((max, d) => Math.max(max, d.properties.load), 0);
 
     const facilityLoads = (loads || [])
         .filter(d => d.properties.region_id != null &&
             Math.round(d.properties.load) > 0 &&
-            d.properties.facility_id == selectedItem.properties.facility_id)
-
+            d.properties.facility_id == selectedItem.properties.facility_id &&
+            Math.abs(d.geometry.coordinates[0] - selectedItem.geometry.coordinates[0]) < tolerance &&
+            Math.abs(d.geometry.coordinates[1] - selectedItem.geometry.coordinates[1]) < tolerance 
+        )
     if (facilityLoads.length === 0) {
         return null;
     }
 
-
+    console.log("In regionFacility loads", facilityLoads)
     return new ArcLayer
         ({
             id: 'region-to-facility',

@@ -1,5 +1,4 @@
 export default function Legend({ layers }) {
-    console.log(layers[0]?.id)
     if (layers[0]?.id == "facilities-volume") {
         return (<div style={{ position: 'absolute', bottom: 0, right: 0 }}>
             <div>± beds usage</div>

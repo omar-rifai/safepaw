@@ -18,10 +18,10 @@ export default function HospitalResourcesChart() {
   const { deckGLData } = useContext(UIContext);
 
   console.log("in Diagram, object selected:", deckGLData)
-
+  if (outputData.status=="Infeasible" || !outputData.results) {return null}
   const filtered_output = deckGLData.properties?.facility_id ?
-    outputData.list_facility_load?.filter(item => item.properties.facility_id == deckGLData.properties?.facility_id)
-    : outputData.list_facility_load;
+    outputData.results.list_facility_load?.filter(item => item.geometry.coordinates == deckGLData.geometry?.coordinates)
+    : outputData.results.list_facility_load;
 
   const facilities_data = filtered_output.flatMap(f =>
    ({

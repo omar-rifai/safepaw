@@ -72,11 +72,12 @@ export default function ManualInputForm() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || "Server error");
+                setError("Server error");
                 return;
             }
 
             if (setOutputData) setOutputData(data);
+            console.log("outputdata in fetch:", data)
         }
 
         catch {
