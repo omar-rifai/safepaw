@@ -166,6 +166,14 @@ export default function customMap() {
         </FormGroup>
       }
       <Box sx={{ height: "90%", position: "relative" }} >
+        <div
+            style={{
+              width: '100%',
+              height: '100%',
+              outline: '1px solid #000',
+              boxSizing: 'border-box',
+            }}
+        >
         <DeckGL
           viewState={viewState}
           onViewStateChange={({ viewState }) => setViewState(viewState)}
@@ -174,15 +182,18 @@ export default function customMap() {
           getTooltip={getTooltip}
           onClick={({ object }) => { if (!object) { setDeckGLData({}) } }}
         >
-          <Map
-            reuseMaps
-            mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-            style={{ width: '100%', height: '100%' }}
-            attributionControl={false}
-          />
+          
+            <Map
+              reuseMaps
+              mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+              style={{ width: '100%', height: '100%' }}
+              attributionControl={false}
+            />
+          
           <Legend layers={renderedLayers} />
         </DeckGL>
+        </div>
       </Box>
-    </Box>
+    </Box >
   );
 }
