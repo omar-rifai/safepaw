@@ -23,14 +23,14 @@ export default function HospitalResourcesChart() {
     outputData.results.list_facility_load?.filter(item => item.geometry.coordinates == deckGLData.geometry?.coordinates)
     : outputData.results.list_facility_load;
 
-  const facilities_data = filtered_output.flatMap(f =>
-   ({
-      resource: f.properties.facility_id,
-      capacity: f.properties?.capacities[0] - f.properties?.transfers_out[0],
-      load : Math.round(f.properties?.load*4.6),
-      imported: f.properties?.transfers_in[0],
-      exported: f.properties?.transfers_out[0]
-   }));
+  const facilities_data = (filtered_output ?? []).flatMap(f => ({
+  resource: f.properties.facility_id,
+  capacity: f.properties?.capacities?.[0] - f.properties?.transfers_out?.[0],
+  load: Math.round(f.properties?.load * 4.6),
+  imported: f.properties?.transfers_in?.[0],
+  exported: f.properties?.transfers_out?.[0]
+  }));
+
 
   return (
     <ComposedChart
