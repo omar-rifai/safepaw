@@ -7,10 +7,12 @@ from backend.core.utils.data_utils import read_geojson_projected
 def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
     """Creates `Region` instance using public data on French communes (Commune code and coordinates)"""
     import numpy as np
+    df_labours = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+    df_labours = df_labours[df_labours["dep_code"].isin(df_instance["dep_code"])]
     df_geo_comms = read_geojson_projected("backend/data/open_data/communes-50m.geojson")
     df_geo_comms_4326 = df_geo_comms.to_crs(epsg=4326)
     dict_comm_centroids = dict(zip(df_geo_comms_4326["code"], np.vstack([df_geo_comms_4326.geometry.centroid.x.values, df_geo_comms_4326.geometry.centroid.y.values]).T))
-    df_geo_comms = df_geo_comms[df_geo_comms["departement"].isin(df_instance["dep_code"].unique())]
+    df_geo_comms = df_geo_comms[df_geo_comms["code"].isin(df_labours["comm_code"])]
     communes_ids = list(df_geo_comms["code"].drop_duplicates().sort_values())
     list_regions = [Region(region_id=c_id, coordinates=dict_comm_centroids[c_id], facilities_affinity=_get_affinities(c_id, df_instance, df_geo_comms)) for c_id in communes_ids]
     return list_regions

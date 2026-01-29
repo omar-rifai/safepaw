@@ -11,7 +11,7 @@ export default function ResultsForm() {
   if (!outputData || !outputData.status) return <Typography>No results to display.</Typography>;
 
   const  status  = outputData.status;
-  const avg_distance = outputData.results.avg_distance;
+  const avg_distance = outputData.results?.avg_distance;
 
   console.log("outputData in ResultForm: ", outputData)
 
@@ -19,7 +19,7 @@ export default function ResultsForm() {
     <Box sx={{ minWidth: 275, height: '100%' }}>
       <Card variant="outlined" sx={{ textAlign: 'left', p: 2, mb: 2 }}>
         <Typography><strong>Status:</strong> {status}</Typography>
-        <Typography><strong>Mean access distance:</strong> {avg_distance} {avg_distance? "km": ""}</Typography>
+        {avg_distance && <Typography><strong>Mean access distance:</strong> {avg_distance}  km</Typography>}
       </Card>
       <Box  sx={{height: '100%'}}  >
         <HospitalResourcesChart/>

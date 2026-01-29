@@ -30,7 +30,7 @@ def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) ->
     status, objective, results = run_driver(params_system)
     print("Optimization driver finished with status:", status)
     if objective is None:
-        return status, "N/A", [], [], [], params_metadata["regions"]
+        return status, None, [], [], [], params_metadata["regions"]
     else:
         list_patient_transfers = create_patientTransfers(results, params_system, params_metadata) if objective is not None else []
         list_facility_load = create_facilityStats(results, params_system, params_metadata) if objective is not None else []
