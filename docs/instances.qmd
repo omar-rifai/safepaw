@@ -27,6 +27,7 @@ in `beds` by facility and 📄 [*summary_maternity_labours.csv*](https://gitlab.
 from IPython.display import display, Markdown
 import pandas as pd
 df= pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv")
+df= pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv")
 df_mat =df.loc[:, ~df.columns.str.contains("^Unnamed")]
 
 display(df_mat.head())
@@ -34,6 +35,7 @@ display(df_mat.head())
 
 from IPython.display import display, Markdown
 import pandas as pd
+df = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
 df = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
 df_labours = df.loc[:, ~df.columns.str.contains("^Unnamed")]
 display(df_labours.head())
@@ -52,6 +54,8 @@ from IPython.display import display, Markdown
 import numpy as np
 import pandas as pd
 
+df_materinity = pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv", low_memory=False)
+df_labours = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
 df_materinity = pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv", low_memory=False)
 df_labours = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
 
@@ -93,6 +97,7 @@ Some hypotheses are made to convert our datasets into our model parameters
 |$K$  | Available pathways | One pathway per group           |
 |$A_{gk}$ | Number of activities for group $g$ pathway $k$ | One activity per pathway            |
 |$R$ | Regions | French communes |
+|$R$ | Regions | French communes |
 |$H$  | Facilities | Facilities are the maternity wards |
 |$L$ | Resources | One resource (=bed/days) from *summary_maternity_capacity.csv* |
 |$U_g$ | Quality levels for group $g$ | One quality level             |
@@ -129,12 +134,16 @@ Using the values $L_{r,y}$ (deliveries in region $r$  year  $y$), we calcuate th
 
 
 This demand is global for all patient groups. As we do not have detailed info on the demand per pation group,
- we multiplyby the obtained global demands by the statistics on delivery type  \[@DREES2021_naissance_accouchements\].
+ we multiply the obtained global demands by the estimated statistics on delivery type  \[@DREES2021_naissance_accouchements\].
 
 
 |Delivery type | fraction|
 |--------------|----------|
 | 1 | 0.5 |
+| 2a | 0.2 |
+| 2b | 0.2|
+| 3 | 0.1|
+| 1 | 0.50 |
 | 2a | 0.2 |
 | 2b | 0.2|
 | 3 | 0.1|

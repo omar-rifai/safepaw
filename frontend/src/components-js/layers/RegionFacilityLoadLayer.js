@@ -17,8 +17,6 @@ export function RegionFacilityLoadLayer({ loads, regions, selectedItem }) {
     if (facilityLoads.length === 0) {
         return null;
     }
-
-    console.log("In regionFacility loads", facilityLoads)
     return new ArcLayer
         ({
             id: 'region-to-facility',

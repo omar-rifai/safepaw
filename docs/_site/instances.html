@@ -211,7 +211,7 @@ window.Quarto = {
 <li>Additional open data for precise coordinates of the regions, departments and communes in France.</li>
 </ul>
 <p>The data sources have been synthesized in our project as two files 📄 <a href="https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_capacity.csv?ref_type=heads"><em>summary_maternity_capacity.csv</em></a> for the capacity in <code>beds</code> by facility and 📄 <a href="https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_labours.csv?ref_type=heads"><em>summary_maternity_labours.csv</em></a> to extract the demand by commune. Sample rows are shown below.</p>
-<div id="a1d3113b" class="cell" data-results="asis" data-execution_count="1">
+<div id="14973ad5" class="cell" data-results="asis" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 
@@ -392,7 +392,7 @@ window.Quarto = {
 <section id="verifying-compatibility" class="level4">
 <h4 class="anchored" data-anchor-id="verifying-compatibility">Verifying compatibility</h4>
 <p>We made sure that the two data sources were coherent by summing the number of deliveries by region across 10 years.</p>
-<div id="ef33568c" class="cell" data-results="asis" data-execution_count="2">
+<div id="b83f00ef" class="cell" data-results="asis" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -438,104 +438,109 @@ window.Quarto = {
 <tr class="even">
 <td><span class="math inline">\(R\)</span></td>
 <td>Regions</td>
-<td>French departments</td>
+<td>French communes</td>
 </tr>
 <tr class="odd">
+<td><span class="math inline">\(R\)</span></td>
+<td>Regions</td>
+<td>French communes</td>
+</tr>
+<tr class="even">
 <td><span class="math inline">\(H\)</span></td>
 <td>Facilities</td>
 <td>Facilities are the maternity wards</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(L\)</span></td>
 <td>Resources</td>
 <td>One resource (=bed/days) from <em>summary_maternity_capacity.csv</em></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(U_g\)</span></td>
 <td>Quality levels for group <span class="math inline">\(g\)</span></td>
 <td>One quality level</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(I_{gu}\)</span></td>
 <td>Pathways available for group <span class="math inline">\(g\)</span> quality level <span class="math inline">\(u\)</span></td>
 <td>Trivial as we have one unique pathway and quality level</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(O_{gk}\)</span></td>
 <td>Facilities able to handle deliveries of type <span class="math inline">\(g\)</span></td>
 <td>Extracted from facility <code>type</code> in <em>summary_maternity_capacity.csv</em></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(J_h\)</span></td>
 <td>Facilities transferable to from facility <span class="math inline">\(h\)</span></td>
 <td>All facilities of the same <code>type</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(N_{gka2}\)</span></td>
 <td>Next activity</td>
 <td>Trivial as only one activity</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(N_{gka1}\)</span></td>
 <td>All activities considered for potential transfer</td>
 <td>Trivial as only one activity</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(D\)</span></td>
 <td>Total demand over service area</td>
 <td>Total deliveries across the service area</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(d_{gr}\)</span></td>
 <td>Minimum deliveries of type <span class="math inline">\(g\)</span> in region <span class="math inline">\(r\)</span></td>
 <td>Calculated from <em>summary_maternity_labours.csv</em> (as explained below) (parameterizable)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(w_{rh}\)</span></td>
 <td>Preference for patients from region <span class="math inline">\(r\)</span> to deliver in facility <span class="math inline">\(h\)</span></td>
 <td>Affinities between regions (french departments) and maternity wards are calculated as <span class="math inline">\(\frac{1}{distance (km)}\)</span> from the maternity ward to the center of the center of the department <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(\underline{q}_g\)</span> / <span class="math inline">\(\overline{q}_g\)</span></td>
 <td>Minimum and maximum proportions of group <span class="math inline">\(g\)</span> to be treated</td>
 <td>Not constrained</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(\underline{q}_{gu}\)</span> / <span class="math inline">\(\overline{q}_{gu}\)</span></td>
 <td>Minimum and maximum proportions of group <span class="math inline">\(g\)</span> to be treated under quality <span class="math inline">\(u\)</span></td>
 <td>Not constrained</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(c_{gk}\)</span></td>
 <td>Benefit score of assigning a patient from group <span class="math inline">\(g\)</span> with the care pathway <span class="math inline">\(k\)</span></td>
 <td>Trivial as only one pathway</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(m_{hl}\)</span></td>
 <td>Total capacity of resource type l in healthcare facilities h</td>
 <td>Number of <code>beds</code> per facility times 365 <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(t_{gkal}\)</span></td>
 <td>Consumption of resource <span class="math inline">\(l=bed/days\)</span> required to perform labour of group <span class="math inline">\(g\)</span></td>
 <td>average length of stay for a delivery 4.6 [<span class="citation" data-cites="DREES2021_naissance_accouchements">DREES (<a href="#ref-DREES2021_naissance_accouchements" role="doc-biblioref">2021</a>)</span>]</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(\delta_l\)</span></td>
 <td>transfer unit between healthcare facilities for each resource (bed/days)</td>
 <td>365 <a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(b_{hl_{in}}\)</span> <span class="math inline">\(b_{hl_{out}}\)</span></td>
 <td>Maximum proportions of resource type l transferable in and out of facility <span class="math inline">\(h\)</span></td>
 <td>1 (parameterizable)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><span class="math inline">\(f\)</span></td>
 <td>Maximum allowable percentage of patients who may be transferred between facilities</td>
 <td>1</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><span class="math inline">\(\alpha\)</span></td>
 <td>weight of objective function</td>
 <td>1 (parameterizable)</td>
@@ -551,7 +556,7 @@ window.Quarto = {
 <p><span class="math display">\[\begin{equation}
 d_{gr} = \frac{\bar{L}_r}{\sum_{r} \bar{L}_r}
 \end{equation}\]</span></p>
-<p>This demand is global for all patient groups. As we do not have detailed info on the demand per pation group, we multiplyby the obtained global demands by the statistics on delivery type [<span class="citation" data-cites="DREES2021_naissance_accouchements">DREES (<a href="#ref-DREES2021_naissance_accouchements" role="doc-biblioref">2021</a>)</span>].</p>
+<p>This demand is global for all patient groups. As we do not have detailed info on the demand per pation group, we multiply the obtained global demands by the estimated statistics on delivery type [<span class="citation" data-cites="DREES2021_naissance_accouchements">DREES (<a href="#ref-DREES2021_naissance_accouchements" role="doc-biblioref">2021</a>)</span>].</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -562,19 +567,35 @@ d_{gr} = \frac{\bar{L}_r}{\sum_{r} \bar{L}_r}
 <tbody>
 <tr class="odd">
 <td>1</td>
-<td>0.20</td>
+<td>0.5</td>
 </tr>
 <tr class="even">
 <td>2a</td>
-<td>0.28</td>
+<td>0.2</td>
 </tr>
 <tr class="odd">
 <td>2b</td>
-<td>0.23</td>
+<td>0.2</td>
 </tr>
 <tr class="even">
 <td>3</td>
-<td>0.29</td>
+<td>0.1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>0.50</td>
+</tr>
+<tr class="even">
+<td>2a</td>
+<td>0.2</td>
+</tr>
+<tr class="odd">
+<td>2b</td>
+<td>0.2</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>0.1</td>
 </tr>
 </tbody>
 </table>

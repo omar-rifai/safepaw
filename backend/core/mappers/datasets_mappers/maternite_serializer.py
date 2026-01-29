@@ -8,12 +8,9 @@ def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
     """Creates `Region` instance using public data on French communes (Commune code and coordinates)"""
     import numpy as np
     df_geo_comms = read_geojson_projected("backend/data/open_data/communes-50m.geojson")
-    df_labours = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-    df_labours = df_labours[df_labours["dep_code"].isin(df_instance["dep_code"])]
-
     df_geo_comms_4326 = df_geo_comms.to_crs(epsg=4326)
     dict_comm_centroids = dict(zip(df_geo_comms_4326["code"], np.vstack([df_geo_comms_4326.geometry.centroid.x.values, df_geo_comms_4326.geometry.centroid.y.values]).T))
-    df_geo_comms = df_geo_comms[df_geo_comms["code"].isin(df_labours["comm_code"])]
+    df_geo_comms = df_geo_comms[df_geo_comms["departement"].isin(df_instance["dep_code"].unique())]
     communes_ids = list(df_geo_comms["code"].drop_duplicates().sort_values())
     list_regions = [Region(region_id=c_id, coordinates=dict_comm_centroids[c_id], facilities_affinity=_get_affinities(c_id, df_instance, df_geo_comms)) for c_id in communes_ids]
     return list_regions
@@ -70,7 +67,6 @@ def get_demand_lower_bounds(df_instance : pd.DataFrame) -> list[list[float]]:
     config = read_configs("data_maternity")
     labour_types_distribution =  config["labour_types_distribution"]
     df_labours = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-    #df_labours["comm_code"] = df_labours["comm_code"].astype(str)
     df_labours = df_labours[df_labours["dep_code"].isin(df_instance["dep_code"])]
     df_labours = df_labours.drop(columns=["region_code"])
     df_comm_avg = (df_labours
@@ -127,8 +123,8 @@ def _get_affinities(c_id: str, df_instance: pd.DataFrame, geo_comms):
     import geopandas as gpd
     comm_geom = geo_comms.loc[geo_comms["code"] == c_id, "geometry"].iloc[0]
     gdf_points = gpd.GeoSeries([Point(c) for c in df_instance["coords"]], crs="EPSG:4326").to_crs(geo_comms.crs)  
-    distances = gdf_points.distance(comm_geom)  # in km  
-    distances[distances == 0] = 0.1
+    distances = gdf_points.distance(comm_geom)
+    distances[distances == 0] = 100
     df_facilities = df_instance[["nofinesset"]].reset_index(drop=True).copy()
     df_facilities["score"] = 1 / distances
     return dict(zip(df_facilities["nofinesset"], df_facilities["score"]))

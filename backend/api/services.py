@@ -21,6 +21,7 @@ def check_executable(exec_name="highs"):
 def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) -> Tuple[str, str, list, list]:
     """Run the optimization problem with a the upper bound of allowed resource export set to `transfers`"""
     from backend.core.mappers.datasets_mappers.maternite_serializer import serialize_maternite
+    from backend.core.mappers.output_mappers import get_average_distance
     from backend.core.main import run_driver
     check_executable() # Check solver
     params_system, params_metadata = serialize_maternite(df_instance)
@@ -33,8 +34,9 @@ def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) ->
     else:
         list_patient_transfers = create_patientTransfers(results, params_system, params_metadata) if objective is not None else []
         list_facility_load = create_facilityStats(results, params_system, params_metadata) if objective is not None else []
-        list_facility_load_regions = create_facilityStats(results, params_system, params_metadata, by_region=True) if objective is not None else []
-    return status, f"{objective:.2f}", list_patient_transfers, list_facility_load, list_facility_load_regions, params_metadata["regions"]
+        list_facility_load_regions = create_facilityStats(results, params_system, params_metadata, by_region=True) if objective is not None else [] 
+        average_distance = get_average_distance(results, params_system)
+    return status, average_distance, list_patient_transfers, list_facility_load, list_facility_load_regions, params_metadata["regions"]
 
 
 

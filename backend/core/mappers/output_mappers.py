@@ -29,6 +29,16 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
     return list_facilities_loads
 
 
+def get_average_distance(results, params_system):
+    """Compute the weighted average distance (in kms) across all patients"""
+    avg_distance = 0
+    for r in params_system["R"]:
+        for h in params_system["H"]:
+            avg_distance += (1 / params_system["w_rh"][r][h]) * results["P_gkrah"]\
+                .sel({"facility":"facility_" + str(h), "region":"region_" + str(r)}).sum(dim=["group", "pathway", "activity"]).item()      
+    return round(avg_distance/1000,1)
+
+
 def get_transfers_in(results, facility, params_system):
     transfers_in = {}
     for l in params_system["L"]:

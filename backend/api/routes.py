@@ -62,12 +62,12 @@ async def optimize_maternite(payload = Body(...)) -> JSONResponse:
             "results": None
         }
     try:
-        status, objective_str, list_patient_transfers, list_facility_load, list_facility_load_regions, regions =\
+        status, avg_distance, list_patient_transfers, list_facility_load, list_facility_load_regions, regions =\
               run_optimization_maternite(df_instance, transfers)
 
         return {
                 "status": status,
-                "results": {"obj_val": objective_str,
+                "results": {"avg_distance": avg_distance,
                         "list_patient_transfers": [pt.as_geojson_feature() for pt in list_patient_transfers],
                         "list_facility_load": [pt.as_geojson_feature() for pt in list_facility_load],
                         "list_facility_load_regions" : [pt.as_geojson_feature() for pt in list_facility_load_regions],
