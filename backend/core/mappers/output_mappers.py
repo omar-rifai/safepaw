@@ -3,30 +3,62 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
                          by_group: bool = False,  by_pathway: bool = False, ) -> list:
     """Creates list of  FacilityStats instances, either total per facility or per facility per region."""
     from backend.core.data_models.output_models import FacilityStats
+    
     list_facilities_loads = []
-    for h in params_system["H"]:  
-        facility_coordinates = params_metadata["facilities"][str(h)]["coordinates"]
-        regions = [None] if not by_region else params_system["R"]
-        groups = [None] if not by_group else params_system["G"]
-        for g in groups:
-            pathways = [None] if not by_pathway else params_system["A_gk"][g]
-            for k in pathways:
-                for r in regions: 
-                    curr_load = calculate_facility_load(results, params_system, dims = {"facility":h, "region": r,
-                                                    "group": g, "pathway": k})
-                    facility_instance = FacilityStats(
-                        facility_id= params_metadata["facilities"][str(h)]["name"],
-                        facility_type=None,
-                        coordinates=facility_coordinates,
-                        patient_group=None,
-                        patient_pathway=None,
-                        region_id= str(r),
-                        load = curr_load ,
-                        capacities = calculate_facility_capacity(params_system, h),
-                        transfers_in = get_transfers_in(results=results, facility=h, params_system=params_system),
-                        transfers_out = get_transfers_out(results=results, facility=h, params_system=params_system))
-                    list_facilities_loads.append(facility_instance)
+    
+    Delta_plus = results["Delta_plus"]
+    Delta_moins = results["Delta_moins"]
+
+    df_loads = _compute_load(results, by_region,by_group,by_pathway, params_system)
+
+    Delta_plus_index = {(f,r): Delta_plus.sel({"facility":  str(f), "resource":   str(r)}).item()
+                   for f in Delta_plus.facility.values
+                   for r in Delta_plus.resource.values}
+    Delta_moins_index = {(f,r): Delta_moins.sel({"facility":  str(f), "resource":  str(r)}).item()
+                   for f in Delta_moins.facility.values
+                   for r in Delta_moins.resource.values}
+    
+    capacity_cache = {str(h): calculate_facility_capacity(params_system, h) for h in params_system["H"]}
+    transfers_in_cache = {str(h): get_transfers_in(h, Delta_plus_index, params_system) for h in params_system["H"]}
+    transfers_out_cache = {str(h): get_transfers_out(h, Delta_moins_index, params_system) for h in params_system["H"]}
+
+    list_facilities_loads = []
+    for _, row in df_loads.iterrows():
+        h = row["facility"].split("_")[1]
+        g = row.get("group", None)
+        k = row.get("pathway", None)
+        r = row.get("region", None)
+        if r: r=r.split("_")[1]
+        
+        facility_instance = FacilityStats(
+            facility_id=params_metadata["facilities"][h]["name"],
+            facility_type=None,
+            coordinates=params_metadata["facilities"][h]["coordinates"],
+            patient_group=g,
+            patient_pathway=k,
+            region_id=str(r),
+            load=row["load"],
+            capacities=capacity_cache[h],
+            transfers_in=transfers_in_cache[h],
+            transfers_out=transfers_out_cache[h]
+        )
+        list_facilities_loads.append(facility_instance)
     return list_facilities_loads
+
+def _compute_load(results, by_region, by_group, by_pathway, params_system):
+    P = results["P_gkrah"]
+    sum_dims = ["activity"]
+    if not by_region:
+        sum_dims.append("region")
+    if not by_group:
+        sum_dims.append("group")
+    if not by_pathway:
+        sum_dims.append("pathway")
+
+    P_summed = P.sum(dim=sum_dims)
+    df_loads = P_summed.to_dataframe(name="load").reset_index() 
+    df_loads["load"]  *= params_system["D"][0]
+    return df_loads
 
 
 def get_average_distance(results, params_system):
@@ -39,19 +71,17 @@ def get_average_distance(results, params_system):
     return round(avg_distance/1000,1)
 
 
-def get_transfers_in(results, facility, params_system):
-    transfers_in = {}
-    for l in params_system["L"]:
-        transfers_in[l] = results["Delta_plus"].sel({"facility": "facility_" + str(facility), "resource": "resource_" + str(l) }).item()
-    return transfers_in
+def get_transfers_in(facility, Delta_plus_index, params_system):
+    return {
+        l: Delta_plus_index[("facility_" + str(facility), "resource_" + str(l))]
+        for l in params_system["L"]
+    }
 
-
-def get_transfers_out(results, facility, params_system):
-    transfers_out = {}
-    for l in params_system["L"]:
-        transfers_out[l] = results["Delta_moins"].sel({"facility": "facility_" + str(facility), "resource": "resource_" + str(l) }).item()
-
-    return  transfers_out
+def get_transfers_out(facility, Delta_moins_index, params_system):
+    return {
+        l: Delta_moins_index[("facility_" + str(facility), "resource_" + str(l))]
+        for l in params_system["L"]
+    }
 
 def calculate_facility_capacity(params_system, facility_id):
     capacities = {}
@@ -59,22 +89,6 @@ def calculate_facility_capacity(params_system, facility_id):
         capacities[l] = params_system["m_hl"][facility_id][l]
     return capacities
 
-def calculate_facility_load(results : dict, params_system : dict, dims) -> dict:
-    """Calculated the used capacity by resource / facility"""
-
-    total_demand = params_system["D"][0]
-
-    all_dims = ["group", "pathway", "region", "facility"]
-    sum_dims = [x for x in all_dims if dims[x] is None]  + ["activity"]
-    sel_dims = {x: f"{x}_{dims[x]}" for x in all_dims if dims[x] is not None}
-
-    frac_used = results["P_gkrah"]\
-            .sel(**sel_dims)\
-                .sum(dim=sum_dims).item()
- 
-    load =  frac_used * total_demand 
-
-    return load
 
 def calculate_total_out(results:dict, h_id, params_system: dict) -> int:
     """ Return the number of patients transfered from one facililty to another"""

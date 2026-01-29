@@ -1,26 +1,35 @@
 import pandas as pd
 from typing import Union
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
-from backend.core.utils.data_utils import read_geojson_projected
+import geopandas as gpd
+import numpy as np
+
+DF_LABOURS_ALL = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+DF_GEO_COMMS = gpd.read_file("backend/data/open_data/communes-50m.geojson")
+DF_GEO_COMMS_METERS= DF_GEO_COMMS.to_crs(epsg=2154)
+centroids_m = DF_GEO_COMMS_METERS.geometry.centroid
+centroids_wgs84 = centroids_m.to_crs(epsg=4326)
+# Precompute centroids once
+DICT_COMM_CENTROIDS = dict(zip(
+    DF_GEO_COMMS["code"],
+    np.vstack([centroids_wgs84.x.values,
+               centroids_wgs84.y.values]).T
+))
 
 
 def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
     """Creates `Region` instance using public data on French communes (Commune code and coordinates)"""
-    import numpy as np
-    df_labours = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-    df_labours = df_labours[df_labours["dep_code"].isin(df_instance["dep_code"])]
-    df_geo_comms = read_geojson_projected("backend/data/open_data/communes-50m.geojson")
-    df_geo_comms_4326 = df_geo_comms.to_crs(epsg=4326)
-    dict_comm_centroids = dict(zip(df_geo_comms_4326["code"], np.vstack([df_geo_comms_4326.geometry.centroid.x.values, df_geo_comms_4326.geometry.centroid.y.values]).T))
-    df_geo_comms = df_geo_comms[df_geo_comms["code"].isin(df_labours["comm_code"])]
+    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance["dep_code"])]
+    df_geo_comms = DF_GEO_COMMS_METERS[DF_GEO_COMMS_METERS["code"].isin(df_labours["comm_code"])]
     communes_ids = list(df_geo_comms["code"].drop_duplicates().sort_values())
-    list_regions = [Region(region_id=c_id, coordinates=dict_comm_centroids[c_id], facilities_affinity=_get_affinities(c_id, df_instance, df_geo_comms)) for c_id in communes_ids]
+    affinities_dict = _get_affinities(df_instance, df_geo_comms)
+    list_regions = [Region(region_id=c_id, coordinates=DICT_COMM_CENTROIDS[c_id], facilities_affinity=affinities_dict[c_id]) for c_id in communes_ids]
     return list_regions
+
 
 def get_Facilities(df_instance : pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1) -> list[Facility]:
     """Creates Facility objects corresponding to unique nofinesset ids with (bed/days) as resource 
-    and availiable pathways dependent on to the facility type (1,2a,2b,3)
-    """
+    and availiable pathways dependent on to the facility type (1,2a,2b,3)"""
     all_ids = df_instance["nofinesset"].sort_values().to_list()
     linked_facilities_dict = {fid: [x for x in all_ids if x != fid] for fid in all_ids} 
     def row_to_facility(row):
@@ -68,8 +77,7 @@ def get_demand_lower_bounds(df_instance : pd.DataFrame) -> list[list[float]]:
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")
     labour_types_distribution =  config["labour_types_distribution"]
-    df_labours = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-    df_labours = df_labours[df_labours["dep_code"].isin(df_instance["dep_code"])]
+    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance["dep_code"])]
     df_labours = df_labours.drop(columns=["region_code"])
     df_comm_avg = (df_labours
         .groupby(["comm_code"], as_index=False)
@@ -117,29 +125,39 @@ def get_PatientPathways(df_instance : pd.DataFrame) -> list[Pathway]:
     return pathways
 
     
-def _get_affinities(c_id: str, df_instance: pd.DataFrame, geo_comms):
-    """Calculates scores linking facilities (nofinesset) to regions (french departments) based on distance
-    for the department the facility is in, score = 10 (high preference)
-    """
+def _get_affinities(df_instance: pd.DataFrame, df_geo_comms: gpd.GeoDataFrame):
+    """ Returns {facility_id: {community_id: score}} where score is 1/Euclidian distance"""
     from shapely.geometry import Point
     import geopandas as gpd
-    comm_geom = geo_comms.loc[geo_comms["code"] == c_id, "geometry"].iloc[0]
-    gdf_points = gpd.GeoSeries([Point(c) for c in df_instance["coords"]], crs="EPSG:4326").to_crs(geo_comms.crs)  
-    distances = gdf_points.distance(comm_geom)
-    distances[distances == 0] = 100
-    df_facilities = df_instance[["nofinesset"]].reset_index(drop=True).copy()
-    df_facilities["score"] = 1 / distances
-    return dict(zip(df_facilities["nofinesset"], df_facilities["score"]))
+    distances = np.zeros((len(df_instance), len(df_geo_comms)))
+    facilities_points = gpd.GeoSeries([Point(c) for c in df_instance["coords"]], crs="EPSG:4326").to_crs(df_geo_comms.crs)
+    for i, comm_geometry in enumerate(df_geo_comms.geometry):
+        distances[:, i] = facilities_points.distance(comm_geometry)
+    scores = 1 / np.where(distances == 0, 100, distances)
+    affinities_dict = {comm_id: dict(zip(df_instance["nofinesset"].tolist(), scores[:, i])) \
+                       for i, comm_id in enumerate(df_geo_comms["code"].tolist())}
+    return affinities_dict
 
 
 def serialize_maternite(df_instance : pd.DataFrame) -> Union[dict, dict]:
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.data_models.input_models import SystemData
+    import time
+    print("Init regions computations")
+    start = time.time()
     list_regions = get_Regions(df_instance)
+    end = time.time()
+    print("\n\n\n\nElapsed time:", end - start, "seconds")
+
     list_facilities = get_Facilities(df_instance)
-    maternite_data = SystemData(regions = list_regions, resources=get_Resources(df_instance), facilities= list_facilities, patients= get_PatientGroups(df_instance),\
-               pathways=get_PatientPathways(df_instance), activities= get_Activities(df_instance), instance=get_Instance(df_instance))
+    list_resources = get_Resources(df_instance)
+    list_patients = get_PatientGroups(df_instance)
+    list_pathways = get_PatientPathways(df_instance)
+    list_activities = get_Activities(df_instance)
+    instance = get_Instance(df_instance)
+    maternite_data = SystemData(regions = list_regions, resources=list_resources, facilities=list_facilities, patients=list_patients ,\
+               pathways=list_pathways, activities= list_activities, instance=instance)
     params_system, params_metadata = convert_dm_to_json(maternite_data)
     return params_system, params_metadata
 
