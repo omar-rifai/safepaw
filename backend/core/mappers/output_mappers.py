@@ -1,3 +1,4 @@
+import numpy as np 
 
 def create_facilityStats(results: dict, params_system: dict, params_metadata: dict, by_region: bool = False,
                          by_group: bool = False,  by_pathway: bool = False, ) -> list:
@@ -8,26 +9,32 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
     
     Delta_plus = results["Delta_plus"]
     Delta_moins = results["Delta_moins"]
+    facilities = Delta_plus.facility.values
+    resources = Delta_plus.resource.values
+    delta_plus_values = Delta_plus.values
+    delta_moins_values = Delta_moins.values
 
     df_loads = _compute_load(results, by_region,by_group,by_pathway, params_system)
 
-    Delta_plus_index = {(f,r): Delta_plus.sel({"facility":  str(f), "resource":   str(r)}).item()
-                   for f in Delta_plus.facility.values
-                   for r in Delta_plus.resource.values}
-    Delta_moins_index = {(f,r): Delta_moins.sel({"facility":  str(f), "resource":  str(r)}).item()
-                   for f in Delta_moins.facility.values
-                   for r in Delta_moins.resource.values}
+    Delta_plus_index = {(f,r): delta_plus_values[i, j]
+                   for i, f in enumerate(facilities)
+                   for j, r in enumerate(resources)}
+    
+    Delta_moins_index = {(f,r): delta_moins_values[i, j]
+                   for i, f in enumerate(facilities)
+                   for j, r in enumerate(resources)}
     
     capacity_cache = {str(h): calculate_facility_capacity(params_system, h) for h in params_system["H"]}
     transfers_in_cache = {str(h): get_transfers_in(h, Delta_plus_index, params_system) for h in params_system["H"]}
     transfers_out_cache = {str(h): get_transfers_out(h, Delta_moins_index, params_system) for h in params_system["H"]}
 
     list_facilities_loads = []
-    for _, row in df_loads.iterrows():
-        h = row["facility"].split("_")[1]
-        g = row.get("group", None)
-        k = row.get("pathway", None)
-        r = row.get("region", None)
+    
+    for row in df_loads.itertuples(index=False):
+        h = row.facility.split("_")[1]
+        g = getattr(row, "group", None)
+        k = getattr(row, "pathway", None)
+        r = getattr(row, "region", None)
         if r: r=r.split("_")[1]
         
         facility_instance = FacilityStats(
@@ -37,7 +44,7 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
             patient_group=g,
             patient_pathway=k,
             region_id=str(r),
-            load=row["load"],
+            load=row.load,
             capacities=capacity_cache[h],
             transfers_in=transfers_in_cache[h],
             transfers_out=transfers_out_cache[h]
@@ -63,11 +70,14 @@ def _compute_load(results, by_region, by_group, by_pathway, params_system):
 
 def get_average_distance(results, params_system):
     """Compute the weighted average distance (in kms) across all patients"""
-    avg_distance = 0
-    for r in params_system["R"]:
-        for h in params_system["H"]:
-            avg_distance += (1 / params_system["w_rh"][r][h]) * results["P_gkrah"]\
-                .sel({"facility":"facility_" + str(h), "region":"region_" + str(r)}).sum(dim=["group", "pathway", "activity"]).item()      
+    P_summed = results["P_gkrah"].sum(dim=["group", "pathway", "activity"])
+    df_loads = P_summed.to_dataframe(name="load").reset_index() 
+    h_idx = df_loads["facility"].str.split("_").str[1].astype(int).to_numpy()
+    r_idx = df_loads["region"].str.split("_").str[1].astype(int).to_numpy()
+    load = df_loads["load"].to_numpy()
+    w_rh = np.array(params_system["w_rh"])
+    distance = load / w_rh[r_idx, h_idx]
+    avg_distance = distance.sum()    
     return round(avg_distance/1000,1)
 
 
