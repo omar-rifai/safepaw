@@ -3,26 +3,50 @@ from typing import Union
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 import geopandas as gpd
 import numpy as np
+import time
 
+start = time.time()
 DF_LABOURS_ALL = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-DF_GEO_COMMS = gpd.read_file("backend/data/open_data/communes-50m.geojson")
+end = time.time()
+print(f"Reading DF_LABOURS_ALL {end-start}s")
+
+start = time.time()
+DF_GEO_COMMS = gpd.read_parquet("backend/data/open_data/communes-50m.parquet")
+end = time.time()
+print(f"Reading DF_GEO_COMMS {end-start}s")
+
+start = time.time()
 DF_GEO_COMMS_METERS= DF_GEO_COMMS.to_crs(epsg=2154)
+end = time.time()
+print(f"Converting to CRS {end-start}s")
+
+start = time.time()
 centroids_m = DF_GEO_COMMS_METERS.geometry.centroid
+end = time.time()
+print(f"Fetching centroids {end-start}s")
+
+start = time.time()
 centroids_wgs84 = centroids_m.to_crs(epsg=4326)
+end = time.time()
+print(f"Converting centroids to crs {end-start}s")
+
+start = time.time()
 # Precompute centroids once
 DICT_COMM_CENTROIDS = dict(zip(
     DF_GEO_COMMS["code"],
     np.vstack([centroids_wgs84.x.values,
                centroids_wgs84.y.values]).T
 ))
+end = time.time()
+print(f"Computing dict of centroids {end-start}s")
 
 
 def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
     """Creates `Region` instance using public data on French communes (Commune code and coordinates)"""
     df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance["dep_code"])]
     df_geo_comms = DF_GEO_COMMS_METERS[DF_GEO_COMMS_METERS["code"].isin(df_labours["comm_code"])]
-    communes_ids = list(df_geo_comms["code"].drop_duplicates().sort_values())
     affinities_dict = _get_affinities(df_instance, df_geo_comms)
+    communes_ids = list(df_geo_comms["code"].drop_duplicates().sort_values())
     list_regions = [Region(region_id=c_id, coordinates=DICT_COMM_CENTROIDS[c_id], facilities_affinity=affinities_dict[c_id]) for c_id in communes_ids]
     return list_regions
 
