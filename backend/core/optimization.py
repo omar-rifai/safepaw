@@ -1,39 +1,5 @@
 
 from pulp import *
-#####################################
-### TOOLS TO CREATE THE VARIABLES ###
-#####################################
-
-
-
-# Create an array representing K_g that is needed for the creation of the variables in Pulp
-    
-def defineK2(K_g):
-    k_max = 0
-    for i in range(len(K_g)):
-        k = K_g[i]
-        if k > k_max:
-            k_max = k   
-    K2 = []
-    for i in range(k_max):
-        K2.append(i)
-    return K2
-
-
-
-# Create an array representing A_{g,k} that is needed for the creation of the variables in Pulp
-
-def defineA2(A_gk):
-    a_max = 0
-    for i in range(len(A_gk)):
-        for j in range(len(A_gk[i])):
-            a = A_gk[i][j]
-            if a > a_max:
-                a_max = a
-    A2 = []
-    for i in range(a_max):
-        A2.append(i)
-    return A2
 
 
 
@@ -45,14 +11,24 @@ def defineA2(A_gk):
 
 # Define the objective function for LP
     
-def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, params_system):
-    LP += (1 - params_system["alpha"][0]) * lpSum([params_system["c_gk"][i][j] * params_system["D"][0] * P_gk[i][j] 
+def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, params_system, mode):
+    
+    match mode:
+        case "default":
+            LP += (1 - params_system["alpha"][0]) * lpSum([params_system["c_gk"][i][j] * params_system["D"][0] * P_gk[i][j] 
                                 for i in range(len(params_system["G"])) 
                                     for j in range(params_system["K_g"][i])]) + params_system["alpha"][0] * lpSum([params_system["D"][0] * P[g2][k2][r2][a2][h2] * params_system["w_rh"][r2][h2]  
                                         for g2 in range(len(params_system["G"])) for k2 in range(params_system["K_g"][g2]) 
                                             for r2 in params_system["R"] for a2 in range(params_system["A_gk"][g2][k2]) for h2 in range(len(params_system["H"]))]) \
-                                                -  1e-6*lpSum([Delta_plus[h][l] for h in params_system["H"] for l in params_system["L"]])\
-                                                    -  1e-6*lpSum([Delta_minus[h][l] for h in params_system["H"] for l in params_system["L"]])
+  
+        case "maternity":
+            LP +=  params_system["alpha"][0] * lpSum([params_system["D"][0] * P[g2][k2][r2][a2][h2] * params_system["w_rh"][r2][h2]
+                                                      for g2 in range(len(params_system["G"])) for k2 in range(params_system["K_g"][g2])
+                                                      for r2 in params_system["R"] for a2 in range(params_system["A_gk"][g2][k2]) for h2 in range(len(params_system["H"]))]) \
+                                                        -  1e-6*lpSum([Delta_plus[h][l] for h in params_system["H"] for l in params_system["L"]])\
+                                                            -  1e-6*lpSum([Delta_minus[h][l] for h in params_system["H"] for l in params_system["L"]])
+        case _:
+            raise ValueError(f"Optimization mode {mode} is undefined for objective function.")
 
 
 
@@ -67,18 +43,18 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, params_system):
 
 # Define \sum_h P_{g,k,r,a,h} = P_{g,k,r} as an lpSum
 
-def const_P_gkr(P, g, k, r, a, H, P_gkr):
+def const_P_gkr(P, P_gkr, H, g, k, r, a):
     return lpSum([P[g][k][r][a][h] for h in H]) == P_gkr[g][k][r]
     
 # Define such constraint for every sub-type (g,k,r) and every activity a:
 #    - For every g \in G, k \in K_g, r \in R, a \in A_{g,k}
 
-def def_const_P_gkr(LP, G, K_g, R, A_gk, H, P_gkr, P):
-    for g in G:
-        for k in range(K_g[g]):
-            for r in R:
-                for a in range(A_gk[g][k]):
-                    LP += const_P_gkr(P, g, k, r, a, H, P_gkr)
+def def_const_P_gkr(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for k in range(params_system["K_g"][g]):
+            for r in params_system["R"]:
+                for a in range(params_system["A_gk"][g][k]):
+                    LP += const_P_gkr(vars_system.P, vars_system.P_gkr, params_system["H"], g, k, r, a)
 
 
 
@@ -92,45 +68,46 @@ def const_P_gk(P_gkr, P_gk, g, k, R):
 # Define such constraint for every type (g,k):
 #    - For every g \in G, k \in K_g
 
-def def_const_P_gk(LP, G, K_g, R, P_gkr, P_gk):
-    for g in G:
-        for k in range(K_g[g]): 
-            LP += const_P_gk(P_gkr, P_gk, g, k, R)
+def def_const_P_gk(LP, vars_system, params_system) :
+    for g in params_system["G"]:
+        for k in range(params_system["K_g"][g]): 
+            LP += const_P_gk(vars_system.P_gkr, vars_system.P_gk, g, k, params_system["R"])
 
 
 
 # DEFINE THE CONSTRAINTS ON THE DEMANDS d_{g,r}
 
-# Define \sum_k P_{g,k,r} == d_{g,r} as an lpSum
+# Define \sum_k P_{g,k,r} >= d_{g,r} as an lpSum
 
 def const_d_gr(P_gkr, g, K_g, r, d):
+    return lpSum([P_gkr[g][k][r] for k in range(K_g[g])]) >= d
+    
+# Define such constraint for every type-ish (g,r):
+#    - For every g \in G, r \in R
+
+def def_const_d_gr(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for r in params_system["R"]:
+            LP += const_d_gr(vars_system.P_gkr, g, params_system["K_g"], r, params_system["d_gr"][g][r])
+
+
+
+# DEFINE THE CONSTRAINTS ON THE DEMANDS d_{g,r} for maternity data
+
+# Define \sum_k P_{g,k,r} == d_{g,r} as an lpSum
+
+def const_d_gr_maternity(P_gkr, g, K_g, r, d):
     return lpSum([P_gkr[g][k][r] for k in range(K_g[g])]) == d
     
 # Define such constraint for every type-ish (g,r):
 #    - For every g \in G, r \in R
 
-def def_const_d_gr(LP, P_gkr, d_gr, G, K_g, R):
-    for g in G:
-        for r in R:
-            LP += const_d_gr(P_gkr, g, K_g, r, d_gr[g][r])
+def def_const_d_gr_maternity(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for r in params_system["R"]:
+            LP += const_d_gr_maternity(vars_system.P_gkr, g, params_system["K_g"], r, params_system["d_gr"][g][r])
 
 
-
-# DEFINE THE RESOURCES CONSTRAINTS ON THE m_{h,l} USING THE t_{g,k,a,l}
-# This is the constraint to use when the transfers of resources are not allowed
-    
-# Define \sum_g \sum_k \sum_r \sum_a (D \cdot P_{g,k,r,a,h}) \cdot t_{g,k,a,l} \leq m_{h,l} as an lpSum
-
-def const_m_hl(P, G, K_g, R, A_gk, h, l, t_gkal, m, D):
-    return lpSum([D[0] * P[g][k][r][a][h] * t_gkal[g][k][a][l] for g in G for k in range(K_g[g]) for r in R for a in range(A_gk[g][k])]) <= m
-
-# Define such constraint for every couple (h,l):
-#    - For every h \in H, l \in L
-
-def def_const_m_hl(LP, P, G, K_g, R, A_gk, H, t_gkal, m_hl, L, D):
-    for h in H:
-        for l in L:
-            LP += const_m_hl(P, G, K_g, R, A_gk, h, l, t_gkal, m_hl[h][l], D)
 
 
 
@@ -144,9 +121,9 @@ def const_q_g(P_gk, g, K_g, under_q, G):
 # Define such constraint for every g:
 #    - For every g \in G
 
-def def_const_q_g(LP, P_gk, G, K_g, Under_q_g):
-    for g in G:
-        LP += const_q_g(P_gk, g, K_g, Under_q_g[g], G)
+def def_const_q_g(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        LP += const_q_g(vars_system.P_gk, g, params_system["K_g"], params_system["Under_q_g"][g], params_system["G"])
 
 
 
@@ -160,9 +137,9 @@ def const_Overq_g(P_gk, g, K_g, over_q, G):
 # Define such constraint for every g:
 #    - For every g
 
-def def_const_Overq_g(LP, P_gk, G, K_g, Over_q_g):
-    for g in G:
-        LP += const_Overq_g(P_gk, g, K_g, Over_q_g[g], G)
+def def_const_Overq_g(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        LP += const_Overq_g(vars_system.P_gk, g, params_system["K_g"], params_system["Over_q_g"][g], params_system["G"])
 
 
 
@@ -177,13 +154,13 @@ def const_q_gk(P_gk, g_2, K_g, M2, q):
 #    - For every g \in G, u \in U
 # (Note that U is not used)
 
-def def_const_q_gk(LP, P_gk, G, K_g, U, I_gu, Under_q_gu):
-    for g in G:
-        for u in range(U[g]):
+def def_const_q_gk(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for u in range(params_system["U"][g]):
             M2 = []
-            for c in I_gu[g][u]:
+            for c in params_system["I_gu"][g][u]:
                 M2.append([g, c])
-            LP += const_q_gk(P_gk, g, K_g, M2, Under_q_gu[g][u])
+            LP += const_q_gk(vars_system.P_gk, g, params_system["K_g"], M2, params_system["Under_q_gu"][g][u])
 
 
 
@@ -198,13 +175,13 @@ def const_Overq_gk(P_gk, g_2, K_g, M2, over_q):
 #    - For every g \in G, u \in U
 # (Note that U is not used)
 
-def def_const_Overq_gk(LP, P_gk, G, K_g, U, I_gu, Over_q_gu):
-    for g in G:
-        for u in range(U[g]):
+def def_const_Overq_gk(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for u in range(params_system["U"][g]):
             M2 = []
-            for c in I_gu[g][u]:
+            for c in params_system["I_gu"][g][u]:
                 M2.append([g, c])
-            LP += const_Overq_gk(P_gk, g, K_g, M2, Over_q_gu[g][u])
+            LP += const_Overq_gk(vars_system.P_gk, g, params_system["K_g"], M2, params_system["Over_q_gu"][g][u])
 
 
 
@@ -218,14 +195,14 @@ def const_O_gk(P, g, k, r, a, h):
 # Define such constraint for every (g,k,r,h):
 #    - For every g \in G, k \in K_g, r \in R, h \in H st. h \notin O_{g,k}
 
-def def_const_O_gk(LP, P, G, K_g, R, A_gk, H, O_gk):
-    for g in G:
-        for k in range(K_g[g]):
-            for r in R:
-                for a in range(A_gk[g][k]):
-                    for h in H:
-                        if h not in O_gk[g][k]:
-                            LP += const_O_gk(P, g, k, r, a, h)
+def def_const_O_gk(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for k in range(params_system["K_g"][g]):
+            for r in params_system["R"]:
+                for a in range(params_system["A_gk"][g][k]):
+                    for h in params_system["H"]:
+                        if h not in params_system["O_gk"][g][k]:
+                            LP += const_O_gk(vars_system.P, g, k, r, a, h)
 
 
 
@@ -239,15 +216,15 @@ def const_J_h(P, h, g, k, r, a1, a2, J2_h):
 # Define such constraint for every (g, k, r, a, a', h):
 #    - For every g \in G, k \in K_g, r \in R, a, a' \in A_{g,k}, a \neq a', h \in H
 
-def def_const_J_h(LP, P, H, G, K_g, A_gk, J_h, R):
-    for g in G:
-        for k in range(K_g[g]):
-            for r in R:
-                for a1 in range(A_gk[g][k] - 1):
+def def_const_J_h(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for k in range(params_system["K_g"][g]):
+            for r in params_system["R"]:
+                for a1 in range(params_system["A_gk"][g][k] - 1):
                     a2 = a1 + 1
-                    for h in H:
-                        J2_h = J_h[h]
-                        LP += const_J_h(P, h, g, k, r, a1, a2, J2_h)
+                    for h in params_system["H"]:
+                        J2_h = params_system["J_h"][h]
+                        LP += const_J_h(vars_system.P, h, g, k, r, a1, a2, J2_h)
 
 
 
@@ -261,32 +238,16 @@ def const_Q_gkrah(Q, g, k, r, a, a_prime, h, P):
 # Define such constraint for every (g,k,r,a,h):
 #    - For every g \in G, k \in K_g, r \in R, a \in [A_{g,k} - 1], h \in H
 
-def def_const_Q_gkrah(LP, Q, G, K_g, R, A_gk, H, P, N_gka_1, N_gka_2):
-    for g in G:
-        for k in range(K_g[g]):
-            for r in R:
-                for a in N_gka_1[g][k]:
-                    index_a = N_gka_1[g][k].index(a)
-                    a_prime = N_gka_2[g][k][index_a]
-                    for h in H:
-                        LP += const_Q_gkrah(Q, g, k, r, a, a_prime, h, P)
+def def_const_Q_gkrah(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for k in range(params_system["K_g"][g]):
+            for r in params_system["R"]:
+                for a in params_system["N_gka_1"][g][k]:
+                    index_a = params_system["N_gka_1"][g][k].index(a)
+                    a_prime = params_system["N_gka_2"][g][k][index_a]
+                    for h in params_system["H"]:
+                        LP += const_Q_gkrah(vars_system.Q, g, k, r, a, a_prime, h, vars_system.P)
 
-
-
-# DEFINE THE CONSTRAINTS ON THE f_{g,k}
-
-# Define \sum_r \sum_a \sum_h Q_{g,k,r,a,h} \leq (|A_{g,k}| - 1) \cdot a_{g,k} \cdot P_{g,k} as an lpSum
-
-def const_f_gk(Q, g, k, K_g, R, A_gk, H, f_gk, P_gk, N_gka_1):
-    return lpSum([Q[g][k][r][a][h] for r in R for a in N_gka_1[g][k] for h in H]) <= len(N_gka_1[g][k]) * f_gk[g][k] * P_gk[g][k]
-    
-# Define such constraint for every type (g,k):
-#    - For every g \in G, k \in K_g
-
-def def_const_f_gk(LP, Q, G, K_g, R, A_gk, H, f_gk, P_gk, N_gka_1):
-    for g in G:
-        for k in range(K_g[g]):
-            LP += const_f_gk(Q, g, k, K_g, R, A_gk, H, f_gk, P_gk, N_gka_1)
 
 
 
@@ -294,19 +255,21 @@ def def_const_f_gk(LP, Q, G, K_g, R, A_gk, H, f_gk, P_gk, N_gka_1):
 
 # Define \sum_g \sum_k \sum_r \sum_a \sum_h Q_{g,k,r,a,h} \leq f \cdot (\sum_g \sum_k n_g \cdot P_{g,k}) as an lpSum
 
-def const_f(Q, G, K_g, R, A_gk, H, f, P_gk, N_gka_1, n_g):
-    return lpSum([Q[g][k][r][a][h] for g in G for k in range(K_g[g]) for r in R for a in N_gka_1[g][k] for h in H]) <= f[0] * lpSum([P_gk[g][k] * n_g[g] for g in G for k in range(K_g[g])])
+def const_f(Q, P_gk, n_g, params_system):
+    return lpSum([Q[g][k][r][a][h] for g in params_system["G"] for k in range(params_system["K_g"][g]) \
+                  for r in params_system["R"] for a in params_system["N_gka_1"][g][k] for h in params_system["H"]]) \
+                    <= params_system["p_transf"][0] * lpSum([P_gk[g][k] * n_g[g] for g in params_system["G"] for k in range(params_system["K_g"][g])])
 
 # Define such constraint for only one $f$:
 
-def def_const_f(LP, Q, G, K_g, R, A_gk, H, f, P_gk, N_gka_1):
-    n_g = [0 for _ in G]
-    for g in G:
-        for k in range(K_g[g]):
-            n_gk = len(N_gka_1[g][k])
+def def_const_f(LP, vars_system, params_system):
+    n_g = [0 for _ in params_system["G"]]
+    for g in params_system["G"]:
+        for k in range(params_system["K_g"][g]):
+            n_gk = len(params_system["N_gka_1"][g][k])
             if n_gk > n_g[g]:
                 n_g[g] = n_gk
-    LP += const_f(Q, G, K_g, R, A_gk, H, f, P_gk, N_gka_1, n_g)
+    LP += const_f(vars_system.Q, vars_system.P_gk, n_g, params_system)
     
 
 
@@ -321,13 +284,13 @@ def const_Q(Q, g, k, r, a, h):
 # Define such constraint for every (g,k,r,a,h):
 #    - For every g \in G, k \in K_g, r \in R, a \in A_{g,k}, h \in H
 
-def def_const_Q(LP, G, K_g, R, A_gk, H, Q):
-    for g in G:
-        for k in range(K_g[g]):
-            for r in R:
-                for a in range(A_gk[g][k]):
-                    for h in H:
-                        LP += const_Q(Q, g, k, r, a, h)
+def def_const_Q(LP, vars_system, params_system):
+    for g in params_system["G"]:
+        for k in range(params_system["K_g"][g]):
+            for r in params_system["R"]:
+                for a in range(params_system["A_gk"][g][k]):
+                    for h in params_system["H"]:
+                        LP += const_Q(vars_system.Q, g, k, r, a, h)
 
 
 
@@ -336,16 +299,19 @@ def def_const_Q(LP, G, K_g, R, A_gk, H, Q):
     
 # Define \sum_g \sum_k \sum_r \sum_a X_{g,k,r,a,h} \cdot t_{g,k,a,l} \leq m_{h,l} + \Delta_{h,l}^{+} - \Delta_{h,l}^{-} as an lpSum
 
-def const_m_hl_2(P, G, K_g, R, A_gk, h, l, t_gkal, m, D, Delta_plus, Delta_moins):
-    return lpSum([D[0] * P[g][k][r][a][h] * t_gkal[g][k][a][l] for g in G for k in range(K_g[g]) for r in R for a in range(A_gk[g][k])]) <= m + Delta_plus[h][l] - Delta_moins[h][l]
+def const_m_hl(P, G, K_g, R, A_gk, h, l, t_gkal, m, D, Delta_plus, Delta_moins):
+    return lpSum([D[0] * P[g][k][r][a][h] * t_gkal[g][k][a][l] 
+                  for g in G for k in range(K_g[g]) for r in R for a in range(A_gk[g][k])]) \
+                    <= m + Delta_plus[h][l] - Delta_moins[h][l]
 
 # Define such constraint for every h and every l:
 #    - For every h \in H, l \in L
 
-def def_const_m_hl_2(LP, P, G, K_g, R, A_gk, H, t_gkal, m_hl, L, D, Delta_plus, Delta_moins):
-    for h in H:
-        for l in L:
-            LP += const_m_hl_2(P, G, K_g, R, A_gk, h, l, t_gkal, m_hl[h][l], D, Delta_plus, Delta_moins)
+def def_const_m_hl(LP, vars_system, params_system) :
+    for h in params_system["H"]:
+        for l in params_system["L"]:
+            LP += const_m_hl(vars_system.P, params_system["G"], params_system["K_g"], params_system["R"], params_system["A_gk"],\
+                                h, l, params_system["t_gkal"], params_system["m_hl"][h][l], params_system["D"], vars_system.Delta_plus, vars_system.Delta_moins)
 
 
 
@@ -359,9 +325,9 @@ def const_delta_zero(Delta_plus, Delta_moins, H, l):
 # Define such constraint for every l:
 #    - For every l \in L
 
-def def_const_delta_zero(LP, Delta_plus, Delta_moins, H, L):
-    for l in L:
-        LP += const_delta_zero(Delta_plus, Delta_moins, H, l)
+def def_const_delta_zero(LP, vars_system, params_system):
+    for l in params_system["L"]:
+        LP += const_delta_zero(vars_system.Delta_plus, vars_system.Delta_moins, params_system["H"], l)
 
 
 
@@ -375,10 +341,10 @@ def const_delta_plus_delta(Delta_plus, z_hl_plus, h, l, delta):
 # Define such constraint for every couple (h,l):
 #    - For every h \in H, l \in L
 
-def def_const_delta_plus_delta(LP, Delta_plus, z_hl_plus, H, L, delta_l):
-    for h in H:
-        for l in L:
-            LP += const_delta_plus_delta(Delta_plus, z_hl_plus, h, l, delta_l[l])
+def def_const_delta_plus_delta(LP, vars_system, params_system):
+    for h in params_system["H"]:
+        for l in params_system["L"]:
+            LP += const_delta_plus_delta(vars_system.Delta_plus, vars_system.z_hl_plus, h, l, params_system["delta_l"][l])
 
 
 
@@ -392,10 +358,10 @@ def const_delta_moins_delta(Delta_moins, z_hl_moins, h, l, delta):
 # Define such constraint for every couple (h,l):
 #    - For every h \in H, l \in L
 
-def def_const_delta_moins_delta(LP, Delta_moins, z_hl_moins, H, L, delta_l):
-    for h in H:
-        for l in L:
-            LP += const_delta_moins_delta(Delta_moins, z_hl_moins, h, l, delta_l[l])
+def def_const_delta_moins_delta(LP, vars_system, params_system):
+    for h in params_system["H"]:
+        for l in params_system["L"]:
+            LP += const_delta_moins_delta(vars_system.Delta_moins, vars_system.z_hl_moins, h, l, params_system["delta_l"][l])
 
 
 
@@ -409,10 +375,10 @@ def const_delta_plus_b_hl_in(Delta_plus, m_hl, h, l, b_hl_in):
 # Define such constraint for every couple (h,l):
 #    - For every h \in H, l \in L
 
-def def_const_delta_plus_b_hl_in(LP, Delta_plus, m_hl, H, L, b_hl_in):
-    for h in H:
-        for l in L:
-            LP += const_delta_plus_b_hl_in(Delta_plus, m_hl, h, l, b_hl_in)
+def def_const_delta_plus_b_hl_in(LP, vars_system, params_system):
+    for h in params_system["H"]:
+        for l in params_system["L"]:
+            LP += const_delta_plus_b_hl_in(vars_system.Delta_plus, params_system["m_hl"], h, l, params_system["b_hl_in"])
 
 
 #TOODO add another variable for the delta moins upper bound constraint
@@ -427,70 +393,38 @@ def const_delta_moins_b_hl_out(Delta_moins, m_hl, h, l, b_hl_out):
 # Define such constraint for every couple (h,l):
 #    - For every h \in H, l \in L
 
-def def_const_delta_moins_b_hl_out(LP, Delta_moins, m_hl, H, L, b_hl_out):
-    for h in H:
-        for l in L:
-            LP += const_delta_moins_b_hl_out(Delta_moins, m_hl, h, l, b_hl_out)
+def def_const_delta_moins_b_hl_out(LP, vars_system, params_system):
+    for h in params_system["H"]:
+        for l in params_system["L"]:
+            LP += const_delta_moins_b_hl_out(vars_system.Delta_moins, params_system["m_hl"], h, l, params_system["b_hl_out"])
 
 
 
 
 #################################################
-### SUPER FUNCTION TO CALL EVERYTHING AT ONCE ###
+###    CHOOSE SET OF CONSTRAINTS TO INCLUD    ###
 #################################################
 
 
 
-def change_Under_Over(G, U, Under_q_gu, Over_q_gu):
+def declare_constraints(LP, vars_system, params_system, mode):
 
-    Under = [[0.0 for _ in range(U[g])] for g in range(len(G))]
-    for g in range(len(G)):
-        sum_u = 0.0
-        for u in range(U[g]):
-            if u < U[g] - 1:
-                sum_u += Under_q_gu[g][u]
-                Under[g][u] = Under_q_gu[g][u]
-            else:
-                Under[g][u] = 1.0 - sum_u
-    return Under, Under
+    CONSTRAINTS_DEFAULT=[def_const_P_gkr, def_const_P_gk, def_const_d_gr, def_const_q_g, def_const_Overq_g, def_const_q_gk, def_const_Overq_gk,
+                           def_const_O_gk, def_const_J_h, def_const_Q_gkrah, def_const_f, def_const_Q, def_const_m_hl, def_const_delta_zero,
+                           def_const_delta_plus_delta, def_const_delta_moins_delta, def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
+    
+    CONSTRAINTS_MATERNITY=[def_const_P_gkr, def_const_P_gk, def_const_d_gr_maternity, def_const_q_g, def_const_Overq_g, def_const_q_gk, def_const_Overq_gk,
+                           def_const_O_gk, def_const_J_h, def_const_Q_gkrah, def_const_f, def_const_Q, def_const_m_hl, def_const_delta_zero,
+                           def_const_delta_plus_delta, def_const_delta_moins_delta, def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
 
-
-def declare_constraints(LP, P_gk, G, K_g, P_gkr, R, P, A_gk, H, Q, Delta_plus,
-                        Delta_moins, L, z_hl_plus, z_hl_moins, d_gr, Under_q_g, Over_q_g,
-                        U, I_gu, Under_q_gu, Over_q_gu, O_gk, J_h, N_gka_1, N_gka_2,
-                        f, t_gkal, m_hl, D, delta_l, b_hl_in, b_hl_out):
-
-
-    def_const_P_gkr(LP, G, K_g, R, A_gk, H, P_gkr, P)
-    def_const_P_gk(LP, G, K_g, R, P_gkr, P_gk) 
-    def_const_d_gr(LP, P_gkr, d_gr, G, K_g, R)
- 
-    
-    # Line below to use when the resources' transfers are not allowed, otherwise (when the resources' transfers are allowed) use "def_const_m_hl_2(..."
-    #def_const_m_hl(LP, P, G, K_g, R, A_gk, H, t_gkal, m_hl, L, D) 
-    
-    def_const_q_g(LP, P_gk, G, K_g, Under_q_g)
-    def_const_Overq_g(LP, P_gk, G, K_g, Over_q_g)
-    def_const_q_gk(LP, P_gk, G, K_g, U, I_gu, Under_q_gu)
-    def_const_Overq_gk(LP, P_gk, G, K_g, U, I_gu, Over_q_gu)
-    def_const_O_gk(LP, P, G, K_g, R, A_gk, H, O_gk)
-    def_const_J_h(LP, P, H, G, K_g, A_gk, J_h, R)
-    def_const_Q_gkrah(LP, Q, G, K_g, R, A_gk, H, P, N_gka_1, N_gka_2)
-    
-    
-    # Line below was the old model (with f_{g,k} for every pathway (g,k)) instead of the new model (with the global f)
-    #def_const_f_gk(LP, Q, G, K_g, R, A_gk, H, f_gk, P_gk, N_gka_1)
-    
-    def_const_f(LP, Q, G, K_g, R, A_gk, H, f, P_gk, N_gka_1)
-    def_const_Q(LP, G, K_g, R, A_gk, H, Q)
-
-    
-    # Set the new constraints
-    
-    # Line below to use when the resources' transfers are allowed
-    def_const_m_hl_2(LP, P, G, K_g, R, A_gk, H, t_gkal, m_hl, L, D, Delta_plus, Delta_moins) 
-    def_const_delta_zero(LP, Delta_plus, Delta_moins, H, L)
-    def_const_delta_plus_delta(LP, Delta_plus, z_hl_plus, H, L, delta_l)
-    def_const_delta_moins_delta(LP, Delta_moins, z_hl_moins, H, L, delta_l)
-    def_const_delta_plus_b_hl_in(LP, Delta_plus, m_hl, H, L, b_hl_in)
-    def_const_delta_moins_b_hl_out(LP, Delta_moins, m_hl, H, L, b_hl_out)
+    match mode:
+        case "default":
+            print("Defining default set of constraints.")
+            for fn in CONSTRAINTS_DEFAULT:
+                fn(LP, vars_system, params_system)
+        case "maternity":
+            print("Defining constraints for maternity instance.")
+            for fn in CONSTRAINTS_MATERNITY:
+                fn(LP, vars_system, params_system)
+        case _:
+            raise ValueError(f"Optimization mode {mode} is undefined for constraints.")

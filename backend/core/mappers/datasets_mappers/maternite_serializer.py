@@ -3,42 +3,18 @@ from typing import Union
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 import geopandas as gpd
 import numpy as np
-import time
 
-start = time.time()
 DF_LABOURS_ALL = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-end = time.time()
-print(f"Reading DF_LABOURS_ALL {end-start}s")
-
-start = time.time()
 DF_GEO_COMMS = gpd.read_parquet("backend/data/open_data/communes-50m.parquet")
-end = time.time()
-print(f"Reading DF_GEO_COMMS {end-start}s")
-
-start = time.time()
 DF_GEO_COMMS_METERS= DF_GEO_COMMS.to_crs(epsg=2154)
-end = time.time()
-print(f"Converting to CRS {end-start}s")
-
-start = time.time()
 centroids_m = DF_GEO_COMMS_METERS.geometry.centroid
-end = time.time()
-print(f"Fetching centroids {end-start}s")
-
-start = time.time()
 centroids_wgs84 = centroids_m.to_crs(epsg=4326)
-end = time.time()
-print(f"Converting centroids to crs {end-start}s")
-
-start = time.time()
 # Precompute centroids once
 DICT_COMM_CENTROIDS = dict(zip(
     DF_GEO_COMMS["code"],
     np.vstack([centroids_wgs84.x.values,
                centroids_wgs84.y.values]).T
 ))
-end = time.time()
-print(f"Computing dict of centroids {end-start}s")
 
 
 def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
@@ -87,8 +63,8 @@ def get_Instance(df_instance : pd.DataFrame) -> Instance:
             d_gr = d_gr,
             under_q_g = [config["min_fraction_to_be_treated"] for i in range(n_g)],
             over_q_g = [config["max_fraction_to_be_treated"] for i in range(n_g)],
-            under_q_gu = [[config["min_fraction_to_be_treated"]]*n_g],
-            over_q_gu = [[config["max_fraction_to_be_treated"]]*n_g],
+            under_q_gu = [[config["min_fraction_to_be_treated"]]for i in range(n_g)],
+            over_q_gu = [[config["max_fraction_to_be_treated"]]for i in range(n_g)],
             p_transf = config["allowed_transfer_fraction"],
             delta_l = [config["resource_transfer_unit"]],
             alpha = config["alpha"]
@@ -197,10 +173,4 @@ def read_maternity() -> pd.DataFrame:
     .agg(deliveries_per_facility=("deliveries_per_facility", "mean"),
         beds=("beds", "first")))
     df = df.drop_duplicates(subset=["nofinesset"], keep="first")
-
-    # for debugging
-
-    #test_f = ["370000861", "370007569", "410000020"]
-    #df = df[df["dep_code"].isin(["37", "41"])]
-    #df = df[df["nofinesset"].isin(test_f)]
     return df

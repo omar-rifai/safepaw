@@ -22,19 +22,18 @@ def extract_values(obj):
         return pulp.value(obj)
 
 
-def package_results(P_gk, P_gkr, P, Q, Delta_plus, Delta_moins, z_hl_plus, z_hl_moins):
+def package_results(vars_system):
 
     dict_results = {
-        "P_gk": extract_values(P_gk),
-        "P_gkr": extract_values(P_gkr),
-        "P_gkrah": extract_values(P),
-        "Q_gkrah": extract_values(Q),
-        "Delta_plus": extract_values(Delta_plus),
-        "Delta_moins": extract_values(Delta_moins),
-        "z_hl_plus": extract_values(z_hl_plus),
-        "z_hl_moins": extract_values(z_hl_moins),
+        "P_gk": extract_values(vars_system.P_gk),
+        "P_gkr": extract_values(vars_system.P_gkr),
+        "P_gkrah": extract_values(vars_system.P),
+        "Q_gkrah": extract_values(vars_system.Q),
+        "Delta_plus": extract_values(vars_system.Delta_plus),
+        "Delta_moins": extract_values(vars_system.Delta_moins),
+        "z_hl_plus": extract_values(vars_system.z_hl_plus),
+        "z_hl_moins": extract_values(vars_system.z_hl_moins),
     }
-
     return dict_results
 
 
@@ -133,19 +132,6 @@ def read_metadata(inputfile : str | Path):
         metadata = json.load(f)
 
     return metadata
-
-def read_configs_file(config_category, file_name, config_path="backend/config.yaml"):
-
-    import yaml
-    from pathlib import Path
-
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-
-    input_file = Path(config[config_category][file_name])
-
-
-    return input_file
 
 
 def read_configs(config_category, config_path="backend/config.yaml"):

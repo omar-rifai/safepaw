@@ -27,7 +27,7 @@ def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) ->
     params_system, params_metadata = serialize_maternite(df_instance)
     params_system["b_hl_out"] = [[transfers] for _ in range(len(params_system["H"]))]
     print("Starting optimization driver...")
-    status, objective, results = run_driver(params_system)
+    status, objective, results = run_driver(params_system, mode="maternity")
     print("Optimization driver finished with status:", status)
     if objective is None:
         return status, None, [], [], [], params_metadata["regions"]

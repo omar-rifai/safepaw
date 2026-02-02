@@ -299,4 +299,5 @@ def readCompleteDataFile(stri):
                 sl = ""
         b_hl_in = b_hl
         b_hl_out = b_hl 
-        return G, K_g, R, A_gk, H, L, c_gk, alpha, w_rh, D, d_gr, t_gkal, m_hl, Under_q_g, Over_q_g, U, I_gu, Under_q_gu, Over_q_gu, O_gk, J_h, f, b_hl_in, b_hl_out, delta_l, N_gka_1, N_gka_2
+        return G, K_g, R, A_gk, H, L, c_gk, alpha, w_rh, D, d_gr, t_gkal, m_hl, Under_q_g, Over_q_g, U, I_gu,\
+               Under_q_gu, Over_q_gu, O_gk, J_h, f, b_hl_in, b_hl_out, delta_l, N_gka_1, N_gka_2
