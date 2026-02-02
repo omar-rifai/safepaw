@@ -72,7 +72,7 @@ def get_Facilities(df_instance : pd.DataFrame, max_transferable_in : int = 10, m
 
 def _get_available_pathways(f_type):
     """Returns available pathways for each facility ``type''"""
-    pathways_dict = {"1": ["p1"], "2a": ["p1", "p2a"], "2b" :["p1", "p2b"], "3": ["p1", "p2a", "p2b", "p3"]}
+    pathways_dict = {"1": ["p1"], "2a": ["p1", "p2a"], "2b" :["p1", "p2a", "p2b"], "3": ["p1", "p2a", "p2b", "p3"]}
     return pathways_dict[f_type]
 
 
@@ -168,12 +168,7 @@ def serialize_maternite(df_instance : pd.DataFrame) -> Union[dict, dict]:
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.data_models.input_models import SystemData
     import time
-    print("Init regions computations")
-    start = time.time()
     list_regions = get_Regions(df_instance)
-    end = time.time()
-    print("\n\n\n\nElapsed time:", end - start, "seconds")
-
     list_facilities = get_Facilities(df_instance)
     list_resources = get_Resources(df_instance)
     list_patients = get_PatientGroups(df_instance)
@@ -202,4 +197,10 @@ def read_maternity() -> pd.DataFrame:
     .agg(deliveries_per_facility=("deliveries_per_facility", "mean"),
         beds=("beds", "first")))
     df = df.drop_duplicates(subset=["nofinesset"], keep="first")
+
+    # for debugging
+
+    #test_f = ["370000861", "370007569", "410000020"]
+    #df = df[df["dep_code"].isin(["37", "41"])]
+    #df = df[df["nofinesset"].isin(test_f)]
     return df
