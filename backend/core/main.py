@@ -20,43 +20,75 @@ class OptVars(BaseModel):
 
 def run_driver(params_system, mode="default"):
 
-    K_indices = list(range(max(params_system["K_g"]))) 
-    A_indices = list(range(max(max(A_g) for A_g in params_system["A_gk"])))              
     LP = pulp.LpProblem('Regional Case Mix', pulp.LpMaximize)
-    P = pulp.LpVariable.dicts("P", (params_system["G"], K_indices, params_system["R"], A_indices, params_system["H"]), 0, None)
-    P_gkr = pulp.LpVariable.dicts("P_gkr", (params_system["G"], K_indices, params_system["R"]), 0, None)
-    P_gk = pulp.LpVariable.dicts("P_gk", (params_system["G"], K_indices), 0, None)
-    Q = pulp.LpVariable.dicts("Q", (params_system["G"], K_indices, params_system["R"], A_indices, params_system["H"]), 0, None)
-    Delta_plus = pulp.LpVariable.dicts("Delta_plus", (params_system["H"], params_system["L"]), 0, None)
-    Delta_moins = pulp.LpVariable.dicts("Delta_moins", (params_system["H"], params_system["L"]), 0, None)
-    z_hl_plus = pulp.LpVariable.dicts("z_hl_plus", (params_system["H"], params_system["L"]), cat=pulp.LpInteger, lowBound = 0)
-    z_hl_moins = pulp.LpVariable.dicts("z_hl_moins", (params_system["H"], params_system["L"]), cat=pulp.LpInteger, lowBound = 0)
-    
+
+    P = {g: {k: {r: {a: {h: pulp.LpVariable(f"P_{g}_{k}_{r}_{a}_{h}", lowBound=0)
+                         for h in params_system["H"]}
+                         for a in params_system["A_idx"][g][k]}
+                         for r in params_system["R"]}
+                         for k in params_system["K_idx"][g]}
+                         for g in params_system["G"]}
+
+    P_gkr = {g: {k: {r: pulp.LpVariable(f"P_gkr_{g}_{k}_{r}", lowBound=0)
+                     for r in params_system["R"]} 
+                     for k in params_system["K_idx"][g]}
+                     for g in params_system["G"]}
+
+    P_gk = {g: {k: pulp.LpVariable(f"P_gk_{g}_{k}", lowBound=0)
+                for k in params_system["K_idx"][g]}
+                for g in params_system["G"]}
+
+    Q = {g: {k: {r: {a: {h: pulp.LpVariable(f"Q_{g}_{k}_{r}_{a}_{h}", lowBound=0)
+                         for h in params_system["H"]}
+                         for a in params_system["A_idx"][g][k]}
+                         for r in params_system["R"]}
+                         for k in params_system["K_idx"][g]}
+                         for g in params_system["G"]}
+
+    Delta_plus = {h: {l: pulp.LpVariable(f"Delta_plus_{h}_{l}", lowBound=0)
+                      for l in params_system["L"]}
+                      for h in params_system["H"]}
+
+    Delta_moins = {h: {l: pulp.LpVariable(f"Delta_moins_{h}_{l}", lowBound=0)
+                       for l in params_system["L"]}
+                       for h in params_system["H"]}
+
+    z_hl_plus = {h: {l: pulp.LpVariable(f"z_hl_plus_{h}_{l}", cat=pulp.LpInteger, lowBound=0)
+                     for l in params_system["L"]}
+                     for h in params_system["H"]}
+
+    z_hl_moins = {h: {l: pulp.LpVariable(f"z_hl_moins_{h}_{l}", cat=pulp.LpInteger, lowBound=0) 
+                      for l in params_system["L"]}
+                      for h in params_system["H"]}
+
+
     vars_system = OptVars(P=P,P_gkr=P_gkr,P_gk=P_gk,Q=Q,Delta_plus=Delta_plus, Delta_moins=Delta_moins, z_hl_plus=z_hl_plus, z_hl_moins=z_hl_moins)
 
     set_obj_fn(LP, P_gk, P, Delta_plus, Delta_moins, params_system, mode)
     print("Declaring Constraints...")
     declare_constraints(LP, vars_system, params_system, mode)
     print("Starting solver...")
-    LP.solve(pulp.HiGHS_CMD(msg=1))
+    LP.solve(pulp.GUROBI(msg=1))
    
-    dict_results = package_results(vars_system)
-    dict_xarray_results = define_xarray(params_system, dict_results)
+    #dict_results = package_results(vars_system)
+    #dict_xarray_results = define_xarray(params_system, dict_results)
     status =  pulp.LpStatus[LP.status]
     objective = pulp.value(LP.objective)
 
-    return status, objective, dict_xarray_results
+    return status, objective#, dict_xarray_results
     
 
-@app.command()
-def main(path: Path):
+
+def main():
+    import sys
     import json
+    path = sys.argv[1]
     with open(path) as fp:
         params_system = json.load(fp)
     run_driver(params_system)
 
 if __name__ == "__main__":
-    app(standalone_mode=False)
+    main()
 
 
 
