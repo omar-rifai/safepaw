@@ -413,9 +413,9 @@ def declare_constraints(LP, vars_system, params_system, mode):
                            def_const_O_gk, def_const_J_h, def_const_Q_gkrah, def_const_f, def_const_Q, def_const_m_hl, def_const_delta_zero,
                            def_const_delta_plus_delta, def_const_delta_moins_delta, def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
     
-    CONSTRAINTS_MATERNITY=[def_const_P_gkr, def_const_P_gk, def_const_d_gr_maternity, def_const_q_g, def_const_Overq_g, def_const_q_gk, def_const_Overq_gk,
-                           def_const_O_gk, def_const_J_h, def_const_Q_gkrah, def_const_f, def_const_Q, def_const_m_hl, def_const_delta_zero,
-                           def_const_delta_plus_delta, def_const_delta_moins_delta, def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
+    CONSTRAINTS_MATERNITY=[def_const_P_gkr, def_const_P_gk, def_const_d_gr_maternity, def_const_q_g, def_const_q_gk,
+                           def_const_O_gk, def_const_J_h, def_const_m_hl, def_const_delta_zero, def_const_delta_plus_delta, def_const_delta_moins_delta,
+                           def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
 
     match mode:
         case "default":
