@@ -143,10 +143,6 @@ This demand is global for all patient groups. As we do not have detailed info on
 | 2a | 0.2 |
 | 2b | 0.2|
 | 3 | 0.1|
-| 1 | 0.50 |
-| 2a | 0.2 |
-| 2b | 0.2|
-| 3 | 0.1|
 
 
 
