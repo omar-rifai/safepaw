@@ -25,18 +25,18 @@ def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) ->
     from backend.core.main import run_driver
     check_executable() # Check solver
     params_system, params_metadata = serialize_maternite(df_instance)
-    params_system["b_hl_out"] = [[transfers] for _ in range(len(params_system["H"]))]
+    params_system["b_hl_out"] = {h : {"cap": transfers} for h in params_system["H"]}
     print("Starting optimization driver...")
     status, objective, results = run_driver(params_system, mode="maternity")
     print("Optimization driver finished with status:", status)
     if objective is None:
         return status, None, [], [], [], params_metadata["regions"]
     else:
-        list_patient_transfers = create_patientTransfers(results, params_system, params_metadata) if objective is not None else []
+        #list_patient_transfers = create_patientTransfers(results, params_system, params_metadata) if objective is not None else []
         list_facility_load = create_facilityStats(results, params_system, params_metadata) if objective is not None else []
         list_facility_load_regions = create_facilityStats(results, params_system, params_metadata, by_region=True) if objective is not None else [] 
         average_distance = get_average_distance(results, params_system)
-    return status, average_distance, list_patient_transfers, list_facility_load, list_facility_load_regions, params_metadata["regions"]
+    return status, average_distance, [], list_facility_load, list_facility_load_regions, params_metadata["regions"]
 
 
 

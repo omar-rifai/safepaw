@@ -52,21 +52,22 @@ def _get_available_pathways(f_type):
     return pathways_dict[f_type]
 
 
-def get_Instance(df_instance : pd.DataFrame) -> Instance:
+def get_Instance(df_instance : pd.DataFrame, list_pathways: list, list_groups, list_resources: list) -> Instance:
     """Returns object to store optimization instance parameters. Most variables are stores in a global config.yaml file """
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")    
     d_gr = get_demand_lower_bounds(df_instance)
-    n_g = len(d_gr)
+    U_idx = list(set([k.quality_level for k in list_pathways]))
+
     return Instance(
             d_total = int(df_instance["deliveries_per_facility"].sum()),
             d_gr = d_gr,
-            under_q_g = [config["min_fraction_to_be_treated"] for i in range(n_g)],
-            over_q_g = [config["max_fraction_to_be_treated"] for i in range(n_g)],
-            under_q_gu = [[config["min_fraction_to_be_treated"]]for i in range(n_g)],
-            over_q_gu = [[config["max_fraction_to_be_treated"]]for i in range(n_g)],
+            under_q_g = {p: config["min_fraction_to_be_treated"]  for p in  list_groups},
+            over_q_g = {p: config["max_fraction_to_be_treated"]  for p in  list_groups},
+            under_q_gu = {p: {u: config["min_fraction_to_be_treated"] for u in U_idx} for p in  list_groups},
+            over_q_gu = {p: {u: config["max_fraction_to_be_treated"] for u in U_idx} for p in list_groups},
             p_transf = config["allowed_transfer_fraction"],
-            delta_l = [config["resource_transfer_unit"]],
+            delta_l = {l: config["resource_transfer_unit"] for l in list_resources},
             alpha = config["alpha"]
         )
 
@@ -82,46 +83,47 @@ def get_demand_lower_bounds(df_instance : pd.DataFrame) -> list[list[float]]:
     df_comm_avg = (df_labours
         .groupby(["comm_code"], as_index=False)
         .agg(comm_deliveries=("deliveries_per_comm", "mean")))  
-    d_gr = [(df_comm_avg["comm_deliveries"] * f / (df_comm_avg["comm_deliveries"]).sum()).tolist()
-    for f in labour_types_distribution.values()]
+    
+    d_gr = {}
+    total_deliveries = df_comm_avg["comm_deliveries"].sum()
+    for g, fraction in labour_types_distribution.items():
+        d_gr[g] = { r: float((comm * fraction / total_deliveries))
+                   for r, comm in zip(df_comm_avg["comm_code"], df_comm_avg["comm_deliveries"])}
     return d_gr
 
 
-def get_Resources(df_instance : pd.DataFrame) -> list[Resource]:
+def get_Resources(list_resources: list) -> list[Resource]:
     """Creates Resource object with id for unique resource (bed/days)"""
     from backend.core.data_models.input_models import Resource
-    return [Resource(resource_id="l0")]
+    return [Resource(resource_id=x) for x in list_resources]
 
 
-def get_PatientGroups(df_instance: pd.DataFrame) -> list[PatientsGroup]:
+def get_PatientGroups(groups_ids: list) -> list[PatientsGroup]:
     """Creates PatientGroups corresponding to French labour types status codes (1,2a,2b,3)"""
     list_patientsGroups = []
-    group_ids = ["1", "2a", "2b", "3"]
-    possible_pathways = ["p" + g for g in group_ids]
-    for gid in group_ids:
+    possible_pathways = ["p" + g for g in groups_ids]
+    for gid in groups_ids:
         list_patientsGroups.append(PatientsGroup(group_id= gid, possible_pathways= possible_pathways))
     return list_patientsGroups
 
 
-def get_Activities(df_instance : pd.DataFrame) -> list[Activity]:
+def get_Activities(groups_ids: list) -> list[Activity]:
     """Creates Activity objects with required resources being the average length of stay for a labour in France in bed/days
     As a simplification the same average length of stay is currently used for all labour types
     """
     from backend.core.data_models.input_models import Activity
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")
-    group_ids = ["1", "2a", "2b", "3"]
     list_activities = [Activity(activity_id="a"+g, associated_pathway="p"+g,
                      associated_group=g, transferable=False,
-                     transfer_to="", required_resources={"l0":config["avg_length_of_stay"]}) for g in group_ids]
+                     transfer_to="", required_resources={"cap":config["avg_length_of_stay"]}) for g in groups_ids]
     return list_activities
 
 
-def get_PatientPathways(df_instance : pd.DataFrame) -> list[Pathway]:
+def get_PatientPathways(groups_ids: list) -> list[Pathway]:
     """Creates Pathways objects for each patientGroup type"""
-    group_ids = ["1", "2a", "2b", "3"]
     pathways = [Pathway(pathway_id= "p"+g, associated_group_id = g, quality_level = "0", list_activities= [],
-                         group_benefit = 1, list_next = []) for g in group_ids]
+                         group_benefit = 1, list_next = []) for g in groups_ids]
     return pathways
 
     
@@ -143,14 +145,16 @@ def serialize_maternite(df_instance : pd.DataFrame) -> Union[dict, dict]:
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.data_models.input_models import SystemData
-    import time
+    groups_ids = ["1", "2a", "2b", "3"]
+    resources_ids = ["cap"]
+
     list_regions = get_Regions(df_instance)
     list_facilities = get_Facilities(df_instance)
-    list_resources = get_Resources(df_instance)
-    list_patients = get_PatientGroups(df_instance)
-    list_pathways = get_PatientPathways(df_instance)
-    list_activities = get_Activities(df_instance)
-    instance = get_Instance(df_instance)
+    list_resources = get_Resources(resources_ids)
+    list_patients = get_PatientGroups(groups_ids)
+    list_pathways = get_PatientPathways(groups_ids)
+    list_activities = get_Activities(groups_ids)
+    instance = get_Instance(df_instance, list_pathways, groups_ids, resources_ids)
     maternite_data = SystemData(regions = list_regions, resources=list_resources, facilities=list_facilities, patients=list_patients ,\
                pathways=list_pathways, activities= list_activities, instance=instance)
     params_system, params_metadata = convert_dm_to_json(maternite_data)

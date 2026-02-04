@@ -25,10 +25,10 @@ export default function HospitalResourcesChart() {
 
   const facilities_data = (filtered_output ?? []).flatMap(f => ({
   resource: f.properties.facility_id,
-  capacity: f.properties?.capacities?.[0] - f.properties?.transfers_out?.[0],
+  capacity: f.properties?.capacities?.["cap"] - f.properties?.transfers_out?.["cap"],
   load: Math.round(f.properties?.load * 4.6),
-  imported: f.properties?.transfers_in?.[0],
-  exported: f.properties?.transfers_out?.[0]
+  imported: f.properties?.transfers_in?.["cap"],
+  exported: f.properties?.transfers_out?.["cap"]
   }));
 
 

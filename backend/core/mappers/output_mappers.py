@@ -31,11 +31,10 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
     list_facilities_loads = []
     
     for row in df_loads.itertuples(index=False):
-        h = row.facility.split("_")[1]
+        h = row.facility
         g = getattr(row, "group", None)
         k = getattr(row, "pathway", None)
         r = getattr(row, "region", None)
-        if r: r=r.split("_")[1]
         
         facility_instance = FacilityStats(
             facility_id=params_metadata["facilities"][h]["name"],
@@ -64,32 +63,33 @@ def _compute_load(results, by_region, by_group, by_pathway, params_system):
 
     P_summed = P.sum(dim=sum_dims)
     df_loads = P_summed.to_dataframe(name="load").reset_index() 
-    df_loads["load"]  *= params_system["D"][0]
+    df_loads["load"]  *= params_system["D"]
     return df_loads
 
 
 def get_average_distance(results, params_system):
     """Compute the weighted average distance (in kms) across all patients"""
+    import pandas as pd
     P_summed = results["P_gkrah"].sum(dim=["group", "pathway", "activity"])
-    df_loads = P_summed.to_dataframe(name="load").reset_index() 
-    h_idx = df_loads["facility"].str.split("_").str[1].astype(int).to_numpy()
-    r_idx = df_loads["region"].str.split("_").str[1].astype(int).to_numpy()
-    load = df_loads["load"].to_numpy()
-    w_rh = np.array(params_system["w_rh"])
-    distance = load / w_rh[r_idx, h_idx]
+    df_loads = P_summed.to_dataframe(name="load").reset_index()
+    w_rh = params_system["w_rh"]
+    w_rh_flat = pd.Series({(r, h): val 
+                           for r, facility_item in w_rh.items() 
+                           for h, val in facility_item.items()})
+    distance = df_loads.set_index(["region", "facility"])["load"] / w_rh_flat
     avg_distance = distance.sum()    
     return round(avg_distance/1000,1)
 
 
 def get_transfers_in(facility, Delta_plus_index, params_system):
     return {
-        l: Delta_plus_index[("facility_" + str(facility), "resource_" + str(l))]
+        l: Delta_plus_index[( facility, l)]
         for l in params_system["L"]
     }
 
 def get_transfers_out(facility, Delta_moins_index, params_system):
     return {
-        l: Delta_moins_index[("facility_" + str(facility), "resource_" + str(l))]
+        l: Delta_moins_index[(facility,l)]
         for l in params_system["L"]
     }
 
@@ -103,7 +103,7 @@ def calculate_facility_capacity(params_system, facility_id):
 def calculate_total_out(results:dict, h_id, params_system: dict) -> int:
     """ Return the number of patients transfered from one facililty to another"""
     h_id = "facility_" + str(h_id)
-    total_demand = params_system["D"][0]
+    total_demand = params_system["D"]
 
     perc_out = results["Q_gkrah"].sel(facility=h_id).sum(dim=["group", "pathway", "region", "activity"]).item()
     perc_tot = results["P_gkrah"].sel(facility=h_id).sum(dim=["group", "pathway", "region", "activity"]).item() 
@@ -119,13 +119,13 @@ def create_patientTransfers(results: dict, params_system: dict, params_metadata 
     from backend.core.data_models.output_models import PatientTransfer
     list_patient_transfer = []
     for h1 in params_system["H"]:
-        origin_coordinates = params_metadata["facilities"][str(h1)]["coordinates"]
+        origin_coordinates = params_metadata["facilities"][h1]["coordinates"]
         allowed_transfers = params_system["J_h"][h1]
         total_out = calculate_total_out(results, h1, params_system) 
         transfers_distribution = total_out / len(allowed_transfers)
 
         for h2 in allowed_transfers:
-            destination_coordinates = params_metadata["facilities"][str(h2)]["coordinates"]
+            destination_coordinates = params_metadata["facilities"][h2]["coordinates"]
             instance_patientTransfer = PatientTransfer(patients_group_id = None,
                                                        pathway_id = None,
                                                        origin_coordinates = origin_coordinates,

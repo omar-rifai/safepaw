@@ -2,6 +2,8 @@ import pulp
 from pathlib import Path
 import geopandas as gpd
 from backend.core.data_models.input_models import PatientsGroup, Facility, Region
+import numpy as np 
+
 
 def read_inputs(file_params_system):
     import json
@@ -12,27 +14,44 @@ def read_inputs(file_params_system):
     return params_system
 
 
-def extract_values(obj):
-    if isinstance(obj, list):
-        return [extract_values(item) for item in obj]
-    elif isinstance(obj, dict):
-        # Discard keys, process only values
-        return [extract_values(item) for item in obj.values()]
-    else:
-        return pulp.value(obj)
+def extract_rectangular(var_dict, dims, params_system):
+    import itertools
+    K_all = sorted({k for g in params_system["G"] for k in params_system["K_idx"][g]})
+    groups = params_system["G"]
+    regions = params_system["R"]
+    facilities = params_system["H"]
+    activities = list({a for g in groups for k in params_system["K_idx"][g] for a in params_system["A_idx"][g][k]})
+    
+    sets = {"group": groups, "pathway": K_all, "region": regions, "activity": activities, "facility": facilities}
+    dim_dict = {x:v for x,v in sets.items() if x in dims }
+    dim_values = [dim_dict[d] for d in dims]
+    dim_lengths = [len(v) for v in dim_dict.values()]
+    
+    out = np.full(dim_lengths, np.nan)
+    for val in itertools.product(*dim_values):
+        try:
+            v = var_dict
+            for i in val:
+                v = v[i]
+            idx = tuple(dim_values[i].index(val[i]) for i in range(len(val)))
+            out[idx] = pulp.value(v)
+        except KeyError:
+            continue
+    return out
 
 
-def package_results(vars_system):
+
+def package_results(vars_system, params_system):
 
     dict_results = {
-        "P_gk": extract_values(vars_system.P_gk),
-        "P_gkr": extract_values(vars_system.P_gkr),
-        "P_gkrah": extract_values(vars_system.P),
-        "Q_gkrah": extract_values(vars_system.Q),
-        "Delta_plus": extract_values(vars_system.Delta_plus),
-        "Delta_moins": extract_values(vars_system.Delta_moins),
-        "z_hl_plus": extract_values(vars_system.z_hl_plus),
-        "z_hl_moins": extract_values(vars_system.z_hl_moins),
+        "P_gkrah": extract_rectangular(vars_system.P, ["group","pathway","region","activity","facility"], params_system),
+        "Q_gkrah": extract_rectangular(vars_system.Q, ["group","pathway","region","activity","facility"], params_system),
+        "P_gkr": extract_rectangular(vars_system.P_gkr, ["group","pathway","region"], params_system),
+        "P_gk": extract_rectangular(vars_system.P_gk, ["group","pathway"], params_system),
+        "Delta_plus": np.array([[pulp.value(vars_system.Delta_plus[h][l]) for l in params_system["L"]] for h in params_system["H"]]),
+        "Delta_moins": np.array([[pulp.value(vars_system.Delta_moins[h][l]) for l in params_system["L"]] for h in params_system["H"]]),
+        "z_hl_plus": np.array([[pulp.value(vars_system.z_hl_plus[h][l]) for l in params_system["L"]] for h in params_system["H"]]),
+        "z_hl_moins": np.array([[pulp.value(vars_system.z_hl_moins[h][l]) for l in params_system["L"]] for h in params_system["H"]])
     }
     return dict_results
 
@@ -46,12 +65,12 @@ def define_xarray(params_system: dict, dict_results: dict) -> dict:
     import xarray as xr
     import numpy as np
     
-    groups = [f"group_{i}" for i in params_system["G"]]
-    pathways = [f"pathway_{i}" for i in range(np.array(params_system["A_gk"]).shape[1])]
-    regions = [f"region_{i}" for i in params_system["R"]]
-    activities = [f"activity_{i}" for i in range(np.array(params_system["t_gkal"]).shape[2])]
-    facilities = [f"facility_{i}" for i in params_system["H"]]
-    resources = [f"resource_{i}" for i in params_system["L"]]
+    groups = [g for g in params_system["G"]]
+    pathways = [k for k in params_system["K_idx"]]
+    regions = [r for r in params_system["R"]]
+    activities = [a for a in params_system["A_idx"]]
+    facilities = [h for h in params_system["H"]]
+    resources = [l for l in params_system["L"]]
 
     P_xr = xr.DataArray(np.array(dict_results["P_gkrah"], dtype=float),
                         dims=["group", "pathway","region","activity","facility"],
@@ -107,21 +126,6 @@ def define_xarray(params_system: dict, dict_results: dict) -> dict:
     return dict_xarray_results
 
 
-def get_r_id(uid: int | str) -> str:
-    return "region_" + str(uid)
-
-def get_h_id(uid: int | str) -> str:
-    return "facility_" + str(uid)
-
-
-def get_uid_pathway(group_id: int | str, pathway_id: int | str) -> str:
-    """
-    Creates a unique pathway identifier  by group of the form (g{x}_{y}) 
-    where {x} is the group integer id and y the pathway integer id
-    """
-    return "g" + str(group_id) + "_" + str(pathway_id)
-
-
 def read_metadata(inputfile : str | Path):
     """
     Reads metadata from a JSON file.
@@ -144,16 +148,12 @@ def read_configs(config_category, config_path="backend/config.yaml"):
 
 
 
-def create_metadata(list_facilities: list[Facility], list_regions: list[Region], list_patients: list[PatientsGroup]) -> dict:
+def create_metadata(params_system: dict, list_facilities: list[Facility], list_regions: list[Region], list_patients: list[PatientsGroup]) -> dict:
     """Create dictionary with metadata from the problem instance not used in the optimization model"""
 
-    facility_index = {h.facility_id: str(i) for i, h in enumerate(list_facilities)}
-    region_index = {r.region_id: str(i) for i, r in enumerate(list_regions)}
-    patients_index = {p.group_id: str(i) for i, p in enumerate(list_patients)}
-
-    dict_metadata = {"facilities" : {facility_index[h.facility_id]: {"coordinates" : h.coordinates, "name": h.facility_name} for h in list_facilities}} | \
-          {"regions" : {region_index[r.region_id]: {"coordinates" : r.coordinates, "name": r.region_id} for r in list_regions}} | \
-          {"patients": {patients_index[p.group_id]: {"name": p.group_id} for p in list_patients} }
+    dict_metadata = {"facilities" : {h.facility_id: {"coordinates" : h.coordinates, "name": h.facility_name} for h in list_facilities}} | \
+          {"regions" : {r.region_id: {"coordinates" : r.coordinates, "name": r.region_id} for r in list_regions}} | \
+          {"patients": {p.group_id: {"name": p.group_id} for p in list_patients} }
     return dict_metadata
 
 

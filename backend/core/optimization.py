@@ -26,7 +26,8 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, params_system, mode):
                                                    for h in params_system["H"]]) \
   
         case "maternity":
-            LP +=  params_system["alpha"] * lpSum([params_system["D"] * P[g][k][r][a][h] * params_system["w_rh"][r][h]
+            LP +=  lpSum([params_system["D"] * P[g][k][r][a][h] \
+                                                   * params_system["w_rh"][r][h]
                                                    for g in params_system["G"]
                                                    for k in params_system["K_idx"][g]
                                                    for r in params_system["R"]

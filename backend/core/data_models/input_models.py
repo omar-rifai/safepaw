@@ -46,13 +46,13 @@ class Pathway(BaseModel):
 
 class Instance(BaseModel):
     d_total: int
-    d_gr : List[List[float]]  # [group_id][region ID] : min treatment threshold
-    under_q_g: List[float]
-    over_q_g: List[float]
-    under_q_gu: List[List[float]] #[group_id][treatment lvl] : min treatment proportion
-    over_q_gu: List[List[float]]
+    d_gr : Dict  # [group_id][region ID] : min treatment threshold
+    under_q_g: Dict
+    over_q_g: Dict
+    under_q_gu: Dict #[group_id][treatment lvl] : min treatment proportion
+    over_q_gu: Dict
     p_transf: float # max allowable percentage of patients to be tranfered
-    delta_l: List[int]  # resource id : transfer unit
+    delta_l: Dict  # resource id : transfer unit
     alpha: float
 
 class Activity(BaseModel):

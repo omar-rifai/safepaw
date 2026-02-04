@@ -8,7 +8,7 @@ export function FacilityLoadLayer({ loads, setDeckGLData }) {
         return null;
     }
     const maxTotalLoadFacility = Math.max(...facilityLoad.map(d => d.properties.load))
-    const maxTotalCapacityFacility = Math.max(...facilityLoad.map(d => d.properties.capacities["0"]))
+    const maxTotalCapacityFacility = Math.max(...facilityLoad.map(d => d.properties.capacities["cap"]))
 
     return new ScatterplotLayer
         ({
@@ -16,16 +16,16 @@ export function FacilityLoadLayer({ loads, setDeckGLData }) {
             data: facilityLoad,
             getPosition: d => d.geometry.coordinates,
             getRadius: d => {
-                const delta_plus = Math.round(d.properties.transfers_in["0"])
-                const delta_minus = Math.round(d.properties.transfers_out["0"])
-                const capacity = Math.round(d.properties.capacities["0"])
+                const delta_plus = Math.round(d.properties.transfers_in["cap"])
+                const delta_minus = Math.round(d.properties.transfers_out["cap"])
+                const capacity = Math.round(d.properties.capacities["cap"])
                 const capacity_w_trf = capacity + Number(delta_plus) - Number(delta_minus)
                 return [4 + 6 * (capacity_w_trf / maxTotalCapacityFacility)]
             },
             getFillColor: d => {
-                const delta_plus = Math.round(d.properties.transfers_in["0"])
-                const delta_minus = Math.round(d.properties.transfers_out["0"])
-                const capacity = Math.round(d.properties.capacities["0"])
+                const delta_plus = Math.round(d.properties.transfers_in["cap"])
+                const delta_minus = Math.round(d.properties.transfers_out["cap"])
+                const capacity = Math.round(d.properties.capacities["cap"])
                 const capacity_w_trf = capacity + Number(delta_plus) - Number(delta_minus)
                 const load = Number(d.properties.load)
                 const usage = capacity_w_trf ? Math.min(load * 4.6 / capacity_w_trf, 1) : 0
@@ -52,9 +52,9 @@ export function FacilityLoadLayer({ loads, setDeckGLData }) {
 
 export function getFacilityToolTip(info) {
 
-    const delta_plus = Math.round(info.object.properties.transfers_in["0"])
-    const delta_minus = Math.round(info.object.properties.transfers_out["0"])
-    const capacity = Math.round(info.object.properties.capacities["0"])
+    const delta_plus = Math.round(info.object.properties.transfers_in["cap"])
+    const delta_minus = Math.round(info.object.properties.transfers_out["cap"])
+    const capacity = Math.round(info.object.properties.capacities["cap"])
     const capacity_w_trf = capacity + Number(delta_plus) - Number(delta_minus)
     const load = Number(info.object.properties.load)
     const usage = capacity_w_trf ? Number(load * 4.6 / capacity_w_trf).toPrecision(2) * 100 : 0
