@@ -80,11 +80,15 @@ def run_driver(params_system, mode="default"):
 def main():
     import sys
     import json
+    import os
+
+    
     path = sys.argv[1]
     with open(path) as fp:
         params_system = json.load(fp)
     _, _, dict_results = run_driver(params_system)
     
+    os.makedirs("./backend/data/temp", exist_ok=True)
     with open("./backend/data/temp/outputs.json", "w+") as fp:
         json.dump({k: (v.to_dict(orient="records")) for k,v in dict_results.items()}, fp)
     
