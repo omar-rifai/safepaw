@@ -1,10 +1,4 @@
 # config.yaml
-
-paths:
-  sample_input_file: "./data/params_toy.json"
-  real_input_file: "./data/params_ptg_pth.json"
-  maternity_path: "./data/open_data/summary_maternity_capacity.csv"
-
 data_maternity:
   alpha: 1
   allowed_transfer_fraction: 1

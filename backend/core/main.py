@@ -83,7 +83,11 @@ def main():
     path = sys.argv[1]
     with open(path) as fp:
         params_system = json.load(fp)
-    run_driver(params_system)
+    _, _, dict_results = run_driver(params_system)
+    
+    with open("./backend/data/temp/outputs.json", "w+") as fp:
+        json.dump({k: (v.to_dict(orient="records")) for k,v in dict_results.items()}, fp)
+    
 
 if __name__ == "__main__":
     main()
