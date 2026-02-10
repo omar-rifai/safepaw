@@ -21,5 +21,6 @@ yarn-error.log*
 .idea/
 *.ipynb
 
+backend/data/legacy/raw_*
 # Mac system files
 .DS_Store

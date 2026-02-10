@@ -1,6 +1,6 @@
 import pulp
-from backend.core.utils.data_utils import package_results, define_xarray
 from backend.core.optimization import declare_constraints, set_obj_fn
+from backend.core.utils.data_utils import package_results
 import typer
 from typing import Any
 from pydantic import BaseModel
@@ -70,11 +70,10 @@ def run_driver(params_system, mode="default"):
     LP.solve(pulp.HiGHS(msg=1))
    
     dict_results = package_results(vars_system, params_system)
-    dict_xarray_results = define_xarray(params_system, dict_results)
     status =  pulp.LpStatus[LP.status]
     objective = pulp.value(LP.objective)
 
-    return status, objective, dict_xarray_results
+    return status, objective, dict_results
     
 
 

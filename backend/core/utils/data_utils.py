@@ -2,7 +2,7 @@ import pulp
 from pathlib import Path
 import geopandas as gpd
 from backend.core.data_models.input_models import PatientsGroup, Facility, Region
-import numpy as np 
+import pandas as pd
 
 
 def read_inputs(file_params_system):
@@ -13,117 +13,62 @@ def read_inputs(file_params_system):
 
     return params_system
 
+def get_var(curr_var, dims, list_dims):
+    v = curr_var[dims["group"]][dims["pathway"]]
+    if "region" in list_dims:
+        v = v[dims["region"]]
+    if "activity" in list_dims:
+        v = v[dims["activity"]]
+    if "facility" in list_dims:
+        v = v[dims["facility"]]
+    return pulp.value(v)
 
-def extract_rectangular(var_dict, dims, params_system):
-    import itertools
-    K_all = sorted({k for g in params_system["G"] for k in params_system["K_idx"][g]})
-    groups = params_system["G"]
-    regions = params_system["R"]
-    facilities = params_system["H"]
-    activities = list({a for g in groups for k in params_system["K_idx"][g] for a in params_system["A_idx"][g][k]})
-    
-    sets = {"group": groups, "pathway": K_all, "region": regions, "activity": activities, "facility": facilities}
-    dim_dict = {x:v for x,v in sets.items() if x in dims }
-    dim_values = [dim_dict[d] for d in dims]
-    dim_lengths = [len(v) for v in dim_dict.values()]
-    
-    out = np.full(dim_lengths, np.nan)
-    for val in itertools.product(*dim_values):
-        try:
-            v = var_dict
-            for i in val:
-                v = v[i]
-            idx = tuple(dim_values[i].index(val[i]) for i in range(len(val)))
-            out[idx] = pulp.value(v)
-        except KeyError:
-            continue
-    return out
 
+
+def vars_to_df(curr_var, list_dims, params_system):
+    
+    records = []
+    dims = {}
+
+    for g in params_system["G"]:
+        dims["group"] = g
+        for k in params_system["K_idx"][g]:
+            dims["pathway"] = k
+            for r in params_system["R"]:
+                if "region" in list_dims: 
+                    dims["region"] = r
+                for a in params_system["A_idx"][g][k]:
+                    if "activity" in list_dims: 
+                        dims["activity"] = a
+                    for h in params_system["H"]:
+                        if "facility" in list_dims: 
+                            dims["facility"] = h
+                        dims["value"] = get_var(curr_var, dims, list_dims)
+                        records.append(dims.copy())
+    df = pd.DataFrame(records)
+    return df
 
 
 def package_results(vars_system, params_system):
 
     dict_results = {
-        "P_gkrah": extract_rectangular(vars_system.P, ["group","pathway","region","activity","facility"], params_system),
-        "Q_gkrah": extract_rectangular(vars_system.Q, ["group","pathway","region","activity","facility"], params_system),
-        "P_gkr": extract_rectangular(vars_system.P_gkr, ["group","pathway","region"], params_system),
-        "P_gk": extract_rectangular(vars_system.P_gk, ["group","pathway"], params_system),
-        "Delta_plus": np.array([[pulp.value(vars_system.Delta_plus[h][l]) for l in params_system["L"]] for h in params_system["H"]]),
-        "Delta_moins": np.array([[pulp.value(vars_system.Delta_moins[h][l]) for l in params_system["L"]] for h in params_system["H"]]),
-        "z_hl_plus": np.array([[pulp.value(vars_system.z_hl_plus[h][l]) for l in params_system["L"]] for h in params_system["H"]]),
-        "z_hl_moins": np.array([[pulp.value(vars_system.z_hl_moins[h][l]) for l in params_system["L"]] for h in params_system["H"]])
+        "P_gkrah": vars_to_df(vars_system.P, ["group","pathway","region","activity","facility"], params_system),
+        "Q_gkrah": vars_to_df(vars_system.Q, ["group","pathway","region","activity","facility"], params_system),
+        "P_gkr": vars_to_df(vars_system.P_gkr, ["group","pathway","region"], params_system),
+        "P_gk": vars_to_df(vars_system.P_gk, ["group","pathway"], params_system),
+        "Delta_plus" : pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.Delta_plus[h][l])}
+                                         for h in params_system["H"] for l in params_system["L"]]),
+                                         
+        "Delta_moins": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.Delta_moins[h][l])}
+                                         for h in params_system["H"] for l in params_system["L"]]),
+
+        "z_hl_plus": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.z_hl_plus[h][l])}
+                                         for h in params_system["H"] for l in params_system["L"]]),
+
+        "z_hl_moins": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.z_hl_moins[h][l])}
+                                         for h in params_system["H"] for l in params_system["L"]])
     }
     return dict_results
-
-
-def define_xarray(params_system: dict, dict_results: dict) -> dict:
-    """
-    Creates a dictionary of xarray items with variables inside dict_results
-    """
-
-
-    import xarray as xr
-    import numpy as np
-    
-    groups = [g for g in params_system["G"]]
-    pathways = [k for k in params_system["K_idx"]]
-    regions = [r for r in params_system["R"]]
-    activities = [a for a in params_system["A_idx"]]
-    facilities = [h for h in params_system["H"]]
-    resources = [l for l in params_system["L"]]
-
-    P_xr = xr.DataArray(np.array(dict_results["P_gkrah"], dtype=float),
-                        dims=["group", "pathway","region","activity","facility"],
-                        coords={"group":groups,"pathway":pathways,"region":regions,"activity":activities,"facility":facilities},
-                        name = "P")
-    
-    P_gkr_xr = xr.DataArray(np.array(dict_results["P_gkr"], dtype=float),
-                            dims=["group", "pathway","region"],
-                            coords={"group":groups,"pathway":pathways,"region":regions},
-                            name = "P_gkr")
-    
-    P_gk_xr = xr.DataArray(np.array(dict_results["P_gk"], dtype=float),
-                           dims=["group", "pathway"],
-                           coords={"group":groups,"pathway":pathways},
-                           name = "P_gk")    
-    
-    Q_xr = xr.DataArray(np.array(dict_results["Q_gkrah"], dtype=float),
-                        dims=["group", "pathway","region","activity","facility"],
-                        coords={"group":groups,"pathway":pathways,"region":regions,"activity":activities,"facility":facilities},
-                        name = "Q")
-    
-    Delta_plus_xr = xr.DataArray(np.array(dict_results["Delta_plus"], dtype=float),
-                                dims=["facility", "resource"],
-                                coords={"facility":facilities,"resource":resources},
-                                name = "Delta_plus")
-    
-    Delta_moins_xr = xr.DataArray(np.array(dict_results["Delta_moins"], dtype=float),
-                                  dims=["facility", "resource"],
-                                  coords={"facility":facilities,"resource":resources},
-                                  name = "Delta_moins")
-    
-    z_hl_plus_xr = xr.DataArray(np.array(dict_results["z_hl_plus"], dtype=float),
-                                dims=["facility", "resource"],
-                                coords={"facility":facilities,"resource":resources},
-                                name = "z_hl_plus")
-    
-    z_hl_moins_xr = xr.DataArray(np.array(dict_results["z_hl_moins"], dtype=float),
-                                dims=["facility", "resource"],
-                                coords={"facility":facilities,"resource":resources},
-                                name = "z_hl_moins") 
-   
-    dict_xarray_results = {
-        "P_gk": P_gk_xr,
-        "P_gkr": P_gkr_xr,
-        "P_gkrah": P_xr,
-        "Q_gkrah": Q_xr,
-        "Delta_plus": Delta_plus_xr,
-        "Delta_moins": Delta_moins_xr,
-        "z_hl_plus": z_hl_plus_xr,
-        "z_hl_moins": z_hl_moins_xr,
-    }
-
-    return dict_xarray_results
 
 
 def read_metadata(inputfile : str | Path):

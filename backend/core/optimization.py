@@ -171,7 +171,7 @@ def def_const_q_gk(LP, vars_system, params_system):
         for u in params_system["U_idx"][g]:
             M2 = []
             for k in params_system["I_gu"][g][u]:
-                M2.append([g, str(k)])
+                M2.append([g, k])
             LP += const_q_gk(vars_system.P_gk, g, params_system["K_idx"], M2, params_system["Under_q_gu"][g][u])
 
 
@@ -192,7 +192,7 @@ def def_const_Overq_gk(LP, vars_system, params_system):
         for u in params_system["U_idx"][g]:
             M2 = []
             for k in params_system["I_gu"][g][u]:
-                M2.append([g, str(k)])
+                M2.append([g, k])
             LP += const_Overq_gk(vars_system.P_gk, g, params_system["K_idx"], M2, params_system["Over_q_gu"][g][u])
 
 

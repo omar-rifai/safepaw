@@ -9,20 +9,15 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
     
     Delta_plus = results["Delta_plus"]
     Delta_moins = results["Delta_moins"]
-    facilities = Delta_plus.facility.values
-    resources = Delta_plus.resource.values
-    delta_plus_values = Delta_plus.values
-    delta_moins_values = Delta_moins.values
+
 
     df_loads = _compute_load(results, by_region,by_group,by_pathway, params_system)
 
-    Delta_plus_index = {(f,r): delta_plus_values[i, j]
-                   for i, f in enumerate(facilities)
-                   for j, r in enumerate(resources)}
-    
-    Delta_moins_index = {(f,r): delta_moins_values[i, j]
-                   for i, f in enumerate(facilities)
-                   for j, r in enumerate(resources)}
+    delta_plus_value = Delta_plus.groupby(["facility","resource"], dropna=False)["value"].sum().reset_index()
+    delta_moins_values = Delta_moins.groupby(["facility","resource"], dropna=False)["value"].sum().reset_index()
+
+    Delta_plus_index = {(row.facility, row.resource): row.value for row in delta_plus_value.itertuples()}
+    Delta_moins_index = {(row.facility, row.resource): row.value for row in delta_moins_values.itertuples()}
     
     capacity_cache = {str(h): calculate_facility_capacity(params_system, h) for h in params_system["H"]}
     transfers_in_cache = {str(h): get_transfers_in(h, Delta_plus_index, params_system) for h in params_system["H"]}
@@ -52,17 +47,18 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
     return list_facilities_loads
 
 def _compute_load(results, by_region, by_group, by_pathway, params_system):
-    P = results["P_gkrah"]
+    all_dims = ["facility", "group", "pathway", "region", "activity"]
+    df_P = results["P_gkrah"] 
     sum_dims = ["activity"]
     if not by_region:
         sum_dims.append("region")
     if not by_group:
         sum_dims.append("group")
     if not by_pathway:
-        sum_dims.append("pathway")
-
-    P_summed = P.sum(dim=sum_dims)
-    df_loads = P_summed.to_dataframe(name="load").reset_index() 
+        sum_dims.append("pathway")    
+    group_dims = [c for c in all_dims if c not in sum_dims]
+    df_loads = df_P.groupby(group_dims, dropna=False)["value"].sum().reset_index()
+    df_loads.rename(columns={"value": "load"}, inplace=True)
     df_loads["load"]  *= params_system["D"]
     return df_loads
 
@@ -70,8 +66,10 @@ def _compute_load(results, by_region, by_group, by_pathway, params_system):
 def get_average_distance(results, params_system):
     """Compute the weighted average distance (in kms) across all patients"""
     import pandas as pd
-    P_summed = results["P_gkrah"].sum(dim=["group", "pathway", "activity"])
-    df_loads = P_summed.to_dataframe(name="load").reset_index()
+    df_P = results["P_gkrah"]
+    df_loads = df_P.groupby(["region", "facility"], dropna=False)["value"].sum().reset_index()
+    df_loads.rename(columns={"value": "load"}, inplace=True)
+
     w_rh = params_system["w_rh"]
     w_rh_flat = pd.Series({(r, h): val 
                            for r, facility_item in w_rh.items() 
