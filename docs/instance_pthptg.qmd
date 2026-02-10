@@ -1,0 +1,85 @@
+
+---
+title: Hip and Knee Protheses
+---
+
+This instance both public and private data to study the patient pathways for hip and knee replacements surgeries[^1] .
+
+```{python}
+#| echo: false
+#| results: asis
+
+import pandas as pd
+
+# types_parcours_fields
+types_parcours_fields = {
+    "BEN_RES_DPT": "Patient department of residence",
+    "sej_type": "Type of hospital stay (e.g., PTG, PTH)",
+    "type_parcours": "Care pathway type",
+    "SSR_TYPE": "Type of post-acute care (DOM, HC, HDJ, etc.)",
+    "nb": "Number of patients"
+}
+
+# ssr_fields
+ssr_fields = {
+    "BOR": "Type of activity (SSR)",
+    "AN": "Year",
+    "FI": "Patient FINESS number",
+    "FI_EJ": "Facility FINESS number",
+    "GDE": "SSR group/type (e.g., SSR_A)",
+    "AUT": "Other info",
+    "LIT": "Number of beds",
+    "PLA": "Number of places",
+    "APEC": "Unknown (could be specialized activity)",
+    "SEJHC": "Hospital days",
+    "JOUHC": "Hospital stays",
+    "SEJ3M": "3-month stays",
+    "JOUHP": "Other hospital stay counts"
+}
+
+# mco_fields (shortened example; expand as needed)
+mco_fields = {
+    "BOR": "Activity type",
+    "AN": "Year",
+    "FI_EJ": "Legal FINESS ID / Facility identifier",
+    "LIT_MED": "Beds (Medicine)",
+    "JLI_MED": "Bed-days (Medicine)",
+    "SEJHC_MED": "Full inpatient stays (Medicine)",
+    "SEJ0_MED": "Day stays (Medicine)",
+    "JOU_MED": "Hospital days (Medicine)"
+    # ... you can continue adding the rest of your mco_fields entries here
+}
+
+# Convert to DataFrames
+df_types_parcours = pd.DataFrame(list(types_parcours_fields.items()), columns=["Field", "Description"])
+df_ssr = pd.DataFrame(list(ssr_fields.items()), columns=["Field", "Description"])
+df_mco = pd.DataFrame(list(mco_fields.items()), columns=["Field", "Description"])
+
+# Convert to HTML (wrap in div with max-width for Quarto HTML)
+def html_table(df, max_width=500):
+    html_table = df.to_html(index=False, border=1, justify="center")
+    return f"""
+<div style="max-width:{max_width}px; margin:auto;">
+<style>
+  table {{ width: 100%; table-layout: fixed; border-collapse: collapse; }}
+  th, td {{ padding: 0.3em 0.5em; border: 1px solid #ccc; word-wrap: break-word; }}
+</style>
+{html_table}
+</div>
+"""
+
+# Example usage
+html_types_parcours = html_table(df_types_parcours)
+html_ssr = html_table(df_ssr)
+html_mco = html_table(df_mco)
+
+# Display in Jupyter / Quarto
+from IPython.display import display, HTML
+display(HTML(html_types_parcours))
+display(HTML(html_ssr))
+display(HTML(html_mco))
+
+```
+
+
+[^1]:a footnote

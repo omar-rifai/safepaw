@@ -1,0 +1,221 @@
+
+---
+title: Maternity Instances
+---
+
+Our main testing instance for demo purpose uses open data from the French maternity wards. Below we detail how the datasets were curated and the hypothese
+made to fit the datasets to our optimization model.
+
+## Data Sources
+Several open data sources were used to construct  instances for our optimization problem.
+
+-  Dataset of french maternity wards \[@maternity2000\]. This dataset contains yearly (10 years) info on `deliveries_per_facility` and the number of `beds` per facility. 
+The type of maternity ward is also recorded (type 1, 2a, 2b, or 3). 
+- The french national directory of health establishements list\[@finess2025\]. We use this dataset mainly to extract the coordinates of each maternity ward.
+- Statistics on number of births by commune \[@insee_births_communal\]. This dataset allows us to set the lower bounds $d_{gr}$ on our model's demand.
+- Additional open data for precise coordinates of the regions, departments and communes in France.
+
+
+The data sources have been synthesized in our project as two files 📄 [*summary_maternity_capacity.csv*](https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_capacity.csv?ref_type=heads)  for the capacity 
+in `beds` by facility and 📄 [*summary_maternity_labours.csv*](https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_labours.csv?ref_type=heads) to extract the demand by commune. Sample rows are shown below.
+
+
+```{python}
+#| echo: false
+#| results: asis
+
+from IPython.display import display, Markdown
+import pandas as pd
+df= pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv")
+df_mat =df.loc[:, ~df.columns.str.contains("^Unnamed")]
+
+display(df_mat.head(n=1).to_html(index=False))
+
+
+from IPython.display import display, Markdown
+import pandas as pd
+df = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+df = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+df_labours = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+display(df_labours.head(n=1).to_html(index=False))
+```
+
+#### Verifying compatibility
+We made sure that the two data sources were coherent by summing the number of deliveries by region across 10 years.
+
+
+```{python}
+#| echo: false
+#| results: asis
+
+from IPython.display import display, Markdown
+
+import numpy as np
+import pandas as pd
+
+df_materinity = pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv", low_memory=False)
+df_labours = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+df_materinity = pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv", low_memory=False)
+df_labours = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+
+years_cap = list(np.sort(df_materinity["year"].unique()))
+regions_cap = list(np.sort(df_materinity["region_code"].unique()))
+df_materinity = df_materinity.groupby(["region_code"]).agg(summary_maternity_capacity_csv=("deliveries_per_facility", "sum")).reset_index()
+
+
+df_labours = df_labours[(df_labours["year"].isin(years_cap)) & (df_labours["region_code"].isin(regions_cap))]
+df_labours = df_labours.groupby(["region_code"]).agg(summary_maternity_labours_csv=("deliveries_per_comm","sum")).reset_index()
+import matplotlib.pyplot as plt
+import logging
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+
+fig, ax = plt.subplots()
+
+df_materinity.plot.bar(x="region_code", y="summary_maternity_capacity_csv", color="red", ax=ax, alpha=0.3)
+df_labours.plot.bar(x="region_code", y="summary_maternity_labours_csv", color="blue", ax=ax, alpha=0.3)
+
+ax.set_xlabel("French Region Code")
+ax.set_ylabel("Number of Deliveries")
+ax.set_title("Comparison of number of deliveries per region in two datasources")
+ax.legend()  # shows the labels
+
+plt.xlabel
+
+plt.show()
+
+```
+
+## Hypotheses
+
+Some hypotheses are made to convert our datasets into our model parameters
+
+
+
+### Demand per region {#sec:demand-per-region}
+
+Using the values $L_{r,y}$ (deliveries in region $r$  year  $y$), we calcuate the fraction $d_{gr}$ as follows:
+
+
+\begin{equation}
+\bar{L}_r = \frac{1}{Y} \sum_{y=1}^{Y} L_{r,y} 
+\end{equation}
+
+\begin{equation}
+ d_{gr} = \frac{\bar{L}_r}{\sum_{r} \bar{L}_r}
+\end{equation}
+
+
+This demand is global for all patient groups. As we do not have detailed info on the demand per pation group,
+ we multiply the obtained global demands by the estimated statistics on delivery type  \[@DREES2021_naissance_accouchements\].
+
+
+```{python}
+#| echo: false
+#| results: asis
+import pandas as pd
+
+params = {
+    "Parameter": [
+        "$G$",
+        "$K$",
+        "$A_{gk}$",
+        "$R$",
+        "$R$",
+        "$H$",
+        "$L$",
+        "$U_g$",
+        "$I_{gu}$",
+        "$O_{gk}$",
+        "$J_h$",
+        "$N_{gka2}$",
+        "$N_{gka1}$",
+        "$D$",
+        "$d_{gr}$",
+        "$w_{rh}$",
+        "$\\underline{q}_g$ / $\\overline{q}_g$",
+        "$\\underline{q}_{gu}$ / $\\overline{q}_{gu}$",
+        "$c_{gk}$",
+        "$m_{hl}$",
+        "$t_{gkal}$",
+        "$\\delta_l$",
+        "$b_{hl_{in}}$ $b_{hl_{out}}$",
+        "$f$",
+        "$\\alpha$"
+    ],
+    "Meaning": [
+        "Patients groups",
+        "Available pathways",
+        "Number of activities for group $g$ pathway $k$",
+        "Regions",
+        "Regions",
+        "Facilities",
+        "Resources",
+        "Quality levels for group $g$",
+        "Pathways available for group $g$ quality level $u$",
+        "Facilities able to handle deliveries of type $g$",
+        "Facilities transferable to from facility $h$",
+        "Next activity",
+        "All activities considered for potential transfer",
+        "Total demand over service area",
+        "Minimum deliveries of type $g$ in region $r$",
+        "Preference for patients from region $r$ to deliver in facility $h$",
+        "Minimum and maximum proportions of group $g$ to be treated",
+        "Minimum and maximum proportions of group $g$ to be treated under quality $u$",
+        "Benefit score of assigning a patient from group $g$ with the care pathway $k$",
+        "Total capacity of resource type l in healthcare facilities h",
+        "Consumption of resource $l=bed/days$ required to perform labour of group $g$",
+        "Transfer unit between healthcare facilities for each resource (bed/days)",
+        "Maximum proportions of resource type l transferable in and out of facility $h$",
+        "Maximum allowable percentage of patients who may be transferred between facilities",
+        "Weight of objective function"
+    ],
+    "Value": [
+        "Four groups corresponding to maternity types [^1] (1,2a,2b,3)",
+        "One pathway per group",
+        "One activity per pathway",
+        "French communes",
+        "French communes",
+        "Facilities are the maternity wards",
+        "One resource (=bed/days) from *summary_maternity_capacity.csv*",
+        "One quality level",
+        "Trivial as we have one unique pathway and quality level",
+        "Extracted from facility `type` in *summary_maternity_capacity.csv*",
+        "All facilities of the same `type`",
+        "Trivial as only one activity",
+        "Trivial as only one activity",
+        "Total deliveries across the service area",
+        "Calculated from *summary_maternity_labours.csv* (parameterizable)",
+        "Affinities between regions (french departments) and maternity wards calculated as 1/distance (km) from the maternity ward to the center of the department [^2]",
+        "Not constrained",
+        "Not constrained",
+        "Trivial as only one pathway",
+        "Number of `beds` per facility times 365 [^3]",
+        "Average length of stay for a delivery 4.6 [@DREES2021_naissance_accouchements]",
+        "365 [^4]",
+        "1 (parameterizable)",
+        "1",
+        "1 (parameterizable)"
+    ]
+}
+
+# Create DataFrame
+df_params = pd.DataFrame(params)
+
+df_params.to_html(index=False)
+```
+
+
+
+|Delivery type | fraction|
+|--------------|----------|
+| 1 | 0.5 |
+| 2a | 0.2 |
+| 2b | 0.2|
+| 3 | 0.1|
+
+
+
+[^1]: Type 1: Obstetrics only; Type 2a: Obstetrics and neonatology; Type 2b: Obstetrics, neonatology, and neonatal intensive care; Type 3: Obstetrics, neonatology, neonatal intensive care, and neonatal resuscitation.
+[^2]: For the department the maternity ward is situated in, this affinity score is set to 10 arbitrarity to reflect a high affinity. 
+[^3]: The resource unit considered is bed/days per facility per year
+[^4]: A resource transfer is considered definitive for the planning horizon
