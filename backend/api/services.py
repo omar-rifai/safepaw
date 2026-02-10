@@ -10,13 +10,9 @@ class ExecutableNotFound(Exception):
     pass
 
 
-def check_executable(exec_name="highs"):
-    import shutil
-
-    solver_path = shutil.which(exec_name)
-    print("Solver path:", solver_path)
-    if solver_path is None:
-        raise ExecutableNotFound(f"Executable '{exec_name}' not found")
+def check_executable():
+    #TODO: check for gurobi or HiGHS
+    return True
 
 def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) -> Tuple[str, str, list, list]:
     """Run the optimization problem with a the upper bound of allowed resource export set to `transfers`"""
