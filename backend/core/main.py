@@ -19,7 +19,7 @@ class OptVars(BaseModel):
 
 def run_driver(params_system, mode="default"):
 
-    LP = pulp.LpProblem('Regional Case Mix', pulp.LpMaximize)
+    LP = pulp.LpProblem('regional_case_mix', pulp.LpMaximize)
 
     P = {g: {k: {r: {a: {h: pulp.LpVariable(f"P_{g}_{k}_{r}_{a}_{h}", lowBound=0)
                          for h in params_system["H"]}
@@ -67,8 +67,8 @@ def run_driver(params_system, mode="default"):
     print("Declaring Constraints...")
     declare_constraints(LP, vars_system, params_system, mode)
     print("Starting solver...")
+
     LP.solve(pulp.HiGHS(msg=1))
-   
     dict_results = package_results(vars_system, params_system)
     status =  pulp.LpStatus[LP.status]
     objective = pulp.value(LP.objective)
