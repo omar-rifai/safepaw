@@ -36,7 +36,7 @@ def reconstruct_c_gk(list_pathways: list, params_system: dict) -> dict:
     validate_required_params(params_system, ["G"], "Construct patient groups first.")
     c_gk = {}
     for g in params_system["G"]:
-        c_gk[g] = [k.group_benefit for k in [k for k in list_pathways if k.associated_group_id == g]]
+        c_gk[g] = {k.pathway_id: k.group_benefit for k in [k for k in list_pathways if k.associated_group_id == g]}
     params_system["c_gk"] = c_gk
     return params_system
 
@@ -163,14 +163,14 @@ def reconstruct_N_gka(list_activities: list, params_system: dict):
     """
     validate_required_params(params_system, ["G", "K_idx"], msg="Construct patient groups first")
     B = {g: {k: [] for k in params_system["K_idx"][g]} for g in params_system["G"]}
-    N = {g: {k: [] for k in params_system["K_idx"][g]} for g in params_system["G"]}
+    N = {g: {k: {} for k in params_system["K_idx"][g]} for g in params_system["G"]}
 
     for a in list_activities:
         if not a.transferable:
             continue
         g, k = a.associated_group, a.associated_pathway
-        B[g][k].append(a.activity_id)       
-        N[g][k].append(a.transfer_to)
+        B[g][k].append(a.activity_id)      
+        N[g][k][a.activity_id] = a.transfer_to
         
     params_system["N_gka_1"] = B
     params_system["N_gka_2"] = N
