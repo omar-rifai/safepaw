@@ -123,7 +123,7 @@ def get_Activities(groups_ids: list) -> list[Activity]:
 def get_PatientPathways(groups_ids: list) -> list[Pathway]:
     """Creates Pathways objects for each patientGroup type"""
     pathways = [Pathway(pathway_id= "p"+g, associated_group_id = g, quality_level = "0", list_activities= [],
-                         group_benefit = 1, list_next = []) for g in groups_ids]
+                         group_benefit = 1) for g in groups_ids]
     return pathways
 
     
