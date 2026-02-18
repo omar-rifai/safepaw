@@ -409,7 +409,7 @@ def def_const_delta_moins_b_hl_out(LP, vars_system, params_system):
 
 
 #################################################
-###    CHOOSE SET OF CONSTRAINTS TO INCLUD    ###
+###    CHOOSE SET OF CONSTRAINTS TO INCLUDE   ###
 #################################################
 
 
