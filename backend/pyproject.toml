@@ -21,7 +21,8 @@ dependencies = [
     "pyproj (>=3.6.0,<4.0.0)",
     "pyarrow (>=23.0.0,<24.0.0)",
     "typer (>=0.21.1,<0.22.0)",
-    "pyyaml (>=6.0.3,<7.0.0)"
+    "pyyaml (>=6.0.3,<7.0.0)",
+    "gurobipy (>=13.0.1,<14.0.0)"
 ]
 
 [dependency-groups]
