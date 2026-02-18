@@ -39,9 +39,8 @@ class Pathway(BaseModel):
     pathway_id : str
     associated_group_id : str
     quality_level: str 
-    list_activities : List[int]
+    list_activities : List[str]
     group_benefit : float
-    list_next : List[int] # the next non-home activity if self is also non-home
 
 
 class Instance(BaseModel):
