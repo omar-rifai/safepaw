@@ -147,8 +147,12 @@ window.Quarto = {
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="./instances.html" aria-current="page"> 
-<span class="menu-text">Instances</span></a>
+    <a class="nav-link" href="./instance_maternites.qmd"> 
+<span class="menu-text">Maternity Wards</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./instance_pthptg.html"> 
+<span class="menu-text">Hip and Knee Protheses</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./about.html"> 
@@ -211,7 +215,7 @@ window.Quarto = {
 <li>Additional open data for precise coordinates of the regions, departments and communes in France.</li>
 </ul>
 <p>The data sources have been synthesized in our project as two files 📄 <a href="https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_capacity.csv?ref_type=heads"><em>summary_maternity_capacity.csv</em></a> for the capacity in <code>beds</code> by facility and 📄 <a href="https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_labours.csv?ref_type=heads"><em>summary_maternity_labours.csv</em></a> to extract the demand by commune. Sample rows are shown below.</p>
-<div id="14973ad5" class="cell" data-results="asis" data-execution_count="1">
+<div id="dbaa7451" class="cell" data-results="asis" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 
@@ -392,7 +396,7 @@ window.Quarto = {
 <section id="verifying-compatibility" class="level4">
 <h4 class="anchored" data-anchor-id="verifying-compatibility">Verifying compatibility</h4>
 <p>We made sure that the two data sources were coherent by summing the number of deliveries by region across 10 years.</p>
-<div id="b83f00ef" class="cell" data-results="asis" data-execution_count="2">
+<div id="3adc9abc" class="cell" data-results="asis" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -568,22 +572,6 @@ d_{gr} = \frac{\bar{L}_r}{\sum_{r} \bar{L}_r}
 <tr class="odd">
 <td>1</td>
 <td>0.5</td>
-</tr>
-<tr class="even">
-<td>2a</td>
-<td>0.2</td>
-</tr>
-<tr class="odd">
-<td>2b</td>
-<td>0.2</td>
-</tr>
-<tr class="even">
-<td>3</td>
-<td>0.1</td>
-</tr>
-<tr class="odd">
-<td>1</td>
-<td>0.50</td>
 </tr>
 <tr class="even">
 <td>2a</td>

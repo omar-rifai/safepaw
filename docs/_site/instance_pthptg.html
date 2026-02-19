@@ -68,6 +68,9 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
@@ -99,11 +102,11 @@ ul.task-list li input[type="checkbox"] {
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./instance_maternities.html"> 
-<span class="menu-text">Maternities</span></a>
+<span class="menu-text">Maternity Wards</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link active" href="./instance_pthptg.html" aria-current="page"> 
-<span class="menu-text">Protheses</span></a>
+<span class="menu-text">Hip and Knee Protheses</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./about.html"> 
@@ -146,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <p>This instance both public and private data to study the patient pathways for hip and knee replacements surgeries<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> .</p>
-<div id="0a457308" class="cell" data-results="asis" data-execution_count="1">
+<div id="e3015bcb" class="cell" data-results="asis" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div style="max-width:500px; margin:auto;">
 
@@ -300,6 +303,33 @@ ul.task-list li input[type="checkbox"] {
 </tbody>
 </table>
 
+</div>
+</div>
+</div>
+<p>We can illustrate the general pathway of patients with the following graph:</p>
+<div style="text-align: center;">
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph TD
+  A["CHIR/ORTHO (pre-op)"] --&gt; B["ANESTH(pre-op)"]
+  B --&gt; C["Opt. Specialities"]
+  C --&gt; D["KINE_MCO (pre-op physiotherapy)"]
+  D --&gt; E["CHIR/ORTHO + ANESTH (surgery block)"]
+  E --&gt; F1["Scenario 0: DAY_HC / KINE_SSR / KINE_DOM = 28 / 0 / 0"]
+  E --&gt; F2["Scenario 1: DAY_HC / KINE_SSR / KINE_DOM = 0 / 0 / 25"]
+  E --&gt; F3["Scenario 2: DAY_HC / KINE_SSR / KINE_DOM = 21 / 20 / 0"]
+  E --&gt; F4["Scenario 3: DAY_HC / KINE_SSR / KINE_DOM = 0 / 25 / 0"]
+  F1 --&gt; G["CHIR/ORTHO (final post-op)"]
+  F2 --&gt; G
+  F3 --&gt; G
+  F4 --&gt; G
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>

@@ -9,10 +9,14 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: instances.qmd
-        text: Instances
+      - href: instance_maternities.qmd
+        text: Maternity Wards
+      - href: instance_pthptg.qmd
+        text : Hip and Knee Protheses
       - about.qmd
       
+
+
 
 format:
   html:

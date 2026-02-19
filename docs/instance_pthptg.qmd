@@ -68,18 +68,36 @@ def html_table(df, max_width=500):
 </div>
 """
 
-# Example usage
 html_types_parcours = html_table(df_types_parcours)
 html_ssr = html_table(df_ssr)
 html_mco = html_table(df_mco)
 
-# Display in Jupyter / Quarto
 from IPython.display import display, HTML
 display(HTML(html_types_parcours))
 display(HTML(html_ssr))
 display(HTML(html_mco))
 
 ```
+
+We can illustrate the general pathway of patients with the following graph:
+
+::: {style="text-align: center;"}
+```{mermaid}
+graph TD
+  A["CHIR/ORTHO (pre-op)"] --> B["ANESTH(pre-op)"]
+  B --> C["Opt. Specialities"]
+  C --> D["KINE_MCO (pre-op physiotherapy)"]
+  D --> E["CHIR/ORTHO + ANESTH (surgery block)"]
+  E --> F1["Scenario 0: DAY_HC / KINE_SSR / KINE_DOM = 28 / 0 / 0"]
+  E --> F2["Scenario 1: DAY_HC / KINE_SSR / KINE_DOM = 0 / 0 / 25"]
+  E --> F3["Scenario 2: DAY_HC / KINE_SSR / KINE_DOM = 21 / 20 / 0"]
+  E --> F4["Scenario 3: DAY_HC / KINE_SSR / KINE_DOM = 0 / 25 / 0"]
+  F1 --> G["CHIR/ORTHO (final post-op)"]
+  F2 --> G
+  F3 --> G
+  F4 --> G
+```
+:::
 
 
 [^1]:a footnote
