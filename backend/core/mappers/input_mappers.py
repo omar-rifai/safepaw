@@ -44,12 +44,9 @@ def reconstruct_c_gk(list_pathways: list, params_system: dict) -> dict:
 def reconstruct_U_from_pathways(list_pathways: list, params_system: dict) -> dict:
     """ Adds U (Quality level u among the Ug quality levels of care pathways of group g) to params_system"""
     validate_required_params(params_system, ["G"], "Construct patient groups first.")
-    U_g = {}
     U_idx = {}
     for g in params_system["G"]:
-        U_g[g] = len(set([k.quality_level for k in list_pathways if k.associated_group_id == g]))
-        U_idx[g] = set([k.quality_level for k in list_pathways if k.associated_group_id == g])
-    params_system["U"] = U_g
+        U_idx[g] = [k.quality_level for k in list_pathways if k.associated_group_id == g]
     params_system["U_idx"] =  U_idx
     return params_system
 

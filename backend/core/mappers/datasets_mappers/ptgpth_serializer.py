@@ -2,6 +2,7 @@ import pandas as pd
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 import geopandas as gpd
 
+specialities = ["CSC", "DERMA", "RHUMA", "URO", "GASTRO", "OPH", "ENDO", "ORL", "standard"]
 
 def load_types_parcours(path: str, min_patients: int, dep_code:str):
     """Read and filter TYPES_PARCOURS for Loire."""
@@ -38,50 +39,97 @@ def reduce_TYPES_PARCOURS_LOIRE(data: pd.DataFrame, min_patients: int, dep_code:
 
 def reduce_MCO_LOIRE(data: pd.DataFrame, dep_code: str) -> pd.DataFrame:
     """Keep only rows corresponding to Loire department in MCO data. (FINESS number starts with 42)"""
-    dept_code = data['FI_EJ'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
+    dept_code = data['420'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
     return data[dept_code.isin(dep_code)].reset_index(drop=True)
 
 
 def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
     """Keep only SSR_A rows corresponding to Loire department"""
-    dept_code = data['FI_EJ'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
+    dept_code = data['FI'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
     return data[dept_code.isin(dep_code) & (data['GDE'] == "SSR_A")].reset_index(drop=True)
 
 
 import pandas as pd
-def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
-    """Creates Region instance using public data on French communes (Commune code and coordinates)"""
-    cantons = []
+def get_Regions(df_instance: pd.DataFrame, dep_code: int) -> list[Region]:
+    """Creates Region instance (cantons) given a department code (cantons are grouped by bureau de voe)"""
+    gdf_cantons = get_geo_polygon()
+    gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
     list_regions = [Region(region_id="",
                            coordinates="",
-                           facilities_affinity=_get_affinities()) for c in cantons]
+                           facilities_affinity=_get_affinities()) for c in []]
     return list_regions
 
 
 def _get_affinities():
     return
 
-def get_Facilities(df_instance : pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1) -> list[Facility]:
-    """Creates Facility objects corresponding to unique nofinesset ids 
-    """
-    all_ids = []
-    def row_to_facility(row):
-        return Facility(
-            facility_id ="" ,
-            facility_name ="" ,
-            region = "" ,
-            coordinates = [] , 
-            resources_capacity = 0 ,
+def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int,
+                   max_transferable_in: int = 10, max_transferable_out : int = 1) -> list[Facility]:
+    """Creates Facility objects corresponding to unique nofinesset ids """
+    list_facilities = []
+    gdf_cantons = get_geo_polygon()
+    gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
+    df_finess = get_finness_info(df_mco, df_ssr, gdf_geo)
+    list_finess = list(df_finess["nofinesset"].unique())
+    list_finess.append("DOM")
+    
+    for row in df_finess.itertuples():
+        
+        list_facilities.append(Facility(
+            facility_id = row.nofinesset,
+            facility_name = "" ,
+            region = row.can_code,
+            coordinates =[row.lat, row.lon] , 
+            resources_capacity = _get_resources_capacity(row.nofinesset) ,
             max_transferable_in = 0,
             max_transferable_out = 0,
             linked_facilities = [],
-            available_pathways= _get_available_pathways())
-    list_facilities = df_instance.apply(row_to_facility, axis=1).tolist()
+            available_pathways= _get_available_pathways()))
+    #list_facilities = df_instance.apply(row_to_facility, axis=1).tolist()
     return list_facilities
 
 def _get_available_pathways():
     """Returns available pathways for each facility ``type''"""
     return  []
+
+def _get_hospital_share_speciality(df_mco: pd.DataFrame, nofinesset: str, specialities: list) -> float:
+    """Returns the fraction of the facility activity in the region"""
+
+
+def _get_resources_capacity(nofinesset: str) -> dict:
+    """Returns a dict with each available resource and its capacity given a finess number"""
+    
+    _get_ORTH_pre_capacity()
+    _get_ANES_capacity()
+    _get_specialities_capacity()
+    _get_KINE_MCO_capacity()
+    _get_DAY_HC_capacity()
+    _get_KINE_SSR_capacity()
+    _get_ORTH_post_capacity()
+    capacities = {}
+    return capacities
+
+def _get_specialities_frac(df_mco: pd.DataFrame) -> dict:
+    """Returns a proxy of facilities' capacity for a speciality. When there is no info on availability,
+        we assume the speciality is present following other specialists patterns"""
+    
+    df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU", "URO": "PNEU",
+                           "GASTRO": "PGAS", "OPH": "POPH", "ENDO": "PEND", "ORL": "PPNE", "standard": None}
+    total_cap_regional = {}
+    
+    for speciality in df_mco_flag_fields.keys():
+        flag_field = df_mco_flag_fields[speciality]
+        total_cap_regional[speciality] = sum(df_mco[df_mco[flag_field]!=0]["ACTCLI_PM"])
+       
+    facility_specialty_frac= {}
+    for i, row_facility in df_mco.iterrows():
+        facility_specialty_frac[row_facility["420"]] = {} #420 is the field of the finess number
+        for speciality in df_mco_flag_fields.keys():
+            flag_field = df_mco_flag_fields[speciality]
+            if row_facility[flag_field] !=0:
+                facility_specialty_frac[row_facility["420"]][speciality] = row_facility["ACTCLI_PM"] / total_cap_regional[speciality]
+
+    return facility_specialty_frac
 
 
 def get_Instance(df_instance : pd.DataFrame) -> Instance:

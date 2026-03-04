@@ -164,7 +164,6 @@ def const_q_gk(P_gk, g_2, K_idx, M2, q):
     
 # Define such constraint for every type (g,u):
 #    - For every g \in G, u \in U
-# (Note that U is not used)
 
 def def_const_q_gk(LP, vars_system, params_system):
     for g in params_system["G"]:
@@ -185,7 +184,6 @@ def const_Overq_gk(P_gk, g_2, K_idx, M2, over_q):
     
 # Define such constraint for every type (g,u):
 #    - For every g \in G, u \in U
-# (Note that U is not used)
 
 def def_const_Overq_gk(LP, vars_system, params_system):
     for g in params_system["G"]:
