@@ -2,7 +2,7 @@ import pandas as pd
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 import geopandas as gpd
 
-specialities = ["CSC", "DERMA", "RHUMA", "URO", "GASTRO", "OPH", "ENDO", "ORL", "standard"]
+specialities = ["CSC", "DERMA", "RHUMA", "URO", "GASTRO", "OPH", "ENDO", "ORL"]
 
 def load_types_parcours(path: str, min_patients: int, dep_code:str):
     """Read and filter TYPES_PARCOURS for Loire."""
@@ -13,6 +13,7 @@ def load_types_parcours(path: str, min_patients: int, dep_code:str):
 def load_mco_data(path: str, dep_code: str):
     """Read MCO data and keep Loire rows only."""
     df = pd.read_csv(path)
+    df = df.rename(columns={'420': 'FI_ET'})
     return reduce_MCO_LOIRE(df, dep_code)
 
 def load_ssr_data(path: str, dep_code:str):
@@ -39,7 +40,7 @@ def reduce_TYPES_PARCOURS_LOIRE(data: pd.DataFrame, min_patients: int, dep_code:
 
 def reduce_MCO_LOIRE(data: pd.DataFrame, dep_code: str) -> pd.DataFrame:
     """Keep only rows corresponding to Loire department in MCO data. (FINESS number starts with 42)"""
-    dept_code = data['420'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
+    dept_code = data['FI_ET'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
     return data[dept_code.isin(dep_code)].reset_index(drop=True)
 
 
@@ -92,16 +93,13 @@ def _get_available_pathways():
     """Returns available pathways for each facility ``type''"""
     return  []
 
-def _get_hospital_share_speciality(df_mco: pd.DataFrame, nofinesset: str, specialities: list) -> float:
-    """Returns the fraction of the facility activity in the region"""
-
-
-def _get_resources_capacity(nofinesset: str) -> dict:
+def _get_resources_capacity(nofinesset: str, list_finess: list, df_mco: pd.DataFrame,
+                            df_types_parcours: pd.DataFrame) -> dict:
     """Returns a dict with each available resource and its capacity given a finess number"""
     
     _get_ORTH_pre_capacity()
     _get_ANES_capacity()
-    _get_specialities_capacity()
+    m_hl = _get_specialities_cap(m_hl, df_mco, df_types_parcours, list_finess)
     _get_KINE_MCO_capacity()
     _get_DAY_HC_capacity()
     _get_KINE_SSR_capacity()
@@ -109,27 +107,107 @@ def _get_resources_capacity(nofinesset: str) -> dict:
     capacities = {}
     return capacities
 
-def _get_specialities_frac(df_mco: pd.DataFrame) -> dict:
+def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
     """Returns a proxy of facilities' capacity for a speciality. When there is no info on availability,
         we assume the speciality is present following other specialists patterns"""
     
     df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU", "URO": "PNEU",
-                           "GASTRO": "PGAS", "OPH": "POPH", "ENDO": "PEND", "ORL": "PPNE", "standard": None}
+                           "GASTRO": "PGAS", "OPH": "POPH", "ENDO": "PEND", "ORL": "PPNE"}
     total_cap_regional = {}
     
     for speciality in df_mco_flag_fields.keys():
         flag_field = df_mco_flag_fields[speciality]
         total_cap_regional[speciality] = sum(df_mco[df_mco[flag_field]!=0]["ACTCLI_PM"])
-       
+    
     facility_specialty_frac= {}
-    for i, row_facility in df_mco.iterrows():
-        facility_specialty_frac[row_facility["420"]] = {} #420 is the field of the finess number
+    for finess in list_finess:
+        facility_specialty_frac[finess] = {} 
         for speciality in df_mco_flag_fields.keys():
             flag_field = df_mco_flag_fields[speciality]
-            if row_facility[flag_field] !=0:
-                facility_specialty_frac[row_facility["420"]][speciality] = row_facility["ACTCLI_PM"] / total_cap_regional[speciality]
+            if finess in list(df_mco["FI_ET"].unique()):
+                if df_mco[df_mco["FI_ET"]==finess][flag_field].iloc[0] != 0:
+                    facility_specialty_frac[finess][speciality] = \
+                        df_mco[df_mco["FI_ET"]==finess]["ACTCLI_PM"].iloc[0] / total_cap_regional[speciality]
+                else:
+                    facility_specialty_frac[finess][speciality] = 0
+            else:
+                facility_specialty_frac[finess][speciality] = 0
 
     return facility_specialty_frac
+
+def _get_specialities_cap(m_hl: dict, df_mco: pd.DataFrame, df_types_parcours: pd.DataFrame,
+                          list_finess: list) -> dict:
+    import math
+    import copy
+    
+    frac_specialities =  _get_specialities_frac(df_mco, list_finess)
+    nb_groups = {x:0 for x in specialities}
+
+    for i,row in df_types_parcours.iterrows():
+        for s in specialities:
+            if s in row["type_parcours"].split(" + "):
+                nb_groups[s] += 1
+
+    cap_specialities = copy.deepcopy(frac_specialities)
+    for facility in frac_specialities.keys():
+        for speciality in specialities:
+            cap_specialities[facility][speciality] = math.ceil(frac_specialities[facility][speciality] * nb_groups[speciality])
+    
+    m_hl = _extend_nested_dict(m_hl, cap_specialities)
+    return  m_hl
+
+def _extend_nested_dict(init_dict: dict, ext_dict: dict):
+    """Helper function to update capacity of m_hl with an extension containg capacity of new resources"""
+    res_dict = {k: init_dict.get(k, {}) | ext_dict[k] for k in set(init_dict) | set(ext_dict)}
+    return res_dict
+
+
+def _get_ORTH_pre_capacity(m_hl_init: dict, list_finess: list, df_mco: pd.DataFrame, df_types_parcours: pd.DataFrame) -> dict:
+    """ 
+    Calculates capacity of CHIR./ORTHO. using a proxy of total departmental number of visits times
+    the proportion of beds available at a facility (we assume that visit consumes 3 resources of beds/days
+    # Hypothesis: CHIR./ORTHO. at every MCO-hospital
+    """
+    import math
+    unit_consumption = 3
+    m_hl = {h: {"ORTH/CHIR": 0} for h in list_finess}
+        
+    total_bed_days = df_mco["JLI_CHI"].sum()
+    total_consumption_ORTH = unit_consumption * df_types_parcours["nb"].sum()
+    
+    for h in list_finess:
+        current_facility_beds = df_mco[df_mco["FI_ET"]==h]["JLI_CHI"].iloc[0]
+        capacity_orth = math.ceil(total_consumption_ORTH * ( current_facility_beds / total_bed_days))
+        if current_facility_beds == 0: m_hl[h][j] == 0
+        else: m_hl[h]["ORTH/CHIR"] = capacity_orth
+            
+    m_hl = _extend_nested_dict(m_hl_init, m_hl)
+    return m_hl
+    
+
+def _get_ANES_capacity(m_hl_init: dict, list_finess: list,df_mco: pd.DataFrame, df_types_parcours: pd.DataFrame) -> dict:
+    """ 
+    Calculates capacity of ANES. using a proxy of total departmental number of visits times
+    the proportion of beds available at a facility (we assume that visit consumes 2 resources of beds/days
+    # Hypothesis: ANES. at every MCO-hospital
+    """
+    import math
+    unit_consumption = 2
+    m_hl = {h: {"ANES": 0} for h in list_finess}
+        
+    total_bed_days = df_mco["JLI_CHI"].sum()
+    total_consumption_ORTH = unit_consumption * df_types_parcours["nb"].sum()
+    
+    for h in list_finess:
+        current_facility_beds = df_mco[df_mco["FI_ET"]==h]["JLI_CHI"].iloc[0]
+        capacity_orth = math.ceil(total_consumption_ORTH * ( current_facility_beds / total_bed_days))
+        if current_facility_beds == 0: m_hl[h][j] == 0
+        else: m_hl[h]["ORTH/CHIR"] = capacity_orth
+            
+    m_hl = _extend_nested_dict(m_hl_init, m_hl)
+    return m_hl
+
+
 
 
 def get_Instance(df_instance : pd.DataFrame) -> Instance:
@@ -227,7 +305,7 @@ def get_finness_info(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, gdf_geo: gpd.Ge
                             usecols=["nofinesset", "coordx", "coordy"],  dtype={"coordx": str, "coordy": str},\
                             low_memory=False)
     
-    all_finess = pd.concat([df_ssr["FI"], df_mco["420"]]).dropna().unique()
+    all_finess = pd.concat([df_ssr["FI"], df_mco["FI_ET"]]).dropna().unique()
     df_finess = df_finess[df_finess["nofinesset"].isin(all_finess)]
     
     transformer = Transformer.from_crs(2154, 4326, always_xy=True)
