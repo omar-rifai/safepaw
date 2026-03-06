@@ -1,6 +1,9 @@
 import pandas as pd
 import geopandas as gpd
 
+def get_pathways(df_types_parcours_init: pd.DataFrame):
+    return list(df_types_parcours_init["SSR_TYPE"].unique())
+
 
 specialities = ["CSC", "DERMA", "RHUMA", "URO", "GASTRO", "OPH", "ENDO", "ORL"]
 post_op_scenarios = {"DAY_HC":{"PTG_HC":28,"PTH_HC":21,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":21,"PTH_HC_HDJ":14,"PTG_HDJ":0,"PTH_HDJ":0},
@@ -243,8 +246,24 @@ def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, de
     }).reset_index().rename(columns={"bureau":"nom"})
     gdf_geo  = gdf_geo.explode(index_parts=False).reset_index(drop=True)
     gdf_geo["perc_65p"] = gdf_geo["pop65p"] / gdf_geo["population"] * 100
-    gdf_geo["adjacent"] = gdf_geo.apply(lambda x: gdf_geo.loc[gdf_geo.geometry.touches(x.geometry),"can_code"].to_list(), axis=1)
+    gdf_geo["adjacent"] = [gdf_geo.loc[gdf_geo.geometry.touches(geom),"can_code"].to_list() for geom in gdf_geo.geometry]
     return gdf_geo
 
 def _get_region_affinities():
     return
+
+def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: list) -> dict:
+    """Returns a dictionary with the activities for each group/pathway"""
+    A_idx = {}
+    for g in list_patientGroups:
+        A_idx[g] = {}
+        for k in list_pathways:
+            A_idx[g][k] = []
+            A_idx[g][k].extend(["CHIR/ORTH", "ANES"])
+            A_idx[g][k].extend(g.split("_")[1:])
+            A_idx[g][k].extend(["CHIR/ORTH", "ANES"])
+            for activity, scenarios in post_op_scenarios.items():
+                for s in scenarios:
+                    if str(g.split("_")[0] + "_" + k) == s and post_op_scenarios[activity][s] != 0:
+                        A_idx[g][k].extend([activity])
+    
