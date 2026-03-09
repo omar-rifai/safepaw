@@ -4,17 +4,19 @@ import geopandas as gpd
 def get_pathways(df_types_parcours_init: pd.DataFrame):
     return list(df_types_parcours_init["SSR_TYPE"].unique())
 
-
+nb_kine_preop = {"PTG":10, "PTH":15}
 specialities = ["CSC", "DERMA", "RHUMA", "URO", "GASTRO", "OPH", "ENDO", "ORL"]
+list_resources = ["CHIR/ORTHO", "ANES", "KINE_MCO", "DAY_HC", "KINE_DOM", "KINE_SSR", "finance"]
+list_resources.extend(specialities)
+
 post_op_scenarios = {"DAY_HC":{"PTG_HC":28,"PTH_HC":21,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":21,"PTH_HC_HDJ":14,"PTG_HDJ":0,"PTH_HDJ":0},
                      "KINE_SSR":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":20,"PTH_HC_HDJ":15,"PTG_HDJ":25,"PTH_HDJ":20},
                      "KINE_DOM":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":25,"PTH_DOM":20,"PTG_HC_HDJ":0,"PTH_HC_HDJ":0,"PTG_HDJ":0,"PTH_HDJ":0}}
 
-finance_PTG = {"CHIR/ORTHO":46, "ANES" : 46, "CSC": 34.75, "DERMA": 40,"ENDO": 40, "GASTRO": 40, "GYNECO": 40,
-               "OPH":40, "ORL":40, "RHUMA":40, "URO":40, "KINE_MCO":9.95, "DAY_HC":4365.61, "KINE_DOM":769.56, "KINE_SSR":126.80,"post_ORTH": 370.99}
-finance_PTH = {"CHIR/ORTHO": 46, "ANES": 46, "CSC":34.75, "DERMA":40, "ENDO":40, "GASTRO":40, "GYNECO":40, "OPH":40,"ORL": 40,
-               "RHUMA":40, "URO":40, "KINE_MCO":9.95, "DAY_HC":3966.66, "KINE_DOM":803.30, "KINE_SSR":127.63, "post_ORTH":370.99}
-
+finance_costs= {"PTG": {"CHIR/ORTHO":46 + 4365.61, "ANES" : 46, "CSC": 34.75, "DERMA": 40,"ENDO": 40, "GASTRO": 40, "GYNECO": 40,
+                  "OPH":40, "ORL":40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTG"] * 9.95, "DAY_HC":769.56, "KINE_SSR":126.80,"KINE_DOM": 370.99},
+          "PTH": {"CHIR/ORTHO": 46 + 3966.66, "ANES": 46, "CSC":34.75, "DERMA":40, "ENDO":40, "GASTRO":40, "GYNECO":40, "OPH":40,
+                  "ORL": 40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTH"]* 9.95, "DAY_HC":803.30, "KINE_SSR":127.63, "KINE_DOM":370.99}}
 
 
 def load_types_parcours(path: str, min_patients: int, dep_code:str):
@@ -64,16 +66,10 @@ def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
     return data[dept_code.isin(dep_code) & (data['GDE'] == "SSR_A")].reset_index(drop=True)
 
 
-
-
-def _get_available_pathways():
-    """Returns available pathways for each facility ``type''"""
-    return  []
-
-def _get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
+def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
                             df_types_parcours: pd.DataFrame) -> dict:
     """Returns a dict with each available resource and its capacity given a finess number"""
-    
+    m_hl = {h: {} for h in list_finess}  
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "ORTH/CHIR", "JLI_CHI", 3)
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "ANES", "JLI_CHI", 2)
     m_hl = _get_specialities_cap(m_hl, df_mco, df_types_parcours, list_finess)
@@ -249,21 +245,79 @@ def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, de
     gdf_geo["adjacent"] = [gdf_geo.loc[gdf_geo.geometry.touches(geom),"can_code"].to_list() for geom in gdf_geo.geometry]
     return gdf_geo
 
-def _get_region_affinities():
-    return
+def get_region_affinities():
+    return {}
 
 def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: list) -> dict:
     """Returns a dictionary with the activities for each group/pathway"""
+    #STEP 1: CHIR/ORTHO (pre-op)
+    #STEP 2: ANES (pre-op)
+    #STEP 3: type_parcours consultations (optional specialties)
+    #STEP 4: KINE_MCO (pre-op physiotherapy)
+    #STEP 5: CHIR/ORTHO + ANES (surgery block)
+    #STEP 6: Post-op KINE allocation (varies by scenario)
+    #STEP 7: CHIR/ORTHO (final post-op)
     A_idx = {}
     for g in list_patientGroups:
         A_idx[g] = {}
         for k in list_pathways:
             A_idx[g][k] = []
-            A_idx[g][k].extend(["CHIR/ORTH", "ANES"])
-            A_idx[g][k].extend(g.split("_")[1:])
-            A_idx[g][k].extend(["CHIR/ORTH", "ANES"])
+            A_idx[g][k].extend(["CHIR/ORTHO", "ANES"])
+            specialists_activities = g.split("_")[1:]
+            if not "standard" in specialists_activities:
+                A_idx[g][k].extend(specialists_activities)
+            A_idx[g][k].extend(["KINE_MCO"])
+            A_idx[g][k].extend(["CHIR/ORTHO+ANES"])
             for activity, scenarios in post_op_scenarios.items():
                 for s in scenarios:
                     if str(g.split("_")[0] + "_" + k) == s and post_op_scenarios[activity][s] != 0:
                         A_idx[g][k].extend([activity])
+            A_idx[g][k].extend(["CHIR/ORTHO"])
+    return A_idx
     
+def is_transferable(A_idx: dict) -> dict:
+    """Returns a dictionary with the transferable activities for group g pathway k"""
+    import copy
+    transferable= copy.deepcopy(A_idx.copy)
+    for g in A_idx.keys():
+        for k in A_idx[g].keys():
+            transferable[g][k].pop()
+            if k == "DOM":
+                transferable[g][k].remove("KINE_DOM")          
+    return transferable
+
+def transfer_to(A_idx: dict) -> dict:
+    """Returns a dictionary with the activities to transfer to for for group g pathway k"""
+    import copy
+    transfer_to= copy.deepcopy(A_idx.copy)
+    for g in A_idx.keys():
+        for k in A_idx[g].keys():
+            transfer_to[g][k].pop(0)
+            if k == "DOM":
+                transfer_to[g][k].remove("KINE_DOM")
+    return transfer_to
+
+
+def get_required_resources(A_idx):
+    """Return a dictionary of dims groups x pathways x activities with required resources of each type"""
+    default_activities_consumption = {"CHIR/ORTH": 2, "ANES": 1} | {x : 1 for x in specialities}
+    dict_required_resources = {}
+    for g in A_idx.keys():
+        main_group = g.split("_")[0]
+        dict_required_resources[g] = {}
+        for k in A_idx[g].keys():
+            dict_required_resources[g][k]={}
+            for a in A_idx[g][k]:
+                dict_required_resources[g][k][a] = {l:0 for l in list_resources}
+                l = a
+                if a in default_activities_consumption :
+                    dict_required_resources[g][k][a][l] = default_activities_consumption[a]
+                elif a in post_op_scenarios:
+                    dict_required_resources[g][k][a][l] = post_op_scenarios[a][ main_group + "_" + k]
+                elif a == "KINE_MCO":
+                    dict_required_resources[g][k][a][l] = nb_kine_preop[main_group]
+                elif a == "CHIR/ORTHO+ANES":
+                    dict_required_resources[g][k][a]["CHIR/ORTHO"] += 1
+                    dict_required_resources[g][k][a]["ANES"] += 1
+                dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
+    return dict_required_resources
