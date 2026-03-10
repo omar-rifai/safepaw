@@ -1,11 +1,12 @@
 import pandas as pd
 import geopandas as gpd
+import math
 
 def get_pathways(df_types_parcours_init: pd.DataFrame):
     return list(df_types_parcours_init["SSR_TYPE"].unique())
 
 nb_kine_preop = {"PTG":10, "PTH":15}
-specialities = ["CSC", "DERMA", "RHUMA", "URO", "GASTRO", "OPH", "ENDO", "ORL"]
+specialities = ["CSC", "DERMA", "ENDO", "GASTRO", "GYNECO", "OPH", "ORL", "RHUMA", "URO"]
 list_resources = ["CHIR/ORTHO", "ANES", "KINE_MCO", "DAY_HC", "KINE_DOM", "KINE_SSR", "finance"]
 list_resources.extend(specialities)
 
@@ -13,10 +14,10 @@ post_op_scenarios = {"DAY_HC":{"PTG_HC":28,"PTH_HC":21,"PTG_DOM":0,"PTH_DOM":0,"
                      "KINE_SSR":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":20,"PTH_HC_HDJ":15,"PTG_HDJ":25,"PTH_HDJ":20},
                      "KINE_DOM":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":25,"PTH_DOM":20,"PTG_HC_HDJ":0,"PTH_HC_HDJ":0,"PTG_HDJ":0,"PTH_HDJ":0}}
 
-finance_costs= {"PTG": {"CHIR/ORTHO":46 + 4365.61, "ANES" : 46, "CSC": 34.75, "DERMA": 40,"ENDO": 40, "GASTRO": 40, "GYNECO": 40,
-                  "OPH":40, "ORL":40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTG"] * 9.95, "DAY_HC":769.56, "KINE_SSR":126.80,"KINE_DOM": 370.99},
-          "PTH": {"CHIR/ORTHO": 46 + 3966.66, "ANES": 46, "CSC":34.75, "DERMA":40, "ENDO":40, "GASTRO":40, "GYNECO":40, "OPH":40,
-                  "ORL": 40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTH"]* 9.95, "DAY_HC":803.30, "KINE_SSR":127.63, "KINE_DOM":370.99}}
+finance_costs= {"PTG": {"CHIR/ORTHO_pre":46, "ANES" : 46, "CSC": 34.75, "DERMA": 40,"ENDO": 40, "GASTRO": 40, "GYNECO": 40,
+                  "OPH":40, "ORL":40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTG"] * 9.95, "CHIR/ORTHO+ANES": 4365.61, "DAY_HC":769.56, "KINE_SSR":126.80,"KINE_DOM": 370.99, "CHIR/ORTHO_post":46},
+          "PTH": {"CHIR/ORTHO_pre": 46, "ANES": 46, "CSC":34.75, "DERMA":40, "ENDO":40, "GASTRO":40, "GYNECO":40, "OPH":40,
+                  "ORL": 40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTH"]* 9.95, "CHIR/ORTHO+ANES": 4365.61, "DAY_HC":803.30, "KINE_SSR":127.63, "KINE_DOM":370.99, "CHIR/ORTHO_post":46}}
 
 
 def load_types_parcours(path: str, min_patients: int, dep_code:str):
@@ -29,6 +30,7 @@ def load_mco_data(path: str, dep_code: str):
     """Read MCO data and keep Loire rows only."""
     df = pd.read_csv(path)
     df = df.rename(columns={'420': 'FI_ET'})
+    df = df.fillna(0)
     return reduce_MCO_LOIRE(df, dep_code)
 
 def load_ssr_data(path: str, dep_code: str):
@@ -92,26 +94,27 @@ def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataF
     return m_hl
 
 def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
-    """Returns a proxy of facilities' capacity for a speciality. When there is no info on availability,
-        we assume the speciality is present following other specialists patterns"""
-    
-    df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU", "URO": "PNEU",
-                           "GASTRO": "PGAS", "OPH": "POPH", "ENDO": "PEND", "ORL": "PPNE"}
+    """Returns approx of facilities' capacity for a speciality. When there is no info on availability,
+        we assume the speciality is available (namely for GYNECO, URO, and ORL)"""
+    df_mco["PTRUE"] = 1
+    df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU",
+                           "GASTRO": "PGAS", "OPH": "POPH", "ENDO": "PEND", "GYNECO": "PTRUE",
+                            "URO": "PTRUE", "ORL": "PTRUE"}
     total_cap_regional = {}
     
     for speciality in df_mco_flag_fields.keys():
         flag_field = df_mco_flag_fields[speciality]
         total_cap_regional[speciality] = sum(df_mco[df_mco[flag_field]!=0]["ACTCLI_PM"])
-    
+
     facility_specialty_frac= {}
     for finess in list_finess:
-        facility_specialty_frac[finess] = {} 
+        facility_specialty_frac[finess] = {}
         for speciality in df_mco_flag_fields.keys():
             flag_field = df_mco_flag_fields[speciality]
             if finess in list(df_mco["FI_ET"].unique()):
                 if df_mco[df_mco["FI_ET"]==finess][flag_field].iloc[0] != 0:
                     facility_specialty_frac[finess][speciality] = \
-                        df_mco[df_mco["FI_ET"]==finess]["ACTCLI_PM"].iloc[0] / total_cap_regional[speciality]
+                        math.ceil(df_mco[df_mco["FI_ET"]==finess]["ACTCLI_PM"].iloc[0] / total_cap_regional[speciality])
                 else:
                     facility_specialty_frac[finess][speciality] = 0
             else:
@@ -245,8 +248,25 @@ def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, de
     gdf_geo["adjacent"] = [gdf_geo.loc[gdf_geo.geometry.touches(geom),"can_code"].to_list() for geom in gdf_geo.geometry]
     return gdf_geo
 
-def get_region_affinities():
-    return {}
+def get_region_affinities(gdf_summary: pd.DataFrame,df_finess: pd.DataFrame) -> dict:
+    """Returns a dict with the affinities of each facility to each region"""
+    w_rh = {}
+    all_regions = list(gdf_summary["can_code"].unique())
+
+    for r in all_regions:
+        w_rh[r] = {}
+        list_adjacent = gdf_summary[gdf_summary["can_code"]==r]["adjacent"]
+       
+        for _,row in df_finess.iterrows():
+            h = row["nofinesset"]
+
+            if row["can_code"] == r:
+                w_rh[r][h] = 2
+            elif row["can_code"] in list_adjacent.values[0]:
+                w_rh[r][h] = 1
+            else:
+                w_rh[r][h] = 0
+    return w_rh
 
 def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: list) -> dict:
     """Returns a dictionary with the activities for each group/pathway"""
@@ -262,7 +282,7 @@ def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: li
         A_idx[g] = {}
         for k in list_pathways:
             A_idx[g][k] = []
-            A_idx[g][k].extend(["CHIR/ORTHO", "ANES"])
+            A_idx[g][k].extend(["CHIR/ORTHO_pre", "ANES"])
             specialists_activities = g.split("_")[1:]
             if not "standard" in specialists_activities:
                 A_idx[g][k].extend(specialists_activities)
@@ -272,13 +292,13 @@ def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: li
                 for s in scenarios:
                     if str(g.split("_")[0] + "_" + k) == s and post_op_scenarios[activity][s] != 0:
                         A_idx[g][k].extend([activity])
-            A_idx[g][k].extend(["CHIR/ORTHO"])
+            A_idx[g][k].extend(["CHIR/ORTHO_post"])
     return A_idx
     
-def is_transferable(A_idx: dict) -> dict:
+def get_transferable(A_idx: dict) -> dict:
     """Returns a dictionary with the transferable activities for group g pathway k"""
     import copy
-    transferable= copy.deepcopy(A_idx.copy)
+    transferable= copy.deepcopy(A_idx)
     for g in A_idx.keys():
         for k in A_idx[g].keys():
             transferable[g][k].pop()
@@ -286,21 +306,36 @@ def is_transferable(A_idx: dict) -> dict:
                 transferable[g][k].remove("KINE_DOM")          
     return transferable
 
-def transfer_to(A_idx: dict) -> dict:
+def get_transfer_to(A_idx: dict) -> dict:
     """Returns a dictionary with the activities to transfer to for for group g pathway k"""
     import copy
-    transfer_to= copy.deepcopy(A_idx.copy)
+
+    transfer_to= copy.deepcopy(A_idx)
     for g in A_idx.keys():
         for k in A_idx[g].keys():
             transfer_to[g][k].pop(0)
             if k == "DOM":
                 transfer_to[g][k].remove("KINE_DOM")
+            transfer_to[g][k] = {A_idx[g][k][i]: v for i,v in enumerate(transfer_to[g][k])}
     return transfer_to
+
+
+def get_demand_lower_bounds(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame) -> dict:
+    """ Returns ``d_gr'', the lower bound on patients asssigments per patient group, per canton"""
+    d_gr = {}
+    for _, row in df_types_parcours.iterrows():
+        group = row["sej_type"] + "_" + row["type_parcours"].replace(" + ", "_")
+        d_gr[group] = {}
+        for _, gdf_row in gdf_summary.iterrows():
+            can_code = gdf_row["can_code"]
+            frac_65 = gdf_row["pop65p"]/ 100.
+            d_gr[group][can_code] = round(float(row["nb"] * frac_65 / gdf_summary["pop65p"].sum()),3)
+    return d_gr
 
 
 def get_required_resources(A_idx):
     """Return a dictionary of dims groups x pathways x activities with required resources of each type"""
-    default_activities_consumption = {"CHIR/ORTH": 2, "ANES": 1} | {x : 1 for x in specialities}
+    default_activities_consumption = {"CHIR/ORTHO_pre": 1, "ANES": 1, "CHIR/ORTHO_post": 1} | {x : 1 for x in specialities}
     dict_required_resources = {}
     for g in A_idx.keys():
         main_group = g.split("_")[0]
@@ -309,7 +344,9 @@ def get_required_resources(A_idx):
             dict_required_resources[g][k]={}
             for a in A_idx[g][k]:
                 dict_required_resources[g][k][a] = {l:0 for l in list_resources}
-                l = a
+                if "pre" in a or "post" in a:
+                    l = a.split("_")[0]
+                else: l = a
                 if a in default_activities_consumption :
                     dict_required_resources[g][k][a][l] = default_activities_consumption[a]
                 elif a in post_op_scenarios:

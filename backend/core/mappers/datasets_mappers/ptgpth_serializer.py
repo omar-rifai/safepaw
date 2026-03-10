@@ -1,18 +1,20 @@
 import pandas as pd
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 from backend.core.mappers.datasets_mappers.ptgpth_utils import get_geo_polygon, summarize_geo_data, get_pop65p,\
-    get_finness_info, get_resources_capacities, get_region_affinities, get_required_resources, is_transferable, transfer_to,\
-    list_resources
+    get_finness_info, get_resources_capacities, get_region_affinities, get_required_resources,\
+    get_transfer_to, get_transferable, get_activities_per_group_pathway, get_demand_lower_bounds, list_resources
 
 
 import pandas as pd
-def get_Regions(dep_code: int) -> list[Region]:
+def get_Regions(dep_code: int, df_ssr: pd.DataFrame, df_mco:pd.DataFrame) -> list[Region]:
     """Creates Region instance (cantons) given a department code (cantons are grouped by bureau de vote)"""
     gdf_cantons = get_geo_polygon()
     gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
+    df_finess = get_finness_info(df_mco, df_ssr, gdf_cantons)
+    affinities = get_region_affinities(gdf_geo,df_finess)
     list_regions = [Region(region_id=row["can_code"],
                            coordinates=[row["geometry"].centroid.x, row["geometry"].centroid.y],
-                           facilities_affinity=get_region_affinities()) for i,row in gdf_geo.iterrows()]
+                           facilities_affinity=affinities[row["can_code"]] )for i,row in gdf_geo.iterrows()]
     return list_regions
 
 
@@ -43,26 +45,21 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, 
     return list_facilities
 
 
-def get_Instance(df_instance : pd.DataFrame) -> Instance:
+def get_Instance(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame, 
+                 list_groups_ids: list, list_resources: list) -> Instance:
     """Returns object to store optimization instance parameters. Most variables are stores in a global config.yaml file """
    
     return Instance(
-            d_total = 0 ,
-            d_gr = get_demand_lower_bounds(),
-            under_q_g = {} ,
-            over_q_g = {},
-            under_q_gu = {},
-            over_q_gu = {},
-            p_transf = 0,
-            delta_l = 0,
-            alpha = 0
+            d_total = 1464 ,
+            d_gr = get_demand_lower_bounds(gdf_summary, df_types_parcours),
+            under_q_g = {g : 0 for g in list_groups_ids} ,
+            over_q_g = {g : 1 for g in list_groups_ids},
+            under_q_gu = {g : {"0": 1} for g in list_groups_ids},
+            over_q_gu = {g : {"0": 1} for g in list_groups_ids},
+            p_transf = 1,
+            delta_l = {l: 1 for l in list_resources},
+            alpha = 0.0125
         )
-
-
-def get_demand_lower_bounds() -> dict:
-    """ Returns ``d_gr'', the lower bound on patients asssigments per patient group, per canton"""
-    
-    return {}
 
 
 def get_Resources(list_resources: list) -> list[Resource]:
@@ -82,22 +79,29 @@ def get_Activities(list_patienGroups: list, list_pathways: list, A_idx: dict) ->
     """ get activities """
     list_activities = []
     dict_required_resources = get_required_resources(A_idx)
+    tranferable_activities = get_transferable(A_idx)
+    transfer_to_activities = get_transfer_to(A_idx)
     for g in list_patienGroups:
         for k in list_pathways:
             for a in A_idx[g][k]:
+                if a in transfer_to_activities[g][k]: 
+                    transfer_to = transfer_to_activities[g][k][a]
+                else: transfer_to = ""
                 list_activities.append(
                     Activity(activity_id= a, associated_pathway=k,
-                     associated_group=g, transferable=is_transferable(A_idx)[g][k],
-                     transfer_to=transfer_to(A_idx)[g][k], required_resources= dict_required_resources[g][k][a]))
+                     associated_group=g, transferable=a in tranferable_activities[g][k],
+                     transfer_to= transfer_to, required_resources= dict_required_resources[g][k][a]))
     return list_activities
 
 
 def get_PatientPathways(list_pathways_ids: list, list_groups: list) -> list[Pathway]:
     """ get patients pathways"""
+    A_idx = get_activities_per_group_pathway(list_groups, list_pathways_ids)
+    list_pathways = []
     for g in list_groups:                      
-        pathways = [Pathway(pathway_id=p_id, associated_group_id = g, quality_level = "0", list_activities= [],
-                            group_benefit = 1) for p_id in list_pathways_ids]
-    return pathways
+        list_pathways.extend([Pathway(pathway_id=p_id, associated_group_id = g, quality_level = "0", list_activities= A_idx[g][p_id],
+                            group_benefit = 1) for p_id in list_pathways_ids])
+    return list_pathways
 
 
 
