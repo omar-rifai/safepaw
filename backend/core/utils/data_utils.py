@@ -55,8 +55,6 @@ def package_results(vars_system, params_system):
         "Q_gkrah": vars_to_df(vars_system.Q, ["group","pathway","region","activity","facility"], params_system),
         "P_gkr": vars_to_df(vars_system.P_gkr, ["group","pathway","region"], params_system),
         "P_gk": vars_to_df(vars_system.P_gk, ["group","pathway"], params_system),
-        "s_hl": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.s_hl[h][l])}
-                                         for h in params_system["H"] for l in params_system["L"]]),
         "Delta_plus" : pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.Delta_plus[h][l])}
                                          for h in params_system["H"] for l in params_system["L"]]),
                                          
