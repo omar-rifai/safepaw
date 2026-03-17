@@ -15,9 +15,13 @@ post_op_scenarios = {"DAY_HC":{"PTG_HC":28,"PTH_HC":21,"PTG_DOM":0,"PTH_DOM":0,"
                      "KINE_DOM":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":25,"PTH_DOM":20,"PTG_HC_HDJ":0,"PTH_HC_HDJ":0,"PTG_HDJ":0,"PTH_HDJ":0}}
 
 finance_costs= {"PTG": {"CHIR/ORTHO_pre":46, "ANES" : 46, "CSC": 34.75, "DERMA": 40,"ENDO": 40, "GASTRO": 40, "GYNECO": 40,
-                  "OPH":40, "ORL":40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTG"] * 9.95, "CHIR/ORTHO+ANES": 4365.61, "DAY_HC":769.56, "KINE_SSR":126.80,"KINE_DOM": 370.99, "CHIR/ORTHO_post":46},
+                  "OPH":40, "ORL":40, "RHUMA":40, "URO":40, "KINE_MCO": 9.95, "CHIR/ORTHO+ANES": 4365.61, "DAY_HC":769.56, "KINE_SSR":126.80,"KINE_DOM": 370.99, "CHIR/ORTHO_post":46},
           "PTH": {"CHIR/ORTHO_pre": 46, "ANES": 46, "CSC":34.75, "DERMA":40, "ENDO":40, "GASTRO":40, "GYNECO":40, "OPH":40,
-                  "ORL": 40, "RHUMA":40, "URO":40, "KINE_MCO": nb_kine_preop["PTH"]* 9.95, "CHIR/ORTHO+ANES": 4365.61, "DAY_HC":803.30, "KINE_SSR":127.63, "KINE_DOM":370.99, "CHIR/ORTHO_post":46}}
+                  "ORL": 40, "RHUMA":40, "URO":40, "KINE_MCO": 9.95, "CHIR/ORTHO+ANES": 3966.66, "DAY_HC":803.30, "KINE_SSR":127.63, "KINE_DOM":370.99, "CHIR/ORTHO_post":46}}
+
+df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU",
+                           "GASTRO": "PGAS", "OPH": "POPH", "ENDO": "PEND", "GYNECO": "PTRUE",
+                            "URO": "PTRUE", "ORL": "PTRUE"}
 
 
 def load_types_parcours(path: str, min_patients: int, dep_code:str):
@@ -31,6 +35,7 @@ def load_mco_data(path: str, dep_code: str):
     df = pd.read_csv(path)
     df = df.rename(columns={'420': 'FI_ET'})
     df = df.fillna(0)
+    df["PTRUE"] = 1
     return reduce_MCO_LOIRE(df, dep_code)
 
 def load_ssr_data(path: str, dep_code: str):
@@ -71,10 +76,10 @@ def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
 def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
                             df_types_parcours: pd.DataFrame) -> dict:
     """Returns a dict with each available resource and its capacity given a finess number"""
-    m_hl = {h: {} for h in list_finess}  
-    m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "ORTH/CHIR", "JLI_CHI", 3)
+    m_hl = {h: {"finance": 604954.0*2} for h in list_finess}  
+    m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "CHIR/ORTHO", "JLI_CHI", 3)
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "ANES", "JLI_CHI", 2)
-    m_hl = _get_specialities_cap(m_hl, df_mco, df_types_parcours, list_finess)
+    m_hl = _get_specialities_cap(m_hl, df_mco, df_types_parcours_init, list_finess)
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "KINE_MCO", "ACTCLI_PM", {"PTG":10, "PTH":15})
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_ssr,
                                 df_types_parcours_init
@@ -96,10 +101,6 @@ def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataF
 def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
     """Returns approx of facilities' capacity for a speciality. When there is no info on availability,
         we assume the speciality is available (namely for GYNECO, URO, and ORL)"""
-    df_mco["PTRUE"] = 1
-    df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU",
-                           "GASTRO": "PGAS", "OPH": "POPH", "ENDO": "PEND", "GYNECO": "PTRUE",
-                            "URO": "PTRUE", "ORL": "PTRUE"}
     total_cap_regional = {}
     
     for speciality in df_mco_flag_fields.keys():
@@ -114,7 +115,7 @@ def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
             if finess in list(df_mco["FI_ET"].unique()):
                 if df_mco[df_mco["FI_ET"]==finess][flag_field].iloc[0] != 0:
                     facility_specialty_frac[finess][speciality] = \
-                        math.ceil(df_mco[df_mco["FI_ET"]==finess]["ACTCLI_PM"].iloc[0] / total_cap_regional[speciality])
+                        df_mco[df_mco["FI_ET"]==finess]["ACTCLI_PM"].iloc[0] / total_cap_regional[speciality]
                 else:
                     facility_specialty_frac[finess][speciality] = 0
             else:
@@ -122,23 +123,23 @@ def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
 
     return facility_specialty_frac
 
-def _get_specialities_cap(m_hl: dict, df_mco: pd.DataFrame, df_types_parcours: pd.DataFrame,
+def _get_specialities_cap(m_hl: dict, df_mco: pd.DataFrame, df_types_parcours_init: pd.DataFrame,
                           list_finess: list) -> dict:
-    import math
     import copy
     
     frac_specialities =  _get_specialities_frac(df_mco, list_finess)
     nb_groups = {x:0 for x in specialities}
-
-    for i,row in df_types_parcours.iterrows():
-        for s in specialities:
-            if s in row["type_parcours"].split(" + "):
-                nb_groups[s] += 1
+    
+    for s in specialities:
+        nb_groups[s] += df_types_parcours_init[df_types_parcours_init["type_parcours"].str.contains(s)]["nb"].sum()
 
     cap_specialities = copy.deepcopy(frac_specialities)
-    for facility in frac_specialities.keys():
+    for facility in df_mco["FI_ET"].unique():
         for speciality in specialities:
-            cap_specialities[facility][speciality] = math.ceil(frac_specialities[facility][speciality] * nb_groups[speciality])
+            if df_mco[df_mco["FI_ET"] == facility][df_mco_flag_fields[speciality]].iloc[0] != 0:
+                cap_specialities[facility][speciality] = int(nb_groups[speciality] * frac_specialities[facility][speciality] + 1)
+            else:
+                cap_specialities[facility][speciality] = 0
     
     m_hl = _extend_nested_dict(m_hl, cap_specialities)
     return  m_hl
@@ -166,11 +167,14 @@ def _get_resource_capacity(m_hl_init: dict, list_finess: list, df_activity: pd.D
             if h in df_activity["FI_ET"].unique():
                     total_dep_resources = df_activity[resource_table_field].sum()
                     current_facility_resources = df_activity[df_activity["FI_ET"]==h][resource_table_field].iloc[0]
-                    capacity_resource = math.ceil(total_consumption_resource * ( current_facility_resources / total_dep_resources))
-                    m_hl[h][resource_name] = capacity_resource
+                    if current_facility_resources == 0:
+                        m_hl[h][resource_name] = 0
+                    else:
+                        capacity_resource = int(total_consumption_resource * ( current_facility_resources / total_dep_resources) + 1)
+                        m_hl[h][resource_name] = capacity_resource
             else:
                 current_facility_resources =  m_hl_init[h].get(resource_name, 0)    
-    
+            
     m_hl = _extend_nested_dict(m_hl_init, m_hl)
     return m_hl  
 
@@ -254,12 +258,11 @@ def get_region_affinities(gdf_summary: pd.DataFrame,df_finess: pd.DataFrame) -> 
     all_regions = list(gdf_summary["can_code"].unique())
 
     for r in all_regions:
-        w_rh[r] = {}
+        w_rh[r] = {"DOM":2}
         list_adjacent = gdf_summary[gdf_summary["can_code"]==r]["adjacent"]
        
         for _,row in df_finess.iterrows():
             h = row["nofinesset"]
-
             if row["can_code"] == r:
                 w_rh[r][h] = 2
             elif row["can_code"] in list_adjacent.values[0]:
@@ -325,11 +328,12 @@ def get_demand_lower_bounds(gdf_summary: pd.DataFrame, df_types_parcours: pd.Dat
     d_gr = {}
     for _, row in df_types_parcours.iterrows():
         group = row["sej_type"] + "_" + row["type_parcours"].replace(" + ", "_")
+        frac_visits  = row["nb"] / df_types_parcours["nb"].sum()
         d_gr[group] = {}
         for _, gdf_row in gdf_summary.iterrows():
             can_code = gdf_row["can_code"]
-            frac_65 = gdf_row["pop65p"]/ 100.
-            d_gr[group][can_code] = round(float(row["nb"] * frac_65 / gdf_summary["pop65p"].sum()),3)
+            frac_pop = gdf_row["population"] / gdf_summary["population"].sum()   
+            d_gr[group][can_code] = float( frac_visits * frac_pop)
     return d_gr
 
 
@@ -349,12 +353,15 @@ def get_required_resources(A_idx):
                 else: l = a
                 if a in default_activities_consumption :
                     dict_required_resources[g][k][a][l] = default_activities_consumption[a]
+                    dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
                 elif a in post_op_scenarios:
                     dict_required_resources[g][k][a][l] = post_op_scenarios[a][ main_group + "_" + k]
+                    dict_required_resources[g][k][a]["finance"] = post_op_scenarios[a][ main_group + "_" + k] * finance_costs[main_group][a]
                 elif a == "KINE_MCO":
                     dict_required_resources[g][k][a][l] = nb_kine_preop[main_group]
+                    dict_required_resources[g][k][a]["finance"] = nb_kine_preop[main_group] * finance_costs[main_group][a]
                 elif a == "CHIR/ORTHO+ANES":
                     dict_required_resources[g][k][a]["CHIR/ORTHO"] += 1
                     dict_required_resources[g][k][a]["ANES"] += 1
-                dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
+                    dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
     return dict_required_resources

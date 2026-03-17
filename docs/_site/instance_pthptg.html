@@ -149,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <p>This instance both public and private data to study the patient pathways for hip and knee replacements surgeries<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> .</p>
-<div id="e3015bcb" class="cell" data-results="asis" data-execution_count="1">
+<div id="5181dda3" class="cell" data-results="asis" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div style="max-width:500px; margin:auto;">
 
@@ -316,12 +316,12 @@ ul.task-list li input[type="checkbox"] {
 <pre class="mermaid mermaid-js">graph TD
   A["CHIR/ORTHO (pre-op)"] --&gt; B["ANESTH(pre-op)"]
   B --&gt; C["Opt. Specialities"]
-  C --&gt; D["KINE_MCO (pre-op physiotherapy)"]
+  C --&gt; D["pre-op physiotherapy (KINE_MCO)"]
   D --&gt; E["CHIR/ORTHO + ANESTH (surgery block)"]
-  E --&gt; F1["Scenario 0: DAY_HC / KINE_SSR / KINE_DOM = 28 / 0 / 0"]
-  E --&gt; F2["Scenario 1: DAY_HC / KINE_SSR / KINE_DOM = 0 / 0 / 25"]
-  E --&gt; F3["Scenario 2: DAY_HC / KINE_SSR / KINE_DOM = 21 / 20 / 0"]
-  E --&gt; F4["Scenario 3: DAY_HC / KINE_SSR / KINE_DOM = 0 / 25 / 0"]
+  E --&gt; F1["Scenario 0: full sesions as inpatient (DAY_HC)"]
+  E --&gt; F2["Scenario 1: full at home kinesiology (KINE_DOM) sessions"]
+  E --&gt; F3["Scenario 2: sessions as inpatient (DAY_HC) followed by on-site (KINE_SSR) session"]
+  E --&gt; F4["Scenario 3: full on-site (KINE_SSR) session"]
   F1 --&gt; G["CHIR/ORTHO (final post-op)"]
   F2 --&gt; G
   F3 --&gt; G

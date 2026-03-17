@@ -47,7 +47,7 @@ mco_fields = {
     "SEJHC_MED": "Full inpatient stays (Medicine)",
     "SEJ0_MED": "Day stays (Medicine)",
     "JOU_MED": "Hospital days (Medicine)"
-    # ... you can continue adding the rest of your mco_fields entries here
+    # ... continue adding the rest of the mco_fields entries here
 }
 
 # Convert to DataFrames
@@ -86,12 +86,12 @@ We can illustrate the general pathway of patients with the following graph:
 graph TD
   A["CHIR/ORTHO (pre-op)"] --> B["ANESTH(pre-op)"]
   B --> C["Opt. Specialities"]
-  C --> D["KINE_MCO (pre-op physiotherapy)"]
+  C --> D["pre-op physiotherapy (KINE_MCO)"]
   D --> E["CHIR/ORTHO + ANESTH (surgery block)"]
-  E --> F1["Scenario 0: DAY_HC / KINE_SSR / KINE_DOM = 28 / 0 / 0"]
-  E --> F2["Scenario 1: DAY_HC / KINE_SSR / KINE_DOM = 0 / 0 / 25"]
-  E --> F3["Scenario 2: DAY_HC / KINE_SSR / KINE_DOM = 21 / 20 / 0"]
-  E --> F4["Scenario 3: DAY_HC / KINE_SSR / KINE_DOM = 0 / 25 / 0"]
+  E --> F1["Scenario 0: full sesions as inpatient (DAY_HC)"]
+  E --> F2["Scenario 1: full at home kinesiology (KINE_DOM) sessions"]
+  E --> F3["Scenario 2: sessions as inpatient (DAY_HC) followed by on-site (KINE_SSR) session"]
+  E --> F4["Scenario 3: full on-site (KINE_SSR) session"]
   F1 --> G["CHIR/ORTHO (final post-op)"]
   F2 --> G
   F3 --> G

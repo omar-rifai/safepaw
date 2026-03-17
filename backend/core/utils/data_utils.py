@@ -13,14 +13,16 @@ def read_inputs(file_params_system):
 
     return params_system
 
-def get_var(curr_var, dims, list_dims):
-    v = curr_var[dims["group"]][dims["pathway"]]
+def get_var(curr_var, row, list_dims):
+    v = curr_var[row["group"]][row["pathway"]]
     if "region" in list_dims:
-        v = v[dims["region"]]
+        v = v[row["region"]]
     if "activity" in list_dims:
-        v = v[dims["activity"]]
+        v = v[row["activity"]]
     if "facility" in list_dims:
-        v = v[dims["facility"]]
+        v = v[row["facility"]]
+    if "resource" in list_dims:
+        v = v[row["resource"]]
     return pulp.value(v)
 
 
@@ -28,23 +30,20 @@ def get_var(curr_var, dims, list_dims):
 def vars_to_df(curr_var, list_dims, params_system):
     
     records = []
-    dims = {}
 
     for g in params_system["G"]:
-        dims["group"] = g
         for k in params_system["K_idx"][g]:
-            dims["pathway"] = k
-            for r in params_system["R"]:
-                if "region" in list_dims: 
-                    dims["region"] = r
-                for a in params_system["A_idx"][g][k]:
-                    if "activity" in list_dims: 
-                        dims["activity"] = a
-                    for h in params_system["H"]:
-                        if "facility" in list_dims: 
-                            dims["facility"] = h
-                        dims["value"] = get_var(curr_var, dims, list_dims)
-                        records.append(dims.copy())
+            for r in (params_system["R"] if "region" in list_dims else [None]):
+                for a in (params_system["A_idx"][g][k] if "activity" in list_dims else [None]):
+                    for h in (params_system["H"] if "facility" in list_dims else [None]):
+                        for l in (params_system["L"] if "resource" in list_dims else [None]):
+                                row = { "group": g, "pathway": k}
+                                if "region" in list_dims: row["region"] = r
+                                if "activity" in list_dims: row["activity"] = a
+                                if "facility" in list_dims: row["facility"] = h
+                                if "resource" in list_dims: row["resource"]= l
+                                row["value"] = get_var(curr_var, row, list_dims)
+                                records.append(row)
     df = pd.DataFrame(records)
     return df
 
@@ -56,6 +55,8 @@ def package_results(vars_system, params_system):
         "Q_gkrah": vars_to_df(vars_system.Q, ["group","pathway","region","activity","facility"], params_system),
         "P_gkr": vars_to_df(vars_system.P_gkr, ["group","pathway","region"], params_system),
         "P_gk": vars_to_df(vars_system.P_gk, ["group","pathway"], params_system),
+        "s_hl": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.s_hl[h][l])}
+                                         for h in params_system["H"] for l in params_system["L"]]),
         "Delta_plus" : pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.Delta_plus[h][l])}
                                          for h in params_system["H"] for l in params_system["L"]]),
                                          
