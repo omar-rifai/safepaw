@@ -10,6 +10,7 @@ specialities = ["CSC", "DERMA", "ENDO", "GASTRO", "GYNECO", "OPH", "ORL", "RHUMA
 list_resources = ["CHIR/ORTHO", "ANES", "KINE_MCO", "DAY_HC", "KINE_DOM", "KINE_SSR", "finance"]
 list_resources.extend(specialities)
 
+# number of resource units needed for each resource type -> groupprefix_pathway
 post_op_scenarios = {"DAY_HC":{"PTG_HC":28,"PTH_HC":21,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":21,"PTH_HC_HDJ":14,"PTG_HDJ":0,"PTH_HDJ":0},
                      "KINE_SSR":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":20,"PTH_HC_HDJ":15,"PTG_HDJ":25,"PTH_HDJ":20},
                      "KINE_DOM":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":25,"PTH_DOM":20,"PTG_HC_HDJ":0,"PTH_HC_HDJ":0,"PTG_HDJ":0,"PTH_HDJ":0}}
@@ -76,7 +77,7 @@ def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
 def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
                             df_types_parcours: pd.DataFrame) -> dict:
     """Returns a dict with each available resource and its capacity given a finess number"""
-    m_hl = {h: {"finance": 604954.0*2} for h in list_finess}  
+    m_hl = {h: {"finance": 604954.0} for h in list_finess}  
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "CHIR/ORTHO", "JLI_CHI", 3)
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "ANES", "JLI_CHI", 2)
     m_hl = _get_specialities_cap(m_hl, df_mco, df_types_parcours_init, list_finess)
@@ -150,16 +151,18 @@ def _get_resource_capacity(m_hl_init: dict, list_finess: list, df_activity: pd.D
                            resource_name: str, resource_table_field: str, resource_consumption: dict) -> dict:
     """ 
     Calculates capacity of resource using a proxy of total departmental number of visits times
-    the proportion of resrouce available at a facility (we assume that visit consumes ``resource_consumption'' resources
+    the proportion of resource available at a facility (we assume that visit consumes ``resource_consumption'' resources
     # Hypothesis: all resources except specialists are present in all facilities by type either MCO or SSR   
     """
     import math
     m_hl = {h: {resource_name: 0} for h in list_finess}    
    
     if isinstance(resource_consumption, dict):
-        resource_consumption = df_types_parcours["sej_type"].map(resource_consumption)
-    total_consumption_resource = float((resource_consumption * df_types_parcours["nb"]).sum())
-
+        df_types_parcours["resource_consumption"] = df_types_parcours["sej_type"].map(resource_consumption)
+        total_consumption_resource = (df_types_parcours['resource_consumption'] * df_types_parcours['nb']).sum()
+    else:
+        total_consumption_resource = float((resource_consumption * df_types_parcours["nb"].sum()))
+    #case dealing with the stay-at-home patients
     if df_activity is None:
          m_hl["DOM"][resource_name] = math.ceil(total_consumption_resource)
     else:  
@@ -167,7 +170,8 @@ def _get_resource_capacity(m_hl_init: dict, list_finess: list, df_activity: pd.D
             if h in df_activity["FI_ET"].unique():
                     total_dep_resources = df_activity[resource_table_field].sum()
                     current_facility_resources = df_activity[df_activity["FI_ET"]==h][resource_table_field].iloc[0]
-                    if current_facility_resources == 0:
+                    # We assume that KINE_SSR and DAY_HC are present at every hospital
+                    if current_facility_resources == 0 and resource_name not in {"KINE_SSR", "DAY_HC"}:
                         m_hl[h][resource_name] = 0
                     else:
                         capacity_resource = int(total_consumption_resource * ( current_facility_resources / total_dep_resources) + 1)
@@ -268,7 +272,7 @@ def get_region_affinities(gdf_summary: pd.DataFrame,df_finess: pd.DataFrame) -> 
             elif row["can_code"] in list_adjacent.values[0]:
                 w_rh[r][h] = 1
             else:
-                w_rh[r][h] = 0
+                w_rh[r][h] = 0.5
     return w_rh
 
 def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: list) -> dict:

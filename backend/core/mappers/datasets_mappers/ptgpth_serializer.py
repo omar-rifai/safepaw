@@ -20,8 +20,8 @@ def get_Regions(dep_code: int, df_ssr: pd.DataFrame, df_mco:pd.DataFrame) -> lis
 
 
 
-def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, df_types_parcours_init: pd.DataFrame,
-                   df_types_parcours: pd.DataFrame, list_resources: list) -> list[Facility]:
+def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, df_types_parcours: pd.DataFrame,
+                   list_resources: list, list_pathways: list) -> list[Facility]:
     """Creates Facility objects corresponding to unique nofinesset ids """
     list_facilities = []
     gdf_cantons = get_geo_polygon()
@@ -29,7 +29,7 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, 
     df_finess = get_finness_info(df_mco, df_ssr, gdf_geo)
     list_finess = list(df_finess["nofinesset"].unique())
     list_finess.append("DOM")
-    m_hl = get_resources_capacities(list_finess, df_types_parcours_init, df_ssr, df_mco, df_types_parcours)
+    m_hl = get_resources_capacities(list_finess, df_types_parcours, df_ssr, df_mco, df_types_parcours)
     
     for row in df_finess.itertuples():     
         list_facilities.append(Facility(
@@ -41,12 +41,12 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, 
             max_transferable_in = {l: 0 if l != "finance" else 1000 for l in list_resources },
             max_transferable_out = {l: 0 if l != "finance" else 1000 for l in list_resources },
             linked_facilities = list_finess,
-            available_pathways= df_types_parcours_init["SSR_TYPE"].unique()))
-    list_facilities = add_dom_facility(list_facilities, list_finess)
+            available_pathways= df_types_parcours["SSR_TYPE"].unique()))
+    list_facilities = add_dom_facility(list_facilities, list_pathways, list_finess)
     return list_facilities
 
 
-def add_dom_facility(list_facilities: list[Facility], list_finess: list) -> list[Facility]:
+def add_dom_facility(list_facilities: list[Facility], list_pathways, list_finess: list) -> list[Facility]:
     """Append a virtual facility corresponding to patients' home"""
     list_facilities.append(Facility(
             facility_id = "DOM",
@@ -59,7 +59,7 @@ def add_dom_facility(list_facilities: list[Facility], list_finess: list) -> list
             max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },
             max_transferable_out = {l: 0 if l != "finance" else 1 for l in list_resources },
             linked_facilities = list_finess,
-            available_pathways= ['DOM', 'HC', 'HC_HDJ', 'HDJ']))
+            available_pathways= list_pathways))
     return list_facilities
 
 
@@ -131,7 +131,7 @@ def serialize_ptgpth(dep_code: str= "42"):
     import json
     df_types_parcours_init, df_mco, df_ssr = load_data([int(dep_code)])
 
-    df_types_parcours = df_types_parcours_init.groupby(["sej_type", "type_parcours"], as_index=False)["nb"].sum()
+    df_types_parcours = df_types_parcours_init.groupby(["sej_type", "type_parcours", "SSR_TYPE"], as_index=False)["nb"].sum()
     df_types_parcours = df_types_parcours[df_types_parcours["nb"].fillna(0) >= 3]
 
     gdf_geo =  get_geo_polygon()
@@ -139,15 +139,15 @@ def serialize_ptgpth(dep_code: str= "42"):
     gdf_summary = summarize_geo_data(gdf_geo, get_pop65p(), dep_code)
 
     list_patientGroups = list(set(df_types_parcours['sej_type'] +  "_" + df_types_parcours['type_parcours'].str.replace(" + ", "_", regex=False)))
-    list_pathways = list(df_types_parcours_init["SSR_TYPE"].unique())
+    list_pathways = list(df_types_parcours["SSR_TYPE"].unique())
     A_idx = get_activities_per_group_pathway(list_patientGroups, list_pathways)
 
     list_Regions = get_Regions(dep_code, df_ssr, df_mco)
     list_Resources = get_Resources(list_resources)
     list_PatientsGroups = get_PatientGroups(list_patientGroups, list_pathways )
     list_Activities = get_Activities(list_patientGroups, list_pathways, A_idx)
-    list_Facilities = get_Facilities(df_mco, df_ssr, dep_code, df_types_parcours_init,
-                    df_types_parcours, list_resources)
+    list_Facilities = get_Facilities(df_mco, df_ssr, dep_code, df_types_parcours,
+                                     list_resources, list_pathways)
     list_Pathways = get_PatientPathways(list_pathways, list_patientGroups)
     instance = get_Instance(gdf_summary, df_types_parcours, list_patientGroups, list_resources)
 
