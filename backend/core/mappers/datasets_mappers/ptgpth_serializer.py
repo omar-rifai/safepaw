@@ -1,5 +1,6 @@
 import pandas as pd
 import typer
+import os
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 from backend.core.mappers.datasets_mappers.ptgpth_utils import load_data, get_geo_polygon, summarize_geo_data, get_pop65p,\
     get_finness_info, get_resources_capacities, get_region_affinities, get_required_resources, get_transfer_to, get_transferable,\
@@ -134,6 +135,7 @@ def serialize_ptgpth(
     sys_data = SystemData(regions = list_Regions, resources=list_Resources, facilities=list_Facilities,
                           patients=list_PatientsGroups , pathways=list_Pathways, activities= list_Activities, instance=instance)
     params_system, _ = convert_dm_to_json(sys_data)
+    os.makedirs("experiments", exist_ok=True)
     with open("experiments/params_ptgpth_" + str(dep_code) + "_" + str(p_transf)+ "_" + str(p_orth)+ ".json", "w") as fp:
         json.dump(params_system, fp)
     return params_system    
