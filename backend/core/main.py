@@ -4,8 +4,7 @@ from backend.core.utils.data_utils import package_results
 import typer
 from typing import Any
 from pydantic import BaseModel
-app = typer.Typer()
-
+from pathlib import Path
 
 class OptVars(BaseModel):
     P : Any
@@ -68,7 +67,7 @@ def run_driver(params_system, mode="default"):
     declare_constraints(LP, vars_system, params_system, mode)
     print("Starting solver...")
 
-    LP.solve(pulp.HiGHS(msg=1))
+    LP.solve(pulp.GUROBI(msg=1))
     dict_results = package_results(vars_system, params_system)
     status =  pulp.LpStatus[LP.status]
     objective = pulp.value(LP.objective)
@@ -77,24 +76,28 @@ def run_driver(params_system, mode="default"):
     
 
 
-def main():
-    import sys
+def main(params_file : Path = typer.Argument(..., help="Path to JSON parameters file")):
     import json
     import os
 
+    if not params_file.exists():
+        typer.echo(f"Error: file {params_file} does not exist")
+        raise typer.Exit(code=1)
     
-    path = sys.argv[1]
-    with open(path) as fp:
+    with open(params_file) as fp:
         params_system = json.load(fp)
     _, _, dict_results = run_driver(params_system)
     
-    os.makedirs("./backend/data/temp", exist_ok=True)
-    with open("./backend/data/temp/outputs.json", "w+") as fp:
+    out_dir = Path("./experiments/")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_file = out_dir / f"results_{params_file.name}"
+
+    with open(out_file, "w+") as fp:
         json.dump({k: (v.to_dict(orient="records")) for k,v in dict_results.items()}, fp)
     
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
 
 
 

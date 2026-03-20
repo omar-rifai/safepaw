@@ -1,6 +1,6 @@
 import pandas as pd
 import geopandas as gpd
-import math
+from backend.core.data_models.input_models import Facility
 
 def get_pathways(df_types_parcours_init: pd.DataFrame):
     return list(df_types_parcours_init["SSR_TYPE"].unique())
@@ -261,10 +261,11 @@ def get_region_affinities(gdf_summary: pd.DataFrame,df_finess: pd.DataFrame) -> 
     w_rh = {}
     all_regions = list(gdf_summary["can_code"].unique())
 
+    orth_can_code, _ = get_default_geo_info(gdf_summary)
     for r in all_regions:
-        w_rh[r] = {"DOM":2}
         list_adjacent = gdf_summary[gdf_summary["can_code"]==r]["adjacent"]
-       
+        w_rh[r] = {"DOM":2, "ORTH":get_orth_wrh(orth_can_code,r, list_adjacent)}
+
         for _,row in df_finess.iterrows():
             h = row["nofinesset"]
             if row["can_code"] == r:
@@ -274,6 +275,14 @@ def get_region_affinities(gdf_summary: pd.DataFrame,df_finess: pd.DataFrame) -> 
             else:
                 w_rh[r][h] = 0.5
     return w_rh
+
+
+def get_orth_wrh(can_code, r, list_adjacent):
+    if can_code == r:
+        return 2
+    elif can_code in list_adjacent.values[0]:
+        return 1
+    else: return 0.5
 
 def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: list) -> dict:
     """Returns a dictionary with the activities for each group/pathway"""
@@ -336,7 +345,7 @@ def get_demand_lower_bounds(gdf_summary: pd.DataFrame, df_types_parcours: pd.Dat
         d_gr[group] = {}
         for _, gdf_row in gdf_summary.iterrows():
             can_code = gdf_row["can_code"]
-            frac_pop = gdf_row["population"] / gdf_summary["population"].sum()   
+            frac_pop = gdf_row["pop65p"] / gdf_summary["pop65p"].sum()   
             d_gr[group][can_code] = float( frac_visits * frac_pop)
     return d_gr
 
@@ -369,3 +378,52 @@ def get_required_resources(A_idx):
                     dict_required_resources[g][k][a]["ANES"] += 1
                     dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
     return dict_required_resources
+
+
+
+def add_orth_facility(list_facilities: list[Facility], list_pathways, list_finess: list, gdf_geo: pd.DataFrame,  p_orth:float) -> list[Facility]:
+    """Append a virtual facility corresponding to patients' home"""
+    orth_resource_capacities = get_frac_resource_capacities(list_facilities, p_orth)
+    default_can_code, default_coords = get_default_geo_info(gdf_geo)
+    list_facilities.append(Facility(
+            facility_id = "ORTH",
+            facility_name = "" ,
+            region = default_can_code,
+            coordinates =default_coords , 
+            resources_capacity = orth_resource_capacities,
+            max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },
+            max_transferable_out = {l: 0 if l != "finance" else 1 for l in list_resources },
+            linked_facilities = list_finess,
+            available_pathways= list_pathways))
+    return list_facilities
+
+def get_default_geo_info(gdf_geo):
+    """return the default region code and coordinates for DOM and ORTH facilities"""
+    can_code_largest = gdf_geo[gdf_geo["population"]==gdf_geo["population"].max()]["can_code"].iloc[0]
+    gdf_proj = gdf_geo.to_crs(epsg=3857)
+    centroid =  gdf_proj[ gdf_proj["population"]== gdf_proj["population"].max()]["geometry"].centroid
+    coordinates = [centroid.x, centroid.y]
+    return can_code_largest, coordinates
+
+def get_frac_resource_capacities(list_facilities: list[Facility], p_orth:float) -> dict:
+    """Calculate the ORTHOPEDIC center resource capacities as a percentage of the other facilities capacities"""
+    frac_resources = {r: int(p_orth*sum(x.resources_capacity[r] for x in list_facilities)) for r in list_facilities[0].resources_capacity}
+    frac_resources["KINE_DOM"] = 0
+    return frac_resources
+
+def add_dom_facility(list_facilities: list[Facility], list_pathways, list_finess: list, gdf_geo: pd.DataFrame) -> list[Facility]:
+    """Append a virtual facility corresponding to patients' home"""
+    default_can_code, default_coords = get_default_geo_info(gdf_geo)
+    list_facilities.append(Facility(
+            facility_id = "DOM",
+            facility_name = "" ,
+            region = default_can_code,
+            coordinates =default_coords, 
+            resources_capacity = {"CHIR/ORTHO":0.0,"ANES":0.0,"CSC":0.0,"DERMA":0.0,"RHUMA":0.0,"GASTRO":0.0,\
+                                  "OPH":0.0,"ENDO":0.0,"GYNECO":0.0,"URO":0.0,"ORL":0.0,"KINE_MCO":0.0,"DAY_HC":0.0,\
+                                  "KINE_SSR":0.0,"KINE_DOM":14940.0,"finance":1209908.0} ,
+            max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },
+            max_transferable_out = {l: 0 if l != "finance" else 1 for l in list_resources },
+            linked_facilities = list_finess,
+            available_pathways= list_pathways))
+    return list_facilities
