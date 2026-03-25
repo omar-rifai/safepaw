@@ -13,57 +13,47 @@ RUN cd frontend && npm run build
 
 
 #-----------backend builder------------
-FROM python:3.13-alpine AS backend-builder
+FROM python:3.13-slim AS backend-builder
 WORKDIR /app
 
-ENV PATH="/root/.local/bin:$PATH" \
-    PYTHONUNBUFFERED=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1 \
+ENV PYTHONUNBUFFERED=1 \
     PROJ_LIB=/usr/share/proj
 
-# Build deps ONLY in builder
-RUN apk add --no-cache \
-    build-base linux-headers musl-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     curl \
-    proj proj-dev \
-    gdal gdal-dev \
-    geos geos-dev
+    libgeos-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+    
+COPY backend/pixi.toml ./
+COPY backend/pixi.lock ./
+
 
 # Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN curl -fsSL https://pixi.sh/install.sh | sh \
+    && /root/.pixi/bin/pixi install \
+    && rm -rf /root/.cache/pip /root/.cache/pixi
 
-COPY backend/pyproject.toml ./
-RUN poetry install --no-root --only main && rm -rf /root/.cache/pip /root/.cache/pypoetry
 
 # Copy app code
 COPY backend ./backend
 
 
 #-----------backend runtime------------
-FROM python:3.13-alpine AS backend
+FROM python:3.13-slim AS backend
 WORKDIR /app
 
-ENV PATH="/root/.local/bin:$PATH" \
+ENV PATH="/app/.pixi/envs/default/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_NO_INTERACTION=1 \
-    PROJ_LIB=/usr/share/proj 
+    PROJ_LIB=/usr/share/proj
+    
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libgeos-dev curl \
+ && rm -rf /var/lib/apt/lists/*
 
-
-RUN apk add --no-cache \
-    proj \
-    gdal \
-    geos \
-    libstdc++ \
-    curl
-
-# Copy Python libs from builder ( bit tricky but we avoid all the building stuff that are useless)
-COPY --from=backend-builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
-COPY --from=backend-builder /usr/local/bin /usr/local/bin
-
-
-# Copy backend and frontend
+# Copy Python libs and backend code from builder
+COPY --from=backend-builder /app/.pixi/envs /app/.pixi/envs
 COPY --from=backend-builder /app/backend ./backend
 COPY --from=frontend /app/frontend/build ./frontend/build
 
