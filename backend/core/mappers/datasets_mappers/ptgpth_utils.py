@@ -46,9 +46,9 @@ def load_ssr_data(path: str, dep_code: str):
     return reduce_SSR_LOIRE(df, dep_code)
 
 def load_data(dep_code:str):
-    types_parcours_loire = load_types_parcours("backend/data/legacy/raw_TYPES_PARCOURS.csv", 3, dep_code)
-    mco_loire = load_mco_data("backend/data/legacy/raw_MCO_2018r.csv", dep_code)
-    ssr_loire = load_ssr_data("backend/data/legacy/raw_SSR_2018r.csv", dep_code)
+    types_parcours_loire = load_types_parcours("backend/data/raw/TYPES_PARCOURS.csv", 3, dep_code)
+    mco_loire = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_code)
+    ssr_loire = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_code)
     return types_parcours_loire, mco_loire, ssr_loire
 
 def reduce_TYPES_PARCOURS_LOIRE(data: pd.DataFrame, min_patients: int, dep_code: str) -> pd.DataFrame:

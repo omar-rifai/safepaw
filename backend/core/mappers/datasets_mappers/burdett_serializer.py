@@ -326,7 +326,7 @@ def _preserve_specialty_lines(data):
     return re.sub(pattern, r'\1', data, flags=re.M)
 
 def read_burdett():
-    filename = "backend/data/legacy/raw_Data_burdett.txt"
+    filename = "backend/data/raw/data_burdett.txt"
     with open(filename, "r") as fp:
         data = fp.read()
     data = _remove_trailing_comments(data)
@@ -339,3 +339,28 @@ def read_burdett():
     data_json = TreeToJSON().transform(tree)
 
     return data_json
+
+
+def main():
+    from backend.core.data_models.input_models import SystemData
+    from backend.core.mappers.input_mappers import convert_dm_to_json
+    import json
+    
+    data = read_burdett()
+    df_pathways = _get_df_pathways(data)
+    df_resources = _get_df_resources(data)
+
+    list_regions = get_Regions(data)
+    list_facilities = get_Facilities(data, df_pathways)
+    list_resources = get_Resources()
+    list_patients = get_PatientGroups(data)
+    list_pathways = get_PatientPathways(df_pathways)
+    list_activities = get_Activities(df_pathways)
+    instance = get_Instance(data, df_pathways)
+
+    burdett_data = SystemData(regions = list_regions, resources=list_resources, facilities=list_facilities, patients=list_patients ,\
+                pathways=list_pathways, activities= list_activities, instance=instance)
+    params_system, params_metadata = convert_dm_to_json(burdett_data)
+
+    with open("experiments/temp_burdett.json", "w") as fp:
+        json.dump(params_system, fp)
