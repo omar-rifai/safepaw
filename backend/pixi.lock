@@ -78,6 +78,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/keyutils-1.6.3-hb9d3cd8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/kiwisolver-1.5.0-py314h97ea11e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/krb5-1.22.2-ha1258a1_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/lark-1.3.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/lcms2-2.18-h0c24ade_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ld_impl_linux-64-2.45.1-default_hbd61a6d_102.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/lerc-4.1.0-hdb68285_0.conda
@@ -301,6 +302,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/json-c-0.18-hc62ec3d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/kiwisolver-1.5.0-py314hd6e1bd6_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/krb5-1.22.2-h207b36a_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/lark-1.3.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/lcms2-2.18-h90db99b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/lerc-4.1.0-h35c7297_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libabseil-20260107.1-cxx17_h7ed6875_0.conda
@@ -518,6 +520,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/json-c-0.18-he4178ee_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/kiwisolver-1.5.0-py314hf8a3a22_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/krb5-1.22.2-h385eeb1_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/lark-1.3.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/lcms2-2.18-hdfa7624_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/lerc-4.1.0-h1eee2c3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libabseil-20260107.1-cxx17_h2062a1b_0.conda
@@ -2602,6 +2605,17 @@ packages:
   purls: []
   size: 1160828
   timestamp: 1769770119811
+- conda: https://conda.anaconda.org/conda-forge/noarch/lark-1.3.1-pyhd8ed1ab_0.conda
+  sha256: 49570840fb15f5df5d4b4464db8ee43a6d643031a2bc70ef52120a52e3809699
+  md5: 9b965c999135d43a3d0f7bd7d024e26a
+  depends:
+  - python >=3.10
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/lark?source=compressed-mapping
+  size: 94312
+  timestamp: 1761596921009
 - conda: https://conda.anaconda.org/conda-forge/linux-64/lcms2-2.18-h0c24ade_0.conda
   sha256: 836ec4b895352110335b9fdcfa83a8dcdbe6c5fb7c06c4929130600caea91c0a
   md5: 6f2e2c8f58160147c4d1c6f4c14cbac4

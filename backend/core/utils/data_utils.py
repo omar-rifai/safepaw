@@ -70,6 +70,97 @@ def package_results(vars_system, params_system):
     return dict_results
 
 
+
+def get_results(dict_results, params_system, objective_value, output_path=None):
+    """Returns summary file of results"""
+    import json
+    P = dict_results["P_gkrah"].groupby(["group", "pathway", "region","activity", "facility"])["value"].sum().to_dict()
+    P_gk = dict_results["P_gk"].groupby(["group", "pathway"])["value"].sum().to_dict()
+    n_patients = get_n_patients(params_system, P_gk)
+    spi = get_SPI(params_system, P)
+    qci = get_QCI(params_system, P_gk)  
+    l_usage = get_resources_usage(params_system, P) 
+    k_usage = get_pathways_usage(params_system, P_gk)
+    results = {"obj":objective_value, "n_patients": n_patients, "spi": spi, "qci": qci, "resources_usage":l_usage, "pathway_distribution": k_usage}
+    
+    if output_path:
+        with open(output_path, "w") as fp:
+            json.dump(results, fp)
+
+    return results
+
+
+
+
+def get_n_patients(params_system: dict, P_gk: dict):
+    """Returns the total number of patients treated in the system"""
+    n_patients = sum(params_system["D"] * P_gk[(g, k)] for g in params_system["G"]
+                                                       for k in params_system["K_idx"][g])
+    return n_patients
+
+
+def get_SPI(params_system: dict, P: dict) -> float:
+    """Returns a Spatial Proximity Index metric"""
+    nominator = sum(params_system["D"] * params_system["w_rh"][r][h] * P[(g,k,r,a,h)]
+                    for g in params_system["G"]
+                    for k in params_system["K_idx"][g]
+                    for r in params_system["R"]
+                    for a in params_system["A_idx"][g][k]
+                    for h in params_system["H"])
+    denominator = sum(params_system["D"] * P[(g,k,r,a,h)]
+                      for g in params_system["G"]
+                      for k in params_system["K_idx"][g]
+                      for r in params_system["R"]
+                      for a in params_system["A_idx"][g][k]
+                      for h in params_system["H"])
+    return  nominator / denominator if denominator != 0 else 0
+
+def get_QCI(params_system: dict, P_gk: dict) -> float:
+    """Return a Quality of Care Index metric"""
+    nominator = sum(params_system["D"] * params_system["c_gk"][g][k] * P_gk[(g,k)] 
+                    for g in params_system["G"]
+                    for k in params_system["K_idx"][g])
+    denominator = sum(params_system["D"] * P_gk[(g,k)] 
+                    for g in params_system["G"]
+                    for k in params_system["K_idx"][g])
+
+    return  nominator / denominator if denominator != 0 else 0
+
+
+def get_resources_usage(params_system: dict, P: dict) -> dict:
+    """Returns a dict with the usage percentage of each resource type"""
+    utilisation = {l: 0 for l in params_system["L"]}
+    for l in params_system["L"]:
+        nominator = 0
+        denominator = 0
+        for g in params_system["G"]:
+            for k in params_system["K_idx"][g]:
+                for r in params_system["R"]:
+                    for a in params_system["A_idx"][g][k]:
+                        for h in params_system["H"]:
+                            nominator += params_system["t_gkal"][g][k][a][l] * P[(g, k, r, a, h)] * params_system["D"]
+        for h in params_system["H"]:
+            denominator += params_system["m_hl"][h][l]
+        utilisation[l] = nominator / denominator if denominator != 0 else 0
+    return utilisation
+
+
+def get_pathways_usage(params_system: dict, P_gk: dict) -> dict:
+    """Returns the percentage of patients for each pathway"""
+    n_total = sum(params_system["D"] * P_gk[(g, k)] for g in params_system["G"]
+                                                       for k in params_system["K_idx"][g])
+    all_pathways = list({k for g in params_system["G"] for k in params_system["K_idx"][g]})
+    utilisation = {k: 0 for k in all_pathways}
+    for k in all_pathways:
+        n_k = 0
+        for g in params_system["G"]:
+            if k in params_system["K_idx"][g]:
+                n_k += params_system["D"] * P_gk[(g, k)] 
+        utilisation[k] = n_k / n_total if n_total != 0 else 0
+    return utilisation
+
+
+
 def read_metadata(inputfile : str | Path):
     """
     Reads metadata from a JSON file.

@@ -1,6 +1,6 @@
 import pulp
 from backend.core.optimization import declare_constraints, set_obj_fn
-from backend.core.utils.data_utils import package_results
+from backend.core.utils.data_utils import package_results, get_results
 import typer
 from typing import Any
 from pydantic import BaseModel
@@ -71,30 +71,27 @@ def run_driver(params_system, mode="default"):
     dict_results = package_results(vars_system, params_system)
     status =  pulp.LpStatus[LP.status]
     objective = pulp.value(LP.objective)
-
+    
     return status, objective, dict_results
     
 
 
 def main(params_file : Path = typer.Argument(..., help="Path to JSON parameters file")):
     import json
-    import os
 
     if not params_file.exists():
         typer.echo(f"Error: file {params_file} does not exist")
         raise typer.Exit(code=1)
     
-    with open(params_file) as fp:
-        params_system = json.load(fp)
-    _, _, dict_results = run_driver(params_system)
-    
     out_dir = Path("./experiments/")
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"results_{params_file.name}"
 
-    with open(out_file, "w+") as fp:
-        json.dump({k: (v.to_dict(orient="records")) for k,v in dict_results.items()}, fp)
-    
+    with open(params_file) as fp:
+        params_system = json.load(fp)
+    status, objective, dict_results = run_driver(params_system)
+    get_results(dict_results, params_system, objective, out_file)
+    return status
 
 if __name__ == "__main__":
     typer.run(main)
