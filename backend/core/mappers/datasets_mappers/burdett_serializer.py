@@ -2,7 +2,7 @@ import pandas as pd
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 from lark import Lark, Transformer, UnexpectedCharacters
 import re
-
+import typer
 
 hospitals = {
     "BPH": {"name": "Brisbane Private Hospital", "coordinates": [-27.4646, 153.0226]},
@@ -37,12 +37,12 @@ def _get_region_affinities(data, default_affinity=1.0):
     w_rh = {fid: default_affinity for fid in facilities_idx}
     return w_rh
 
-def get_Facilities(data: dict, df_pathways : pd.DataFrame) -> list[Facility]:
+def get_Facilities(data: dict, df_pathways : pd.DataFrame, perc_allowed: float= 0) -> list[Facility]:
     """Creates Facility objects corresponding to unique wards"""
     list_facilities = []
     df_resources =  _get_df_resources(data)
     wards = [h for inner in data["WH"] for h in inner]
-    b_hl_in, b_hl_out = _get_facilities_max_transfers(wards)
+    b_hl_in, b_hl_out = _get_facilities_max_transfers(wards, perc_allowed)
     for fid in wards:
         list_facilities.append(Facility(
                 facility_id = fid ,
@@ -58,10 +58,10 @@ def get_Facilities(data: dict, df_pathways : pd.DataFrame) -> list[Facility]:
 
     return list_facilities
 
-def _get_facilities_max_transfers(facilities):
+def _get_facilities_max_transfers(facilities, perc_allowed):
     resources = ["cap_OT", "cap_ICU", "cap_Ward"]
-    b_hl_in = {h: {r: 0 for r in resources} for h in facilities}
-    b_hl_out = {h: {r: 0 for r in resources} for h in facilities}
+    b_hl_in = {h: {r: 0 if perc_allowed == 0 else 2 for r in resources } for h in facilities}
+    b_hl_out = {h: {r: perc_allowed for r in resources} for h in facilities}
     return b_hl_in, b_hl_out
 
 def _get_facility_capacities(fid: str, df_resources: pd.DataFrame) -> dict:
@@ -88,7 +88,7 @@ def get_Instance(data: dict, df_pathways: pd.DataFrame) -> Instance:
     """Returns object to store optimization instance parameters. Most variables are stores in a global config.yaml file """
    
     return Instance(
-            d_total = 10000.0,
+            d_total = 1.0,
             d_gr = _get_demand_lower_bound(df_pathways, data),
             under_q_g = _get_under_q_g(data),
             over_q_g = {g: 1.0 for i,g in enumerate(data["G"])} ,
@@ -96,7 +96,7 @@ def get_Instance(data: dict, df_pathways: pd.DataFrame) -> Instance:
             over_q_gu = _get_under_over_q_gu(data, df_pathways),
             p_transf = 1.0,
             delta_l = {"cap_OT": 12.0, "cap_ICU": 12.0,"cap_Ward": 12.0},
-            alpha = 0.0125
+            alpha = 0
         )
 
 def _get_under_q_g(data:dict) -> dict:
@@ -340,18 +340,23 @@ def read_burdett():
 
     return data_json
 
+def serialize_burdett(
+        perc_allowed: float = typer.Option(0, help="Maximum allowed resources out percentage"),
+        save_params: bool = typer.Option(True))-> dict:
+    return serialize_burdett_core(perc_allowed, save_params)
 
-def main():
+def serialize_burdett_core(
+        perc_allowed: float = 0,
+        save_params: bool = True) -> dict:
     from backend.core.data_models.input_models import SystemData
     from backend.core.mappers.input_mappers import convert_dm_to_json
-    import json
+    import json, os
     
     data = read_burdett()
     df_pathways = _get_df_pathways(data)
-    df_resources = _get_df_resources(data)
-
+ 
     list_regions = get_Regions(data)
-    list_facilities = get_Facilities(data, df_pathways)
+    list_facilities = get_Facilities(data, df_pathways, perc_allowed)
     list_resources = get_Resources()
     list_patients = get_PatientGroups(data)
     list_pathways = get_PatientPathways(df_pathways)
@@ -360,7 +365,15 @@ def main():
 
     burdett_data = SystemData(regions = list_regions, resources=list_resources, facilities=list_facilities, patients=list_patients ,\
                 pathways=list_pathways, activities= list_activities, instance=instance)
-    params_system, params_metadata = convert_dm_to_json(burdett_data)
+    params_system, _ = convert_dm_to_json(burdett_data)
 
-    with open("experiments/temp_burdett.json", "w") as fp:
-        json.dump(params_system, fp)
+    if save_params:
+        os.makedirs("experiments", exist_ok=True)
+        with open("experiments/temp_burdett.json", "w") as fp:
+            json.dump(params_system, fp)
+    return params_system
+
+if __name__ == "__main__":
+     import pyproj
+     pyproj.datadir.set_data_dir(pyproj.datadir.get_data_dir())
+     typer.run(serialize_burdett)
