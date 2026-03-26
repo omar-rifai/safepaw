@@ -1,6 +1,6 @@
 ## Optimizing Case-Mix Planning at the Territorial Level: A Pathway-Centered and Resource-Aware Approach
 
-The dependencies in this project are managed with `poetry`. Please follow the [official instructions](https://python-poetry.org/) to install `poetry` on your system.
+The dependencies in this project are managed with `pixi`.  to install, you can run `curl -fsSL https://pixi.sh/install.sh | sh`
 
 
 #### Getting started
@@ -8,15 +8,15 @@ The dependencies in this project are managed with `poetry`. Please follow the [o
 In the project root directory, install the python dependencies with the following command:
 
 ````
- poetry install -P backend/ --no-root --only main
+ pixi install -m backend
 ````
 
 You can then run the experiments with the following command:
 
 ````
- poetry run -P backend/ python -m backend.core.main backend/data/<file_name.json>
+ pixi run -m backend/ python -m backend.core.main experiments/<file_name.json>
 ````
 
-Where `file_name.json` is one of the parameter files found in `backend/data`. The outputs are stored in `backend/data/temp`.
+Where `file_name.json` is one of the parameter files found in `experiments`. The outputs are stored in `experiments` as wells.
 
 
