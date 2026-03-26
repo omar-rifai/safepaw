@@ -75,7 +75,7 @@ def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
 
 
 def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
-                            df_types_parcours: pd.DataFrame) -> dict:
+                            df_types_parcours: pd.DataFrame, multiplier: float) -> dict:
     """Returns a dict with each available resource and its capacity given a finess number"""
     m_hl = {h: {"finance": 604954.0} for h in list_finess}  
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "CHIR/ORTHO", "JLI_CHI", 3)
@@ -97,7 +97,7 @@ def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataF
                                     .assign(sej_type = \
                                             df_types_parcours_init["sej_type"].str.cat(df_types_parcours_init["SSR_TYPE"], sep="_")),
                                 "KINE_DOM", None, post_op_scenarios["KINE_DOM"])
-    return m_hl
+    return {x: {l : int(m_hl[x][l] * multiplier) for l in m_hl[x]}for x in m_hl}
 
 def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
     """Returns approx of facilities' capacity for a speciality. When there is no info on availability,

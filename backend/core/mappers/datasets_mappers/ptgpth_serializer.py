@@ -21,7 +21,7 @@ def get_Regions(dep_code: int, df_ssr: pd.DataFrame, df_mco:pd.DataFrame) -> lis
 
 
 def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, df_types_parcours: pd.DataFrame,
-                   list_resources: list, list_pathways: list, p_orth:float) -> list[Facility]:
+                   list_resources: list, list_pathways: list, p_orth:float, multiplier=1.0) -> list[Facility]:
     """Creates Facility objects corresponding to unique nofinesset ids """
     list_facilities = []
     gdf_cantons = get_geo_polygon()
@@ -29,7 +29,7 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, 
     df_finess = get_finness_info(df_mco, df_ssr, gdf_geo)
     list_finess = list(df_finess["nofinesset"].unique())
     list_finess.extend(["DOM", "ORTH"])
-    m_hl = get_resources_capacities(list_finess, df_types_parcours, df_ssr, df_mco, df_types_parcours)
+    m_hl = get_resources_capacities(list_finess, df_types_parcours, df_ssr, df_mco, df_types_parcours, multiplier)
     
     for row in df_finess.itertuples():     
         list_facilities.append(Facility(
@@ -105,12 +105,22 @@ def get_PatientPathways(list_pathways_ids: list, list_groups: list, pathway_bene
     return list_pathways
 
 
-
 def serialize_ptgpth(
-        dep_code: str = typer.Argument("42", help="department code"),
-        p_transf: float = typer.Argument(1, help="Maximum allowed transfer percentage"),
-        p_orth:float = typer.Argument(0, help="Orthopedic center additional resources")
+        dep_code: str = typer.Option("42", help="department code"),
+        p_transf: float = typer.Option(1, help="Maximum allowed patitiens transfer percentage"),
+        p_orth:float = typer.Option(0, help="Orthopedic center percentage additional resources"),
+        resources_mult: float = typer.Option(1, help="Multiplier for the available resources"),
+        save_params: bool = typer.Option(True)
         ):
+    return serialize_ptgpth_core(dep_code, p_transf, p_orth, resources_mult, save_params)
+
+
+def serialize_ptgpth_core(
+        dep_code: str = "42",
+        p_transf: float = 1,
+        p_orth:float = 0,
+        resources_mult: float = 1,
+        save_params: bool = True):
     """Serialize PTG PTH Data and write to file"""
     from backend.core.data_models.input_models import SystemData
     from backend.core.mappers.input_mappers import convert_dm_to_json
@@ -120,7 +130,6 @@ def serialize_ptgpth(
     df_types_parcours = df_types_parcours_init.groupby(["sej_type", "type_parcours", "SSR_TYPE"], as_index=False)["nb"].sum()
     df_types_parcours = df_types_parcours[df_types_parcours["nb"].fillna(0) >= 3]
     gdf_geo =  get_geo_polygon()
-    #df_finess = get_finness_info(df_mco, df_ssr, gdf_geo)
     gdf_summary = summarize_geo_data(gdf_geo, get_pop65p(), dep_code)
     list_patientGroups = list(set(df_types_parcours['sej_type'] +  "_" + df_types_parcours['type_parcours'].str.replace(" + ", "_", regex=False)))
     list_pathways = list(df_types_parcours["SSR_TYPE"].unique())
@@ -129,15 +138,18 @@ def serialize_ptgpth(
     list_Resources = get_Resources(list_resources)
     list_PatientsGroups = get_PatientGroups(list_patientGroups, list_pathways )
     list_Activities = get_Activities(list_patientGroups, list_pathways, A_idx)
-    list_Facilities = get_Facilities(df_mco, df_ssr, dep_code, df_types_parcours, list_resources, list_pathways, p_orth)
+    list_Facilities = get_Facilities(df_mco, df_ssr, dep_code, df_types_parcours, list_resources, list_pathways, p_orth, resources_mult)
     list_Pathways = get_PatientPathways(list_pathways, list_patientGroups, pathway_benefit)
     instance = get_Instance(gdf_summary, df_types_parcours, list_patientGroups, list_resources, p_transf)
     sys_data = SystemData(regions = list_Regions, resources=list_Resources, facilities=list_Facilities,
                           patients=list_PatientsGroups , pathways=list_Pathways, activities= list_Activities, instance=instance)
     params_system, _ = convert_dm_to_json(sys_data)
-    os.makedirs("experiments", exist_ok=True)
-    with open("experiments/params_ptgpth_" + str(dep_code) + "_" + str(p_transf)+ "_" + str(p_orth)+ ".json", "w") as fp:
-        json.dump(params_system, fp)
+    
+    if save_params:
+        os.makedirs("experiments", exist_ok=True)
+        with open("experiments/params_ptgpth_" + str(dep_code) + "_" + str(p_transf)+ "_" + str(p_orth)+ "_" + str(resources_mult) + ".json", "w") as fp:
+            json.dump(params_system, fp)
+
     return params_system    
 
 if __name__ == "__main__":
