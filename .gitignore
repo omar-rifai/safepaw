@@ -10,7 +10,8 @@ backend/data/open_data/communes-france.csv
 *.ipynb_checkpoints
 node_modules/*
 backend/data/raw/*
-experiments/*
+experiments/*.json
+experiments/*.csv
 
 # npm logs
 npm-debug.log*
