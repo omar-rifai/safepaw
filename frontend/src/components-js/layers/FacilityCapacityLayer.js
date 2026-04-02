@@ -1,13 +1,14 @@
 import { ScatterplotLayer } from "@deck.gl/layers";
 export function FacilityCapacityLayer({ capacities }) {
 
-    const facilityCapacity = (capacities || []).filter(d => !d.preperties?.region);
-
+    const facilityCapacity = (capacities || []).filter(d => !d.properties?.region_id);
     if (facilityCapacity.length === 0) {
         return null;
     }
 
     const maxTotalCapacityFacility = Math.max(...facilityCapacity.map(d => d.properties.capacities["beds"]))
+    
+    console.log("debug:",facilityCapacity)
 
     const typeColors = {
         "1": [173, 216, 230, 180],  // light blue
@@ -21,7 +22,7 @@ export function FacilityCapacityLayer({ capacities }) {
             id: 'facilities-capacity',
             data: facilityCapacity,
             getPosition: d => d.geometry.coordinates,
-            getRadius: d => 4 + 6 * (d.properties.capacities["beds"] / maxTotalCapacityFacility),
+            getRadius: d => Math.max(4 + 6 * (d.properties.capacities["beds"]  / maxTotalCapacityFacility), 6),
             getFillColor: d => typeColors[d.properties.facility_type] || [0, 0, 255, 100],
             getLineColor: [255, 255, 255, 180],
             lineWidthMinPixels: 2,

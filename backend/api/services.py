@@ -92,14 +92,14 @@ def get_facility_capacity_maternite(df_maternites) -> list:
 
     list_facilities_capacity = []
 
-    for h in df_maternites["facility_name"].unique():
+    for _, h in df_maternites.iterrows():
         
-        beds_capacity = int(df_maternites.loc[df_maternites["facility_name"] == h, "beds"].iloc[0])
-        coords = df_maternites.loc[df_maternites["facility_name"] == h,"coords"].iloc[0]
-        facility_type = df_maternites.loc[df_maternites["facility_name"] == h,"type"].iloc[0]
+        beds_capacity = int(df_maternites.loc[df_maternites["nofinesset"] == h["nofinesset"], "beds"].iloc[0])
+        coords = df_maternites.loc[df_maternites["nofinesset"] == h["nofinesset"],"coords"].iloc[0]
+        facility_type = df_maternites.loc[df_maternites["nofinesset"] == h["nofinesset"],"type"].iloc[0]
 
         facility_instance = FacilityStats(
-            facility_id=h,
+            facility_id=h["facility_name"],
             facility_type=facility_type,
             coordinates=coords,
             patient_group=None,
