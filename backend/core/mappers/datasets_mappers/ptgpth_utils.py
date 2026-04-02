@@ -2,8 +2,8 @@ import pandas as pd
 import geopandas as gpd
 from backend.core.data_models.input_models import Facility
 
-def get_pathways(df_types_parcours_init: pd.DataFrame):
-    return list(df_types_parcours_init["SSR_TYPE"].unique())
+def get_pathways(df_types_parcours: pd.DataFrame):
+    return list(df_types_parcours["SSR_TYPE"].unique())
 
 nb_kine_preop = {"PTG":10, "PTH":15}
 specialities = ["CSC", "DERMA", "ENDO", "GASTRO", "GYNECO", "OPH", "ORL", "RHUMA", "URO"]
@@ -74,34 +74,64 @@ def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
     return data[dept_code.isin(dep_code) & (data['GDE'] == "SSR_A")].reset_index(drop=True)
 
 
-def get_resources_capacities(list_finess: list, df_types_parcours_init: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
-                            df_types_parcours: pd.DataFrame, multiplier: float) -> dict:
+def get_resources_capacities(t_gkal: dict, list_finess: list, list_pathways:list, df_types_parcours: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
+                             multiplier: float) -> dict:
     """Returns a dict with each available resource and its capacity given a finess number"""
-    m_hl = {h: {"finance": 604954.0} for h in list_finess}  
+    m_hl = {h: {} for h in list_finess}  
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "CHIR/ORTHO", "JLI_CHI", 3)
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "ANES", "JLI_CHI", 2)
-    m_hl = _get_specialities_cap(m_hl, df_mco, df_types_parcours_init, list_finess)
+    m_hl = _get_specialities_cap(m_hl, df_mco, df_types_parcours, list_finess)
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_mco, df_types_parcours, "KINE_MCO", "ACTCLI_PM", {"PTG":10, "PTH":15})
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_ssr,
-                                df_types_parcours_init
+                                df_types_parcours
                                     .assign(sej_type = \
-                                            df_types_parcours_init["sej_type"].str.cat(df_types_parcours_init["SSR_TYPE"], sep="_")),
+                                            df_types_parcours["sej_type"].str.cat(df_types_parcours["SSR_TYPE"], sep="_")),
                                 "DAY_HC", "JOUHC", post_op_scenarios["DAY_HC"])
     m_hl = _get_resource_capacity(m_hl, list_finess,  df_ssr,
-                                df_types_parcours_init
+                                df_types_parcours
                                     .assign(sej_type = \
-                                            df_types_parcours_init["sej_type"].str.cat(df_types_parcours_init["SSR_TYPE"], sep="_")),
+                                            df_types_parcours["sej_type"].str.cat(df_types_parcours["SSR_TYPE"], sep="_")),
                                 "KINE_SSR", "JOUHP", post_op_scenarios["KINE_SSR"])
     m_hl = _get_resource_capacity(m_hl, list_finess, None,
-                                df_types_parcours_init
+                                df_types_parcours
                                     .assign(sej_type = \
-                                            df_types_parcours_init["sej_type"].str.cat(df_types_parcours_init["SSR_TYPE"], sep="_")),
+                                            df_types_parcours["sej_type"].str.cat(df_types_parcours["SSR_TYPE"], sep="_")),
                                 "KINE_DOM", None, post_op_scenarios["KINE_DOM"])
+    m_hl = _get_finance_capacity(m_hl, list_finess, df_ssr, df_mco, t_gkal, df_types_parcours) 
     return {x: {l : int(m_hl[x][l] * multiplier) for l in m_hl[x]}for x in m_hl}
+
+
+def _get_finance_capacity(m_hl, list_finess: list , df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
+                          t_gkal: dict, df_types_parcours: pd.DataFrame) -> dict:
+    """Calculate the financial need for every facility (including DOM and ORTHO center)"""
+    
+    df_visits = df_types_parcours.copy()
+    df_visits["group"] = df_visits['sej_type'] +  "_" + df_visits['type_parcours'].str.replace(" + ", "_", regex=False)
+    mco_finance = 0
+    ssr_finance = 0
+    dom_finance = 0
+    for _, row in df_visits.iterrows():
+        g = row["group"]
+        for k in t_gkal[g]:
+            for a in t_gkal[g][k]:
+                    if a == "KINE_DOM":
+                        dom_finance += t_gkal[g][k][a]["finance"] * row["nb"]
+                    elif a == "KINE_SSR" or a == "DAY_HC":
+                        ssr_finance += t_gkal[g][k][a]["finance"] * row["nb"]
+                    else:
+                        mco_finance += t_gkal[g][k][a]["finance"] * row["nb"]
+    for h in list_finess:
+        if h == "DOM":
+            m_hl[h]["finance"] = dom_finance
+        elif h in df_ssr["FI_ET"].unique():
+            m_hl[h]["finance"] = ssr_finance / len(df_ssr["FI_ET"].unique())
+        elif h in df_mco["FI_ET"].unique():
+            m_hl[h]["finance"] = (mco_finance / len(df_mco["FI_ET"].unique()))
+    return m_hl
 
 def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
     """Returns approx of facilities' capacity for a speciality. When there is no info on availability,
-        we assume the speciality is available (namely for GYNECO, URO, and ORL)"""
+        we assume the speciality is available (namely for GYNECO, URO, and ORL (flag field PTRUE=TRUE for all rows))"""
     total_cap_regional = {}
     
     for speciality in df_mco_flag_fields.keys():
@@ -124,7 +154,7 @@ def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
 
     return facility_specialty_frac
 
-def _get_specialities_cap(m_hl: dict, df_mco: pd.DataFrame, df_types_parcours_init: pd.DataFrame,
+def _get_specialities_cap(m_hl: dict, df_mco: pd.DataFrame, df_types_parcours: pd.DataFrame,
                           list_finess: list) -> dict:
     import copy
     
@@ -132,7 +162,7 @@ def _get_specialities_cap(m_hl: dict, df_mco: pd.DataFrame, df_types_parcours_in
     nb_groups = {x:0 for x in specialities}
     
     for s in specialities:
-        nb_groups[s] += df_types_parcours_init[df_types_parcours_init["type_parcours"].str.contains(s)]["nb"].sum()
+        nb_groups[s] += df_types_parcours[df_types_parcours["type_parcours"].str.contains(s)]["nb"].sum()
 
     cap_specialities = copy.deepcopy(frac_specialities)
     for facility in df_mco["FI_ET"].unique():
@@ -339,9 +369,11 @@ def get_transfer_to(A_idx: dict) -> dict:
 def get_demand_lower_bounds(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame) -> dict:
     """ Returns ``d_gr'', the lower bound on patients asssigments per patient group, per canton"""
     d_gr = {}
-    for _, row in df_types_parcours.iterrows():
+    df_groups = df_types_parcours.copy()
+    df_groups = df_groups.groupby(["sej_type", "type_parcours"], as_index=False)["nb"].sum()
+    for _, row in df_groups.iterrows():
         group = row["sej_type"] + "_" + row["type_parcours"].replace(" + ", "_")
-        frac_visits  = row["nb"] / df_types_parcours["nb"].sum()
+        frac_visits  = row["nb"] / df_groups["nb"].sum()
         d_gr[group] = {}
         for _, gdf_row in gdf_summary.iterrows():
             can_code = gdf_row["can_code"]
@@ -377,6 +409,7 @@ def get_required_resources(A_idx):
                     dict_required_resources[g][k][a]["CHIR/ORTHO"] += 1
                     dict_required_resources[g][k][a]["ANES"] += 1
                     dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
+
     return dict_required_resources
 
 
@@ -391,8 +424,8 @@ def add_orth_facility(list_facilities: list[Facility], list_pathways, list_fines
             region = default_can_code,
             coordinates =default_coords , 
             resources_capacity = orth_resource_capacities,
-            max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },
-            max_transferable_out = {l: 0 if l != "finance" else 1 for l in list_resources },
+            max_transferable_in = {l: 0 if l != "finance" else 100 for l in list_resources },
+            max_transferable_out = {l: 0 if l != "finance" else 100 for l in list_resources },
             linked_facilities = list_finess,
             available_pathways= list_pathways))
     return list_facilities
@@ -411,17 +444,17 @@ def get_frac_resource_capacities(list_facilities: list[Facility], p_orth:float) 
     frac_resources["KINE_DOM"] = 0
     return frac_resources
 
-def add_dom_facility(list_facilities: list[Facility], list_pathways, list_finess: list, gdf_geo: pd.DataFrame) -> list[Facility]:
+def add_dom_facility(list_facilities: list[Facility], list_pathways: list, list_finess: list,
+                     gdf_geo: pd.DataFrame, m_hl: dict) -> list[Facility]:
     """Append a virtual facility corresponding to patients' home"""
     default_can_code, default_coords = get_default_geo_info(gdf_geo)
+    
     list_facilities.append(Facility(
             facility_id = "DOM",
             facility_name = "" ,
             region = default_can_code,
             coordinates =default_coords, 
-            resources_capacity = {"CHIR/ORTHO":0.0,"ANES":0.0,"CSC":0.0,"DERMA":0.0,"RHUMA":0.0,"GASTRO":0.0,\
-                                  "OPH":0.0,"ENDO":0.0,"GYNECO":0.0,"URO":0.0,"ORL":0.0,"KINE_MCO":0.0,"DAY_HC":0.0,\
-                                  "KINE_SSR":0.0,"KINE_DOM":14940.0,"finance":1209908.0} ,
+            resources_capacity = m_hl["DOM"],
             max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },
             max_transferable_out = {l: 0 if l != "finance" else 1 for l in list_resources },
             linked_facilities = list_finess,
