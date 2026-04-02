@@ -52,7 +52,7 @@ def get_Facilities(data: dict, df_pathways : pd.DataFrame, perc_allowed: float= 
                 resources_capacity =  _get_facility_capacities(fid, df_resources),
                 max_transferable_in = b_hl_in[fid],
                 max_transferable_out = b_hl_out[fid],
-                linked_facilities = wards,
+                linked_facilities = [x for x in wards if x.split("_")[0] == fid.split("_")[0]],
                 available_pathways= _get_facility_pathways(df_pathways, fid))
         )
 
