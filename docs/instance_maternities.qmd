@@ -71,8 +71,8 @@ logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 fig, ax = plt.subplots()
 
-df_materinity.plot.bar(x="region_code", y="summary_maternity_capacity_csv", color="red", ax=ax, alpha=0.3)
-df_labours.plot.bar(x="region_code", y="summary_maternity_labours_csv", color="blue", ax=ax, alpha=0.3)
+df_materinity.plot.bar(x="region_code", y="summary_maternity_capacity_csv", color="red", ax=ax, alpha=0.3, label="Deliveries from facilities statistics")
+df_labours.plot.bar(x="region_code", y="summary_maternity_labours_csv", color="blue", ax=ax, alpha=0.3, label="Deliveries from communes statistics")
 
 ax.set_xlabel("French Region Code")
 ax.set_ylabel("Number of Deliveries")
@@ -118,12 +118,11 @@ params = {
     "Parameter": [
         "$G$",
         "$K$",
-        "$A_{gk}$",
-        "$R$",
         "$R$",
         "$H$",
         "$L$",
         "$U_g$",
+        "$A_{gk}$",
         "$I_{gu}$",
         "$O_{gk}$",
         "$J_h$",
@@ -145,12 +144,11 @@ params = {
     "Meaning": [
         "Patients groups",
         "Available pathways",
-        "Number of activities for group $g$ pathway $k$",
-        "Regions",
         "Regions",
         "Facilities",
         "Resources",
         "Quality levels for group $g$",
+        "Number of activities for group $g$ pathway $k$",
         "Pathways available for group $g$ quality level $u$",
         "Facilities able to handle deliveries of type $g$",
         "Facilities transferable to from facility $h$",
@@ -172,12 +170,11 @@ params = {
     "Value": [
         "Four groups corresponding to maternity types [^1] (1,2a,2b,3)",
         "One pathway per group",
-        "One activity per pathway",
-        "French communes",
         "French communes",
         "Facilities are the maternity wards",
         "One resource (=bed/days) from *summary_maternity_capacity.csv*",
         "One quality level",
+        "One activity per pathway",
         "Trivial as we have one unique pathway and quality level",
         "Extracted from facility `type` in *summary_maternity_capacity.csv*",
         "All facilities of the same `type`",

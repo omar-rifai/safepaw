@@ -5,6 +5,11 @@ node_modules/*
 *.pyc
 *.ipynb_checkpoints
 experiments/
+data/raw/*
+data/open_data/*
+!data/open_data/communes-50m.parquet
+!data/open_data/summary_maternity_capacity.csv
+!data/open_data/summary_maternity_labours.csv
 
 # npm logs
 npm-debug.log*

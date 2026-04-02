@@ -378,7 +378,7 @@ def get_demand_lower_bounds(gdf_summary: pd.DataFrame, df_types_parcours: pd.Dat
         for _, gdf_row in gdf_summary.iterrows():
             can_code = gdf_row["can_code"]
             frac_pop = gdf_row["pop65p"] / gdf_summary["pop65p"].sum()   
-            d_gr[group][can_code] = float( frac_visits * frac_pop)
+            d_gr[group][can_code] = float( frac_visits * frac_pop)/2
     return d_gr
 
 
