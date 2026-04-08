@@ -81,6 +81,7 @@ def get_results(dict_results, params_system, objective_value, output_path=None):
     qci = get_QCI(params_system, P_gk)  
     l_usage = get_resources_usage(params_system, P) 
     k_usage = get_pathways_usage(params_system, P_gk)
+    #saturation = check_resource_saturation(params_system, P)
     results = {"obj":objective_value, "n_patients": n_patients, "spi": spi, "qci": qci, "resources_usage":l_usage, "pathway_distribution": k_usage}
     
     if output_path:
@@ -101,18 +102,16 @@ def get_n_patients(params_system: dict, P_gk: dict):
 
 def get_SPI(params_system: dict, P: dict) -> float:
     """Returns a Spatial Proximity Index metric"""
-    nominator = sum(params_system["D"] * params_system["w_rh"][r][h] * P[(g,k,r,a,h)]
+    nominator = sum(params_system["D"] * params_system["w_rh"][r][h] * P[(g,k,r,"ANES",h)]
                     for g in params_system["G"]
                     for k in params_system["K_idx"][g]
                     for r in params_system["R"]
-                    for a in params_system["A_idx"][g][k]
                     for h in params_system["H"]
                     if h not in ["DOM", "ORTH"])
-    denominator = sum(params_system["D"] * P[(g,k,r,a,h)]
+    denominator = sum(params_system["D"] * P[(g,k,r,"ANES",h)]
                       for g in params_system["G"]
                       for k in params_system["K_idx"][g]
                       for r in params_system["R"]
-                      for a in params_system["A_idx"][g][k]
                       for h in params_system["H"]
                       if h not in ["DOM", "ORTH"])
     return  nominator / denominator if denominator != 0 else 0
@@ -127,6 +126,46 @@ def get_QCI(params_system: dict, P_gk: dict) -> float:
                     for k in params_system["K_idx"][g])
 
     return  nominator / denominator if denominator != 0 else 0
+
+
+
+def check_resource_saturation(params_system:dict, P:dict)-> dict:
+    import numpy as np
+    import math
+    l_map = {"cap_OT":[x for x in params_system["H"] if x.split("_")[1] == "OT"],
+             "cap_ICU":[x for x in params_system["H"] if x.split("_")[1] == "ICU"],
+             "cap_Ward":[x for x in params_system["H"] if x.split("_")[1] not in  ["ICU", "OT"]]}
+    
+    saturation = {l: {h: np.nan for h in l_map[l]} for l in params_system["L"]}
+    for l in params_system["L"]:
+        for h in params_system["H"]:
+            if h in l_map[l]:
+                consumption = 0
+                capacity = 0
+                for g in params_system["G"]:
+                    for k in params_system["K_idx"][g]:
+                        for r in params_system["R"]:
+                            for a in params_system["A_idx"][g][k]:
+                                if h in params_system["O_gk"][g][k]:
+                                    consumption += params_system["t_gkal"][g][k][a][l] * P[(g, k, r, a, h)] * params_system["D"]        
+                capacity = params_system["m_hl"][h][l]
+                if capacity > 0:
+                    saturation[l][h] = round(consumption / capacity,2)
+
+    min_lgk = {l: {g :{k: 0 for k in params_system["K_idx"][g]} for g in params_system["G"]} for l in params_system["L"]}
+    min_lg = {l: {g : 0 for g in params_system["G"]} for l in params_system["L"]}
+    
+    for l in params_system["L"]:
+        for g in params_system["G"]:
+            for k in params_system["K_idx"][g]:
+                curr_min = 1
+                for h in params_system["O_gk"][g][k]:
+                    if h in l_map[l]:
+                        if saturation[l][h] < curr_min:
+                            curr_min = saturation[l][h]
+                min_lgk [l][g][k] = curr_min
+            min_lg[l][g] = min(min_lgk[l][g].values()) 
+    return min_lg
 
 
 def get_resources_usage(params_system: dict, P: dict) -> dict:
@@ -158,7 +197,7 @@ def get_pathways_usage(params_system: dict, P_gk: dict) -> dict:
         for g in params_system["G"]:
             if k in params_system["K_idx"][g]:
                 n_k += params_system["D"] * P_gk[(g, k)] 
-        utilisation[k] = n_k / n_total if n_total != 0 else 0
+        utilisation[k] = round(n_k / n_total,3) if n_total != 0 else 0
     return utilisation
 
 

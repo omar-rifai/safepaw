@@ -7,7 +7,7 @@ from backend.core.utils.data_utils import get_results
 
 
 
-def run_pthptg_experiments(dep_codes = ["42"], ps_transfers = np.arange(0, 1.1, 0.1), ps_orths=[0,0.04,0.08,0.12], mults= np.arange(1, 1.26, 0.05)):
+def run_pthptg_experiments(dep_codes = ["42"], ps_transfers = np.arange(0, 0.4, 0.05), ps_orths=[0,0.04,0.08,0.12], mults= np.arange(1, 1.26, 0.05)):
     
     list_results = []
     
@@ -23,16 +23,16 @@ def run_pthptg_experiments(dep_codes = ["42"], ps_transfers = np.arange(0, 1.1, 
                 results = results | opt_params
                 list_results.append(results)
 
-    for d in dep_codes:
-        for mult in mults:
-            opt_params = {"dep_code": d, "p_transf": 1, "p_orth": 0, "resources_mult": mult}
+    #for d in dep_codes:
+    #    for mult in mults:
+    #        opt_params = {"dep_code": d, "p_transf": 1, "p_orth": 0, "resources_mult": mult}
 
-            params_system = serialize_ptgpth_core(opt_params["dep_code"],opt_params["p_transf"], opt_params["p_orth"], opt_params["resources_mult"], False)
+    #        params_system = serialize_ptgpth_core(opt_params["dep_code"],opt_params["p_transf"], opt_params["p_orth"], opt_params["resources_mult"], False)
 
-            status, objective, dict_results = run_driver(params_system)
-            results = get_results(dict_results, params_system, objective)
-            results = results | opt_params
-            list_results.append(results)
+    #        status, objective, dict_results = run_driver(params_system)
+    #        results = get_results(dict_results, params_system, objective)
+    #        results = results | opt_params
+    #        list_results.append(results)
     
 
     df_main = pd.DataFrame([{"dep_code": d["dep_code"], "p_transf": d["p_transf"], "p_orth": d["p_orth"], "resources_mult": d["resources_mult"], "obj": d["obj"],
@@ -78,4 +78,4 @@ def run_experiements_burdett():
 if __name__ == "__main__":
     os.makedirs("experiments", exist_ok=True)
     run_pthptg_experiments()
-    run_experiements_burdett()
+    #run_experiements_burdett()
