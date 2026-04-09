@@ -13,7 +13,7 @@ import os
 
 def run_pthptg_experiments(
     dep_codes=["42"],
-    ps_transfers=np.arange(0, 0.4, 0.05),
+    ps_transfers=np.arange(0, 0.8, 0.1),
     ps_orths=[0, 0.04, 0.08, 0.12],
     mults=np.arange(1, 1.26, 0.05)
 ):
