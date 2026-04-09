@@ -97,7 +97,6 @@ def run_pthptg_experiments(
             df_path.to_csv(path_path, mode="a", header=write_header, index=False)
 
             write_header = False  # only once
-            print(f"Done dep={d}, p={p:.2f}, p_orth={p_orth:.2f}, obj={results['obj']}")
 
 
 def run_experiements_burdett():
