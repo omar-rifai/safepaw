@@ -30,74 +30,74 @@ def run_pthptg_experiments(
     write_header = True
 
     for d in dep_codes:
-        for p in ps_transfers:
-            for p_orth in ps_orths:
+        for p in mults:
+   
 
-                opt_params = {
-                    "dep_code": d,
-                    "p_transf": p,
-                    "p_orth": p_orth,
-                    "resources_mult": 1
-                }
+            opt_params = {
+                "dep_code": d,
+                "p_transf": 1,
+                "p_orth": 0,
+                "resources_mult": p
+            }
 
-                params_system = serialize_ptgpth_core(
-                    opt_params["dep_code"],
-                    opt_params["p_transf"],
-                    opt_params["p_orth"],
-                    opt_params["resources_mult"],
-                    False
-                )
+            params_system = serialize_ptgpth_core(
+                opt_params["dep_code"],
+                opt_params["p_transf"],
+                opt_params["p_orth"],
+                opt_params["resources_mult"],
+                True
+            )
 
-                status, objective, dict_results = run_driver(params_system)
-                results = get_results(dict_results, params_system, objective)
-                results = results | opt_params
+            status, objective, dict_results = run_driver(params_system)
+            results = get_results(dict_results, params_system, objective)
+            results = results | opt_params
 
-                # ---- MAIN ----
-                df_main = pd.DataFrame([{
+            # ---- MAIN ----
+            df_main = pd.DataFrame([{
+                "dep_code": results["dep_code"],
+                "p_transf": results["p_transf"],
+                "p_orth": results["p_orth"],
+                "resources_mult": results["resources_mult"],
+                "obj": results["obj"],
+                "n_patients": results["n_patients"],
+                "spi": results["spi"],
+                "qci": results["qci"]
+            }])
+
+            df_main.to_csv(main_path, mode="a", header=write_header, index=False)
+
+            # ---- RESOURCES ----
+            df_res = pd.DataFrame([
+                {
                     "dep_code": results["dep_code"],
                     "p_transf": results["p_transf"],
                     "p_orth": results["p_orth"],
                     "resources_mult": results["resources_mult"],
-                    "obj": results["obj"],
-                    "n_patients": results["n_patients"],
-                    "spi": results["spi"],
-                    "qci": results["qci"]
-                }])
+                    "resource": r,
+                    "usage": val
+                }
+                for r, val in results["resources_usage"].items()
+            ])
 
-                df_main.to_csv(main_path, mode="a", header=write_header, index=False)
+            df_res.to_csv(res_path, mode="a", header=write_header, index=False)
 
-                # ---- RESOURCES ----
-                df_res = pd.DataFrame([
-                    {
-                        "dep_code": results["dep_code"],
-                        "p_transf": results["p_transf"],
-                        "p_orth": results["p_orth"],
-                        "resources_mult": results["resources_mult"],
-                        "resource": r,
-                        "usage": val
-                    }
-                    for r, val in results["resources_usage"].items()
-                ])
+            # ---- PATHWAYS ----
+            df_path = pd.DataFrame([
+                {
+                    "dep_code": results["dep_code"],
+                    "p_transf": results["p_transf"],
+                    "p_orth": results["p_orth"],
+                    "resources_mult": results["resources_mult"],
+                    "pathway": pth,
+                    "share": val
+                }
+                for pth, val in results["pathway_distribution"].items()
+            ])
 
-                df_res.to_csv(res_path, mode="a", header=write_header, index=False)
+            df_path.to_csv(path_path, mode="a", header=write_header, index=False)
 
-                # ---- PATHWAYS ----
-                df_path = pd.DataFrame([
-                    {
-                        "dep_code": results["dep_code"],
-                        "p_transf": results["p_transf"],
-                        "p_orth": results["p_orth"],
-                        "resources_mult": results["resources_mult"],
-                        "pathway": pth,
-                        "share": val
-                    }
-                    for pth, val in results["pathway_distribution"].items()
-                ])
-
-                df_path.to_csv(path_path, mode="a", header=write_header, index=False)
-
-                write_header = False  # only once
-                print(f"Done dep={d}, p={p:.2f}, p_orth={p_orth:.2f}, obj={results['obj']}")
+            write_header = False  # only once
+            print(f"Done dep={d}, p={p:.2f}, p_orth={p_orth:.2f}, obj={results['obj']}")
 
 
 def run_experiements_burdett():
