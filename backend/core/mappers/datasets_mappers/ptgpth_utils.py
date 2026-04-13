@@ -97,11 +97,11 @@ def get_resources_capacities(t_gkal: dict, list_finess: list, list_pathways:list
                                     .assign(sej_type = \
                                             df_types_parcours["sej_type"].str.cat(df_types_parcours["SSR_TYPE"], sep="_")),
                                 "KINE_DOM", None, post_op_scenarios["KINE_DOM"])
-    m_hl = _get_finance_capacity(m_hl, list_finess, df_ssr, df_mco, t_gkal, df_types_parcours) 
+    m_hl = _get_finance_capacity(m_hl, df_ssr, df_mco, t_gkal, df_types_parcours) 
     return {x: {l : int(m_hl[x][l] * multiplier) for l in m_hl[x]}for x in m_hl}
 
 
-def _get_finance_capacity(m_hl, list_finess: list , df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
+def _get_finance_capacity(m_hl, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
                           t_gkal: dict, df_types_parcours: pd.DataFrame) -> dict:
     """Calculate the financial need for every facility (including DOM and ORTHO center)"""
     
@@ -110,23 +110,38 @@ def _get_finance_capacity(m_hl, list_finess: list , df_ssr: pd.DataFrame, df_mco
     mco_finance = 0
     ssr_finance = 0
     dom_finance = 0
+    standard_pathway = ["CHIR/ORTHO_pre", "ANES", "KINE_MCO", "CHIR/ORTHO+ANES", "CHIR/ORTHO_post"]
+
     for _, row in df_visits.iterrows():
         g = row["group"]
-        for k in t_gkal[g]:
-            for a in t_gkal[g][k]:
-                    if a == "KINE_DOM":
-                        dom_finance += t_gkal[g][k][a]["finance"] * row["nb"]
-                    elif a == "KINE_SSR" or a == "DAY_HC":
-                        ssr_finance += t_gkal[g][k][a]["finance"] * row["nb"]
-                    else:
-                        mco_finance += t_gkal[g][k][a]["finance"] * row["nb"]
-    for h in list_finess:
-        if h == "DOM":
-            m_hl[h]["finance"] = dom_finance
-        elif h in df_ssr["FI_ET"].unique():
-            m_hl[h]["finance"] = ssr_finance / len(df_ssr["FI_ET"].unique())
-        elif h in df_mco["FI_ET"].unique():
-            m_hl[h]["finance"] = (mco_finance / len(df_mco["FI_ET"].unique()))
+        k = row["SSR_TYPE"]
+        
+        for a in standard_pathway:
+            mco_finance += t_gkal[g][k][a]["finance"] * row["nb"]
+        if row["type_parcours"] != "standard":
+            specialists_visits = row["type_parcours"].replace(" + ", "_").split("_")
+            for s in specialists_visits:
+                mco_finance += t_gkal[g][k][s]["finance"] * row["nb"]
+        if k == "DOM":
+            dom_finance += t_gkal[g][k]["KINE_DOM"]["finance"] * row["nb"]
+        elif k == "HC":
+            ssr_finance += t_gkal[g][k]["DAY_HC"]["finance"] * row["nb"]
+        elif k == "HDJ":
+            ssr_finance += t_gkal[g][k]["KINE_SSR"]["finance"] * row["nb"]
+        elif k == "HC_HDJ":
+            ssr_finance += t_gkal[g][k]["KINE_SSR"]["finance"] * row["nb"]
+            ssr_finance += t_gkal[g][k]["DAY_HC"]["finance"] * row["nb"]
+       
+        
+    m_hl["DOM"]["finance"] = dom_finance
+    for h in df_ssr["FI_ET"].unique():
+        m_hl[h]["finance"] = ssr_finance  / len(df_ssr["FI_ET"].unique())
+    for h in  df_mco["FI_ET"].unique():
+        if h in df_ssr["FI_ET"].unique():
+            m_hl[h]["finance"] += mco_finance / len(df_mco["FI_ET"].unique())
+        else:
+            m_hl[h]["finance"] = mco_finance  / len(df_mco["FI_ET"].unique())
+
     return m_hl
 
 def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
