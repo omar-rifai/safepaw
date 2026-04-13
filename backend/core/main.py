@@ -15,6 +15,7 @@ class OptVars(BaseModel):
     Delta_moins:Any
     z_hl_plus: Any
     z_hl_moins: Any
+    s_hl: Any
 
 def run_driver(params_system, mode="default"):
 
@@ -59,10 +60,13 @@ def run_driver(params_system, mode="default"):
                       for l in params_system["L"]}
                       for h in params_system["H"]}
 
+    s_hl = {h: {l: pulp.LpVariable(f"s_hl{h}_{l}") 
+                      for l in params_system["L"]}
+                      for h in params_system["H"]}
 
-    vars_system = OptVars(P=P,P_gkr=P_gkr,P_gk=P_gk,Q=Q,Delta_plus=Delta_plus, Delta_moins=Delta_moins, z_hl_plus=z_hl_plus, z_hl_moins=z_hl_moins)
+    vars_system = OptVars(P=P,P_gkr=P_gkr,P_gk=P_gk,Q=Q,Delta_plus=Delta_plus, Delta_moins=Delta_moins, z_hl_plus=z_hl_plus, z_hl_moins=z_hl_moins, s_hl=s_hl)
 
-    set_obj_fn(LP, P_gk, P, Delta_plus, Delta_moins, params_system, mode)
+    set_obj_fn(LP, P_gk, P, Delta_plus, Delta_moins, s_hl, params_system, mode)
     print("Declaring Constraints...")
     declare_constraints(LP, vars_system, params_system, mode)
     print("Starting solver...")

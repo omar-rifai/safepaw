@@ -11,7 +11,7 @@ from pulp import *
 
 # Define the objective function for LP
     
-def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, params_system, mode):
+def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system, mode):
     
     match mode:
         case "default":
@@ -23,8 +23,9 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, params_system, mode):
                                                    for k in params_system["K_idx"][g]
                                                    for r in params_system["R"]
                                                    for a in params_system["A_idx"][g][k]
-                                                   for h in params_system["H"]]) \
-  
+                                                   for h in params_system["H"]])
+        case "slack":
+            LP += lpSum(-s_hl[h][l] for h in params_system["H"] for l in params_system["L"])
         case "maternity":
             LP +=  lpSum([params_system["D"] * P[g][k][r][a][h] \
                                                    * params_system["w_rh"][r][h]
@@ -318,6 +319,20 @@ def def_const_m_hl(LP, vars_system, params_system) :
             LP += const_m_hl(vars_system.P, params_system["G"], params_system["K_idx"], params_system["R"], params_system["A_idx"],\
                                 h, l, params_system["t_gkal"], params_system["m_hl"][h][l], params_system["D"], vars_system.Delta_plus, vars_system.Delta_moins)
 
+# With slack    
+
+def const_s_hl(P, G, K_idx, R, A_idx, h, l, t_gkal, m, D, Delta_plus, Delta_moins, s_hl):
+    return lpSum([D * P[g][k][r][a][h] * t_gkal[g][k][a][l] 
+                  for g in G for k in K_idx[g] for r in R for a in A_idx[g][k]]) \
+                    <= m + s_hl + Delta_plus[h][l] - Delta_moins[h][l]
+
+
+def def_const_s_hl(LP, vars_system, params_system) :
+    for h in params_system["H"]:
+        for l in params_system["L"]:
+            LP += const_s_hl(vars_system.P, params_system["G"], params_system["K_idx"], params_system["R"], params_system["A_idx"],\
+                                h, l, params_system["t_gkal"], params_system["m_hl"][h][l], params_system["D"], vars_system.Delta_plus, vars_system.Delta_moins, vars_system.s_hl[h][l])
+
 
 
 # DEFINE THE ZERO-pulp.value OF DELTAS
@@ -405,6 +420,15 @@ def def_const_delta_moins_b_hl_out(LP, vars_system, params_system):
 
 
 
+# Impose an exact number of patients
+
+def def_const_demand(LP, vars_system, params_system):
+            LP += lpSum(vars_system.P_gk[g][k]
+                        for g in params_system["G"]
+                        for k in params_system["K_idx"][g]) * params_system["D"] ==  params_system["D"]*1.118
+
+
+
 
 #################################################
 ###    CHOOSE SET OF CONSTRAINTS TO INCLUDE   ###
@@ -418,6 +442,10 @@ def declare_constraints(LP, vars_system, params_system, mode):
                            def_const_O_gk, def_const_J_h, def_const_Q_gkrah, def_const_f, def_const_Q, def_const_m_hl, def_const_delta_zero,
                            def_const_delta_plus_delta, def_const_delta_moins_delta, def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
     
+    CONSTRAINTS_SLACK=[def_const_P_gkr, def_const_P_gk, def_const_d_gr, def_const_q_g, def_const_Overq_g, def_const_q_gk, def_const_Overq_gk,
+                           def_const_O_gk, def_const_J_h, def_const_Q_gkrah, def_const_f, def_const_Q, def_const_s_hl, def_const_delta_zero,
+                           def_const_delta_plus_delta, def_const_delta_moins_delta, def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out, def_const_demand]
+
     CONSTRAINTS_MATERNITY=[def_const_P_gkr, def_const_P_gk, def_const_d_gr_maternity, def_const_q_g, def_const_q_gk,
                            def_const_O_gk, def_const_J_h, def_const_m_hl, def_const_delta_zero, def_const_delta_plus_delta, def_const_delta_moins_delta,
                            def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
@@ -426,6 +454,10 @@ def declare_constraints(LP, vars_system, params_system, mode):
         case "default":
             print("Defining default set of constraints.")
             for fn in CONSTRAINTS_DEFAULT:
+                fn(LP, vars_system, params_system)
+        case "slack":
+            print("Defining set of constraints with slack capacity.")
+            for fn in CONSTRAINTS_SLACK:
                 fn(LP, vars_system, params_system)
         case "maternity":
             print("Defining constraints for maternity instance.")
