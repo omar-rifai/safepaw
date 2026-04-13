@@ -65,6 +65,8 @@ def package_results(vars_system, params_system):
                                          for h in params_system["H"] for l in params_system["L"]]),
 
         "z_hl_moins": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.z_hl_moins[h][l])}
+                                         for h in params_system["H"] for l in params_system["L"]]),
+        "s_hl":  pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.s_hl[h][l])}
                                          for h in params_system["H"] for l in params_system["L"]])
     }
     return dict_results
@@ -73,23 +75,30 @@ def package_results(vars_system, params_system):
 
 def get_results(dict_results, params_system, objective_value, output_path=None):
     """Returns summary file of results"""
+    from backend.core.utils.data_utils_Burdett import get_patients_blocking
     import json
     P = dict_results["P_gkrah"].groupby(["group", "pathway", "region","activity", "facility"])["value"].sum().to_dict()
     P_gk = dict_results["P_gk"].groupby(["group", "pathway"])["value"].sum().to_dict()
     n_patients = get_n_patients(params_system, P_gk)
-    spi = get_SPI(params_system, P)
-    qci = get_QCI(params_system, P_gk)  
+    
     l_usage = get_resources_usage(params_system, P) 
     k_usage = get_pathways_usage(params_system, P_gk)
-    #saturation = check_resource_saturation(params_system, P)
-    results = {"obj":objective_value, "n_patients": n_patients, "spi": spi, "qci": qci, "resources_usage":l_usage, "pathway_distribution": k_usage}
+    spi = get_SPI(params_system, P)
+    qci = get_QCI(params_system, P_gk)  
+    
+    try:
+        # Only relevant for the Burdett dataset
+        p_blocking = get_patients_blocking(params_system,P)
+    except Exception as e:
+        p_blocking = None
+
+    results = {"obj":objective_value, "n_patients": n_patients, "spi": spi, "qci": qci, "resources_usage":l_usage, "pathway_distribution": k_usage, "saturation": p_blocking}
     
     if output_path:
         with open(output_path, "w") as fp:
             json.dump(results, fp)
 
     return results
-
 
 
 
@@ -106,14 +115,12 @@ def get_SPI(params_system: dict, P: dict) -> float:
                     for g in params_system["G"]
                     for k in params_system["K_idx"][g]
                     for r in params_system["R"]
-                    for h in params_system["H"]
-                    if h not in ["DOM", "ORTH"])
+                    for h in params_system["H"])
     denominator = sum(params_system["D"] * P[(g,k,r,"ANES",h)]
                       for g in params_system["G"]
                       for k in params_system["K_idx"][g]
                       for r in params_system["R"]
-                      for h in params_system["H"]
-                      if h not in ["DOM", "ORTH"])
+                      for h in params_system["H"])
     return  nominator / denominator if denominator != 0 else 0
 
 def get_QCI(params_system: dict, P_gk: dict) -> float:
@@ -127,45 +134,6 @@ def get_QCI(params_system: dict, P_gk: dict) -> float:
 
     return  nominator / denominator if denominator != 0 else 0
 
-
-
-def check_resource_saturation(params_system:dict, P:dict)-> dict:
-    import numpy as np
-    import math
-    l_map = {"cap_OT":[x for x in params_system["H"] if x.split("_")[1] == "OT"],
-             "cap_ICU":[x for x in params_system["H"] if x.split("_")[1] == "ICU"],
-             "cap_Ward":[x for x in params_system["H"] if x.split("_")[1] not in  ["ICU", "OT"]]}
-    
-    saturation = {l: {h: np.nan for h in l_map[l]} for l in params_system["L"]}
-    for l in params_system["L"]:
-        for h in params_system["H"]:
-            if h in l_map[l]:
-                consumption = 0
-                capacity = 0
-                for g in params_system["G"]:
-                    for k in params_system["K_idx"][g]:
-                        for r in params_system["R"]:
-                            for a in params_system["A_idx"][g][k]:
-                                if h in params_system["O_gk"][g][k]:
-                                    consumption += params_system["t_gkal"][g][k][a][l] * P[(g, k, r, a, h)] * params_system["D"]        
-                capacity = params_system["m_hl"][h][l]
-                if capacity > 0:
-                    saturation[l][h] = round(consumption / capacity,2)
-
-    min_lgk = {l: {g :{k: 0 for k in params_system["K_idx"][g]} for g in params_system["G"]} for l in params_system["L"]}
-    min_lg = {l: {g : 0 for g in params_system["G"]} for l in params_system["L"]}
-    
-    for l in params_system["L"]:
-        for g in params_system["G"]:
-            for k in params_system["K_idx"][g]:
-                curr_min = 1
-                for h in params_system["O_gk"][g][k]:
-                    if h in l_map[l]:
-                        if saturation[l][h] < curr_min:
-                            curr_min = saturation[l][h]
-                min_lgk [l][g][k] = curr_min
-            min_lg[l][g] = min(min_lgk[l][g].values()) 
-    return min_lg
 
 
 def get_resources_usage(params_system: dict, P: dict) -> dict:
