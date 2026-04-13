@@ -149,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <p>This instance both public and private data to study the patient pathways for hip and knee replacements surgeries<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> .</p>
-<div id="5181dda3" class="cell" data-results="asis" data-execution_count="1">
+<div id="dc9a5c4e" class="cell" data-results="asis" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div style="max-width:500px; margin:auto;">
 
@@ -313,19 +313,32 @@ ul.task-list li input[type="checkbox"] {
 <div>
 <p></p><figure class="figure"><p></p>
 <div>
-<pre class="mermaid mermaid-js">graph TD
-  A["CHIR/ORTHO (pre-op)"] --&gt; B["ANESTH(pre-op)"]
-  B --&gt; C["Opt. Specialities"]
-  C --&gt; D["pre-op physiotherapy (KINE_MCO)"]
-  D --&gt; E["CHIR/ORTHO + ANESTH (surgery block)"]
-  E --&gt; F1["Scenario 0: full sesions as inpatient (DAY_HC)"]
-  E --&gt; F2["Scenario 1: full at home kinesiology (KINE_DOM) sessions"]
-  E --&gt; F3["Scenario 2: sessions as inpatient (DAY_HC) followed by on-site (KINE_SSR) session"]
-  E --&gt; F4["Scenario 3: full on-site (KINE_SSR) session"]
-  F1 --&gt; G["CHIR/ORTHO (final post-op)"]
+<pre class="mermaid mermaid-js">%%{init: {
+  'themeVariables': { 'fontSize': '20px' },
+  'flowchart': { 'nodeSpacing': 20, 'rankSpacing': 30 }
+}}%%
+graph TD
+  A["Orthopedic Surgeon Consultation"] --&gt; B["Anesthesiologist Consultation"]
+  B --&gt; C["(Optional) Specialist Physician Consultations"]
+  C --&gt; D["Physical Therapy Sessions"]
+  D --&gt; E["Surgery (w. Orthopedic Surgeon and Anesthesiologist)"]
+  E --&gt; F1["Scenario 0: Physiotherapy as Inpatient (FH)"]
+  E --&gt; F2["Scenario 1: Physiotherapy at home only (HH)"]
+  E --&gt; F3["Scenario 2: Inpatient + Day Hospitalization Sessions (FH+DH)"]
+  E --&gt; F4["Scenario 3: Day Hospitalization Sessions (DH)"]
+  F1 --&gt; G["Orthopedic Surgeon Consultation"]
   F2 --&gt; G
   F3 --&gt; G
   F4 --&gt; G
+  
+ %% Styling
+  classDef default fill:#d6eaf8,stroke:#1b4f72,stroke-width:2px,color:#000;
+  classDef optional fill:#d5f5e3,stroke:#145a32,stroke-width:2px,color:#000;
+  classDef scenario fill:#fef9e7,stroke:#7d6608,stroke-width:2px,color:#000;
+
+  class A,B,D,E,G default;
+  class C optional;
+  class F1,F2,F3,F4 scenario;
 </pre>
 </div>
 <p></p></figure><p></p>

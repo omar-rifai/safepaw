@@ -83,19 +83,32 @@ We can illustrate the general pathway of patients with the following graph:
 
 ::: {style="text-align: center;"}
 ```{mermaid}
+%%{init: {
+  'themeVariables': { 'fontSize': '20px' },
+  'flowchart': { 'nodeSpacing': 20, 'rankSpacing': 30 }
+}}%%
 graph TD
-  A["CHIR/ORTHO (pre-op)"] --> B["ANESTH(pre-op)"]
-  B --> C["Opt. Specialities"]
-  C --> D["pre-op physiotherapy (KINE_MCO)"]
-  D --> E["CHIR/ORTHO + ANESTH (surgery block)"]
-  E --> F1["Scenario 0: full sesions as inpatient (DAY_HC)"]
-  E --> F2["Scenario 1: full at home kinesiology (KINE_DOM) sessions"]
-  E --> F3["Scenario 2: sessions as inpatient (DAY_HC) followed by on-site (KINE_SSR) session"]
-  E --> F4["Scenario 3: full on-site (KINE_SSR) session"]
-  F1 --> G["CHIR/ORTHO (final post-op)"]
+  A["Orthopedic Surgeon Consultation"] --> B["Anesthesiologist Consultation"]
+  B --> C["(Optional) Specialist Physician Consultations"]
+  C --> D["Physical Therapy Sessions"]
+  D --> E["Surgery (w. Orthopedic Surgeon and Anesthesiologist)"]
+  E --> F1["Scenario 0: Physiotherapy as Inpatient (FH)"]
+  E --> F2["Scenario 1: Physiotherapy at home only (HH)"]
+  E --> F3["Scenario 2: Inpatient + Day Hospitalization Sessions (FH+DH)"]
+  E --> F4["Scenario 3: Day Hospitalization Sessions (DH)"]
+  F1 --> G["Orthopedic Surgeon Consultation"]
   F2 --> G
   F3 --> G
   F4 --> G
+  
+ %% Styling
+  classDef default fill:#d6eaf8,stroke:#1b4f72,stroke-width:2px,color:#000;
+  classDef optional fill:#d5f5e3,stroke:#145a32,stroke-width:2px,color:#000;
+  classDef scenario fill:#fef9e7,stroke:#7d6608,stroke-width:2px,color:#000;
+
+  class A,B,D,E,G default;
+  class C optional;
+  class F1,F2,F3,F4 scenario;
 ```
 :::
 
