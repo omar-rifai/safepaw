@@ -147,7 +147,7 @@ def serialize_ptgpth_core(
     
     if save_params:
         os.makedirs("experiments", exist_ok=True)
-        with open("experiments/params_ptgpth_" + str(dep_code) + "_" + str(p_transf)+ "_" + str(p_orth)+ "_" + str(resources_mult) + ".json", "w") as fp:
+        with open("experiments/params_ptgpth_" + str(dep_code) + "_" + str(round(p_transf,2))+ "_" + str(round(p_orth,2))+ "_" + str(round(resources_mult,2)) + ".json", "w") as fp:
             json.dump(params_system, fp)
 
     return params_system    
