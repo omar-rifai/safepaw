@@ -31,7 +31,7 @@ def run_pthptg_instance(opt_params, files_paths):
         experiment_exists(files_paths["pathways"], opt_params):
         return
     
-    params_system = serialize_ptgpth_core(opt_params["dep_code"], opt_params["p_transf"], opt_params["p_orth"], opt_params["resources_mult"],save_params=True)
+    params_system = serialize_ptgpth_core(opt_params["dep_code"], opt_params["p_transf"], opt_params["p_orth"], opt_params["resources_mult"],save_params=False)
 
     _, objective, dict_results = run_driver(params_system)
     results = get_results(dict_results, params_system, objective)
@@ -114,4 +114,4 @@ def run_experiements_burdett():
 if __name__ == "__main__":
     os.makedirs("experiments", exist_ok=True)
     run_pthptg_experiments()
-    #run_experiements_burdett()
+    run_experiements_burdett()
