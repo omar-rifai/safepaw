@@ -21,10 +21,10 @@ def experiment_exists(file_path: str, opt_params: dict)-> bool:
 def write_entry(file_path, df):
     """Write or append entry to file"""
     if Path(file_path).is_file():
-        df = df.round(2)
+        df = df.round(3)
         df.to_csv(file_path, mode="a", header = False, index=False)
     else:
-        df = df.round(2)
+        df = df.round(3)
         df.to_csv(file_path, mode="w", header = True, index=False)    
 
 
