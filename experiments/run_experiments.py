@@ -14,14 +14,17 @@ def experiment_exists(file_path: str, opt_params: dict)-> bool:
     if not set(opt_params).issubset(df.columns):
         return False
     mask = pd.concat([pd.Series(np.isclose(pd.to_numeric(df[k], errors="coerce"), float(v)),index=df.index) for k, v in opt_params.items()],axis=1).all(axis=1)
+    print(opt_params, mask.any())
     return mask.any()
 
 
 def write_entry(file_path, df):
     """Write or append entry to file"""
     if Path(file_path).is_file():
+        df = df.round(2)
         df.to_csv(file_path, mode="a", header = False, index=False)
     else:
+        df = df.round(2)
         df.to_csv(file_path, mode="w", header = True, index=False)    
 
 
