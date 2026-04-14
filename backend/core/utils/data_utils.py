@@ -83,9 +83,12 @@ def get_results(dict_results, params_system, objective_value, output_path=None):
     
     l_usage = get_resources_usage(params_system, P) 
     k_usage = get_pathways_usage(params_system, P_gk)
-    spi = get_SPI(params_system, P)
-    qci = get_QCI(params_system, P_gk)  
-    
+    try:
+        spi = get_SPI(params_system, P)
+        qci = get_QCI(params_system, P_gk)  
+    except Exception as e:
+        spi = None
+        qci = None
     try:
         # Only relevant for the Burdett dataset
         p_blocking = get_patients_blocking(params_system,P)
@@ -111,12 +114,12 @@ def get_n_patients(params_system: dict, P_gk: dict):
 
 def get_SPI(params_system: dict, P: dict) -> float:
     """Returns a Spatial Proximity Index metric"""
-    nominator = sum(params_system["D"] * params_system["w_rh"][r][h] * P[(g,k,r,params_system["A_idx"][g][k][0],h)]
+    nominator = sum(params_system["D"] * params_system["w_rh"][r][h] * P[(g,k,r,"ANES",h)]
                     for g in params_system["G"]
                     for k in params_system["K_idx"][g]
                     for r in params_system["R"]
                     for h in params_system["H"] if h not in ["DOM", "ORTH"])
-    denominator = sum(params_system["D"] * P[(g,k,r,params_system["A_idx"][g][k][0],h)]
+    denominator = sum(params_system["D"] * P[(g,k,r,"ANES",h)]
                       for g in params_system["G"]
                       for k in params_system["K_idx"][g]
                       for r in params_system["R"]
