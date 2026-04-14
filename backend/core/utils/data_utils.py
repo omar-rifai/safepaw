@@ -115,12 +115,12 @@ def get_SPI(params_system: dict, P: dict) -> float:
                     for g in params_system["G"]
                     for k in params_system["K_idx"][g]
                     for r in params_system["R"]
-                    for h in params_system["H"])
+                    for h in params_system["H"] if h not in ["DOM", "ORTH"])
     denominator = sum(params_system["D"] * P[(g,k,r,"ANES",h)]
                       for g in params_system["G"]
                       for k in params_system["K_idx"][g]
                       for r in params_system["R"]
-                      for h in params_system["H"])
+                      for h in params_system["H"] if h not in ["DOM", "ORTH"])
     return  nominator / denominator if denominator != 0 else 0
 
 def get_QCI(params_system: dict, P_gk: dict) -> float:
