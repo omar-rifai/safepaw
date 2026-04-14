@@ -111,12 +111,12 @@ def get_n_patients(params_system: dict, P_gk: dict):
 
 def get_SPI(params_system: dict, P: dict) -> float:
     """Returns a Spatial Proximity Index metric"""
-    nominator = sum(params_system["D"] * params_system["w_rh"][r][h] * P[(g,k,r,"ANES",h)]
+    nominator = sum(params_system["D"] * params_system["w_rh"][r][h] * P[(g,k,r,params_system["A_idx"][g][k][0],h)]
                     for g in params_system["G"]
                     for k in params_system["K_idx"][g]
                     for r in params_system["R"]
                     for h in params_system["H"] if h not in ["DOM", "ORTH"])
-    denominator = sum(params_system["D"] * P[(g,k,r,"ANES",h)]
+    denominator = sum(params_system["D"] * P[(g,k,r,params_system["A_idx"][g][k][0],h)]
                       for g in params_system["G"]
                       for k in params_system["K_idx"][g]
                       for r in params_system["R"]
