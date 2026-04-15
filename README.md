@@ -20,3 +20,4 @@ You can then run the experiments with the following command:
 Where `file_name.json` is one of the parameter files found in `experiments`. The outputs are stored in `experiments` as wells.
 
 
+Datasets available on https://doi.org/10.5281/zenodo.19589604
