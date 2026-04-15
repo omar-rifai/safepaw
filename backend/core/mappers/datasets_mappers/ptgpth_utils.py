@@ -47,9 +47,9 @@ def load_ssr_data(path: str, dep_code: str):
 
 def load_data(dep_code:str):
     types_parcours_loire = load_types_parcours("backend/data/raw/TYPES_PARCOURS.csv", 3, dep_code)
-    mco_loire = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_code)
-    ssr_loire = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_code)
-    return types_parcours_loire, mco_loire, ssr_loire
+    df_mco = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_code)
+    df_ssr = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_code)
+    return types_parcours_loire, df_mco, df_ssr
 
 def reduce_TYPES_PARCOURS_LOIRE(data: pd.DataFrame, min_patients: int, dep_code: str) -> pd.DataFrame:
     """Keep only Loire departments and groups with enough patients."""
@@ -74,7 +74,7 @@ def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
     return data[dept_code.isin(dep_code) & (data['GDE'] == "SSR_A")].reset_index(drop=True)
 
 
-def get_resources_capacities(t_gkal: dict, list_finess: list, list_pathways:list, df_types_parcours: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
+def get_resources_capacities(t_gkal: dict, list_finess: list, df_types_parcours: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
                              multiplier: float) -> dict:
     """Returns a dict with each available resource and its capacity given a finess number"""
     m_hl = {h: {} for h in list_finess}  
@@ -262,7 +262,7 @@ def get_geo_polygon()->gpd.GeoDataFrame:
     return gdf.to_crs("EPSG:4326")
 
 
-def get_finness_info(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, gdf_geo: gpd.GeoDataFrame) -> pd.DataFrame:
+def get_finess_info(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, gdf_geo: gpd.GeoDataFrame) -> pd.DataFrame:
     """Returns a dataframe with the canton code of each finess"""
     from pyproj import Transformer
     from shapely.geometry import Point

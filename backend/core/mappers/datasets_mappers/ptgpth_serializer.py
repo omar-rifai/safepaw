@@ -3,34 +3,33 @@ import typer
 import os
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 from backend.core.mappers.datasets_mappers.ptgpth_utils import load_data, get_geo_polygon, summarize_geo_data, get_pop65p,\
-    get_finness_info, get_resources_capacities, get_region_affinities, get_required_resources, get_transfer_to, get_transferable,\
+    get_finess_info, get_resources_capacities, get_region_affinities, get_required_resources, get_transfer_to, get_transferable,\
     get_activities_per_group_pathway, get_demand_lower_bounds, list_resources, add_orth_facility, add_dom_facility
 
 pathway_benefit = {"HC":1, "DOM":2, "HC_HDJ": 1.25, "HDJ":1.5}
 
-def get_Regions(dep_code: int, df_ssr: pd.DataFrame, df_mco:pd.DataFrame) -> list[Region]:
+def get_Regions(df_finess: pd.DataFrame, gdf_summary: pd.DataFrame) -> list[Region]:
     """Creates Region instance (cantons) given a department code (cantons are grouped by bureau de vote)"""
-    gdf_cantons = get_geo_polygon()
-    gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
-    df_finess = get_finness_info(df_mco, df_ssr, gdf_cantons)
-    affinities = get_region_affinities(gdf_geo, df_finess)
+   
+    affinities = get_region_affinities(gdf_summary, df_finess)
     list_regions = [Region(region_id=row["can_code"],
                            coordinates=[row["geometry"].centroid.x, row["geometry"].centroid.y],
-                           facilities_affinity=affinities[row["can_code"]] )for i,row in gdf_geo.iterrows()]
+                           facilities_affinity=affinities[row["can_code"]] )for _,row in  gdf_summary.iterrows()]
     return list_regions
 
 
-def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, df_types_parcours: pd.DataFrame, t_gkal: dict,
-                   list_resources: list, list_pathways: list, p_orth:float, multiplier=1.0) -> list[Facility]:
+def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.DataFrame,  df_types_parcours: pd.DataFrame, dep_code: int,
+                    t_gkal: dict, list_resources: list, list_pathways: list, p_orth:float, multiplier=1.0) -> list[Facility]:
     """Creates Facility objects corresponding to unique nofinesset ids """
+
     list_facilities = []
     gdf_cantons = get_geo_polygon()
     gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
-    df_finess = get_finness_info(df_mco, df_ssr, gdf_geo)
+    #df_finess = get_finess_info(df_mco, df_ssr, gdf_geo)
     list_finess = list(df_finess["nofinesset"].unique())
     list_finess.extend(["DOM", "ORTH"])
-    m_hl = get_resources_capacities(t_gkal, list_finess, list_pathways, df_types_parcours, df_ssr, df_mco, multiplier)
-    
+    m_hl = get_resources_capacities(t_gkal, list_finess, df_types_parcours, df_ssr, df_mco, multiplier)
+
     for row in df_finess.itertuples():     
         list_facilities.append(Facility(
             facility_id = row.nofinesset,
@@ -107,6 +106,16 @@ def get_PatientPathways(A_idx: dict, list_pathways_ids: list, list_groups: list,
                             group_benefit = pathway_benefit[p_id]) for p_id in list_pathways_ids])
     return list_pathways
 
+def get_data(dep_code: str):
+    """prepare the raw data in DataFrames."""
+    df_types_parcours, df_mco, df_ssr = load_data([int(dep_code)])
+    df_types_parcours = df_types_parcours.groupby(["sej_type", "type_parcours", "SSR_TYPE"], as_index=False)["nb"].sum()
+    df_types_parcours = df_types_parcours[df_types_parcours["nb"].fillna(0) >= 3]
+    gdf_geo =  get_geo_polygon()
+    gdf_summary = summarize_geo_data(gdf_geo, get_pop65p(), dep_code)
+    df_finess = get_finess_info(df_mco, df_ssr, gdf_geo)
+    return df_types_parcours, df_mco, df_ssr, gdf_summary, df_finess
+
 
 def serialize_ptgpth(
         dep_code: str = typer.Option("42", help="department code"),
@@ -127,29 +136,29 @@ def serialize_ptgpth_core(
         quality_requirement: bool = False,
         save_params: bool = True):
     """Serialize PTG PTH Data and write to file"""
+    
     from backend.core.data_models.input_models import SystemData
     from backend.core.mappers.input_mappers import convert_dm_to_json
     import json
-    
+ 
     if quality_requirement:
         quality_levels = {"DOM":"1","HC":"3","HDJ":"2","HC_HDJ":"2"}
     else:
         quality_levels = {"DOM":"0","HC":"0","HDJ":"0","HC_HDJ":"0"}
 
-    df_types_parcours, df_mco, df_ssr = load_data([int(dep_code)])
-    df_types_parcours = df_types_parcours.groupby(["sej_type", "type_parcours", "SSR_TYPE"], as_index=False)["nb"].sum()
-    df_types_parcours = df_types_parcours[df_types_parcours["nb"].fillna(0) >= 3]
-    gdf_geo =  get_geo_polygon()
-    gdf_summary = summarize_geo_data(gdf_geo, get_pop65p(), dep_code)
+    df_types_parcours, df_mco, df_ssr, gdf_summary, df_finess = get_data(dep_code)
+  
     list_patientGroups = list(set(df_types_parcours['sej_type'] +  "_" + df_types_parcours['type_parcours'].str.replace(" + ", "_", regex=False)))
     list_pathways =  list(df_types_parcours["SSR_TYPE"].unique())
     A_idx = get_activities_per_group_pathway(list_patientGroups, list_pathways)
     t_gkal = get_required_resources(A_idx)
-    list_Regions = get_Regions(dep_code, df_ssr, df_mco)
+
+    list_Regions = get_Regions(df_finess, gdf_summary)
     list_Resources = get_Resources(list_resources)
     list_PatientsGroups = get_PatientGroups(list_patientGroups, list_pathways )
     list_Activities = get_Activities(t_gkal, list_patientGroups, list_pathways, A_idx)
-    list_Facilities = get_Facilities(df_mco, df_ssr, dep_code, df_types_parcours, t_gkal, list_resources, list_pathways, p_orth, resources_mult)
+    list_Facilities = get_Facilities(df_mco, df_ssr, df_finess, df_types_parcours, dep_code, t_gkal, list_resources, list_pathways,
+                                    p_orth, resources_mult)
     list_Pathways = get_PatientPathways(A_idx, list_pathways, list_patientGroups, pathway_benefit, quality_levels)
     instance = get_Instance(gdf_summary, df_types_parcours, list_patientGroups, list_resources, p_transf, quality_levels)
     sys_data = SystemData(regions = list_Regions, resources=list_Resources, facilities=list_Facilities,
