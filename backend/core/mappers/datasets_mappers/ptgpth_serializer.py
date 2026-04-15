@@ -48,16 +48,20 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame, dep_code: int, 
 
 
 def get_Instance(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame, 
-                 list_groups_ids: list, list_resources: list, p_transf: float) -> Instance:
+                 list_groups_ids: list, list_resources: list, p_transf: float, quality_levels:dict) -> Instance:
     """Returns object to store optimization instance parameters. Most variables are stores in a global config.yaml file """
-   
+    if len(set(quality_levels.values())) > 1 : quality_objectives = {quality_levels["DOM"]: 0.75,
+                                                                    quality_levels["HDJ"]:0.05, quality_levels["HC_HDJ"]:0.05,
+                                                                    quality_levels["HC"]:0.2 }
+    else: quality_objectives = {"0": 1}
+
     return Instance(
             d_total = df_types_parcours["nb"].sum(),
             d_gr = get_demand_lower_bounds(gdf_summary, df_types_parcours),
             under_q_g = {g : 0 for g in list_groups_ids} ,
             over_q_g = {g : 1 for g in list_groups_ids},
-            under_q_gu = {g : {"0": 1} for g in list_groups_ids},
-            over_q_gu = {g : {"0": 1} for g in list_groups_ids},
+            under_q_gu = {g : quality_objectives for g in list_groups_ids},
+            over_q_gu = {g :  quality_objectives for g in list_groups_ids},
             p_transf = p_transf,
             delta_l = {l: 1 for l in list_resources},
             alpha = 0.0125
@@ -94,12 +98,12 @@ def get_Activities(t_gkal: dict, list_patienGroups: list, list_pathways: list, A
     return list_activities
 
 
-def get_PatientPathways(A_idx: dict, list_pathways_ids: list, list_groups: list, pathway_benefit:dict) -> list[Pathway]:
+def get_PatientPathways(A_idx: dict, list_pathways_ids: list, list_groups: list, pathway_benefit:dict, quality_levels:dict) -> list[Pathway]:
     """ get patients pathways"""
     
     list_pathways = [] 
     for g in list_groups:                      
-        list_pathways.extend([Pathway(pathway_id=p_id, associated_group_id = g, quality_level = "0", list_activities= A_idx[g][p_id],
+        list_pathways.extend([Pathway(pathway_id=p_id, associated_group_id = g, quality_level = quality_levels[p_id], list_activities= A_idx[g][p_id],
                             group_benefit = pathway_benefit[p_id]) for p_id in list_pathways_ids])
     return list_pathways
 
@@ -109,9 +113,10 @@ def serialize_ptgpth(
         p_transf: float = typer.Option(1, help="Maximum allowed patitiens transfer percentage"),
         p_orth:float = typer.Option(0, help="Orthopedic center percentage additional resources"),
         resources_mult: float = typer.Option(1, help="Multiplier for the available resources"),
+        quality_requirement: bool = typer.Option(False, help="Impose a strict distribution of patients to pathways as described in article."),
         save_params: bool = typer.Option(True)
         ):
-    return serialize_ptgpth_core(dep_code, p_transf, p_orth, resources_mult, save_params)
+    return serialize_ptgpth_core(dep_code, p_transf, p_orth, resources_mult, quality_requirement, save_params)
 
 
 def serialize_ptgpth_core(
@@ -119,11 +124,17 @@ def serialize_ptgpth_core(
         p_transf: float = 1,
         p_orth:float = 0,
         resources_mult: float = 1,
+        quality_requirement: bool = False,
         save_params: bool = True):
     """Serialize PTG PTH Data and write to file"""
     from backend.core.data_models.input_models import SystemData
     from backend.core.mappers.input_mappers import convert_dm_to_json
     import json
+    
+    if quality_requirement:
+        quality_levels = {"DOM":"1","HC":"3","HDJ":"2","HC_HDJ":"2"}
+    else:
+        quality_levels = {"DOM":"0","HC":"0","HDJ":"0","HC_HDJ":"0"}
 
     df_types_parcours, df_mco, df_ssr = load_data([int(dep_code)])
     df_types_parcours = df_types_parcours.groupby(["sej_type", "type_parcours", "SSR_TYPE"], as_index=False)["nb"].sum()
@@ -139,8 +150,8 @@ def serialize_ptgpth_core(
     list_PatientsGroups = get_PatientGroups(list_patientGroups, list_pathways )
     list_Activities = get_Activities(t_gkal, list_patientGroups, list_pathways, A_idx)
     list_Facilities = get_Facilities(df_mco, df_ssr, dep_code, df_types_parcours, t_gkal, list_resources, list_pathways, p_orth, resources_mult)
-    list_Pathways = get_PatientPathways(A_idx, list_pathways, list_patientGroups, pathway_benefit)
-    instance = get_Instance(gdf_summary, df_types_parcours, list_patientGroups, list_resources, p_transf)
+    list_Pathways = get_PatientPathways(A_idx, list_pathways, list_patientGroups, pathway_benefit, quality_levels)
+    instance = get_Instance(gdf_summary, df_types_parcours, list_patientGroups, list_resources, p_transf, quality_levels)
     sys_data = SystemData(regions = list_Regions, resources=list_Resources, facilities=list_Facilities,
                           patients=list_PatientsGroups , pathways=list_Pathways, activities= list_Activities, instance=instance)
     params_system, _ = convert_dm_to_json(sys_data)
