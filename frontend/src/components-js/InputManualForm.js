@@ -23,12 +23,12 @@ export default function ManualInputForm() {
     const departmentID = "department-label";
 
     const filteredDepartments = useMemo(
-        () =>
-            departmentsRegions
+        () => {
+            if (!Array.isArray(departmentsRegions)) return []
+            return departmentsRegions
                 .filter(d => d.region_name == selectedRegion)
-                .map(d => d.dep_name),
-        [departmentsRegions, selectedRegion]
-    );
+                .map(d => d.dep_name)
+        }, [departmentsRegions, selectedRegion]);
 
     const handleRegionChange = (region) => {
         setSelectedRegion(region)
@@ -89,9 +89,11 @@ export default function ManualInputForm() {
     };
 
     useEffect(() => {
+
         fetch("data/departments-region.json")
             .then(res => res.json())
             .then(data => {
+                if (!Array.isArray(data)) return;
                 const unique_regions = [... new Set(data.map(d => d.region_name))];
                 setRegions(unique_regions)
                 setDepartmentsRegions(data)
@@ -118,7 +120,7 @@ export default function ManualInputForm() {
 
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pl: 2, pr: 2, mt: 5}} >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pl: 2, pr: 2, mt: 5 }} >
             <FormControl fullWidth sx={{ maxWidth: 300 }} margin="normal">
                 <InputLabel id={regionID}> Regions </InputLabel>
                 <Select label="Regions" labelId={regionID} value={selectedRegion} onChange={
@@ -134,7 +136,7 @@ export default function ManualInputForm() {
                     ))}
                 </Select>
             </FormControl>
-            <FormControl fullWidth sx={{ maxWidth: 300}} margin="normal">
+            <FormControl fullWidth sx={{ maxWidth: 300 }} margin="normal">
                 <InputLabel id={departmentID}> Departements </InputLabel>
                 <Select label="Departments" labelId={departmentID} value={selectedDepartment} onChange={
                     e => {
@@ -153,7 +155,7 @@ export default function ManualInputForm() {
             <DynamicSlider label={inputData.capacity_total ? `Capacity (beds): ${inputData.capacity_total}` : `Global capacity`} value={global_capacity} SetValue={setGlobalCapacity} dict_key="global_capacity" ></DynamicSlider>
             <DynamicSlider label={"Max Transfers (%): " + transfers} value={transfers} SetValue={setTransfers} frac={true} dict_key="max_transfers" ></DynamicSlider>
 
-            <Box sx={{ display: 'flex', borderRadius: 2, mt: 5,  mb :4 }}>
+            <Box sx={{ display: 'flex', borderRadius: 2, mt: 5, mb: 4 }}>
                 <Button
                     variant="contained"
                     component="label"
@@ -163,9 +165,9 @@ export default function ManualInputForm() {
                 >
                     Submit
                 </Button>
-                {loading && <CircularProgress sx={{ ml: 4 }} /> }
+                {loading && <CircularProgress sx={{ ml: 4 }} />}
             </Box>
-            
+
         </Box>
     );
 }

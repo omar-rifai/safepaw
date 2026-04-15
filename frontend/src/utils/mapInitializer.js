@@ -28,7 +28,7 @@ export function useRegionGeoJSON(regionName) {
         fetch("data/regions.geojson")
             .then(res => res.json())
             .then(data => {
-                const features = data.features.filter(feature => feature.properties.nom == regionName);
+                const features = (data?.features ?? []).filter(feature => feature.properties.nom == regionName);
                 setRegionGeoJSON({type: "FeatureCollection", features})
             });
     }, [regionName]);
