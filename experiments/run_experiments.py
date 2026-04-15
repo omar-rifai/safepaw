@@ -34,7 +34,7 @@ def run_pthptg_instance(opt_params, files_paths):
         experiment_exists(files_paths["pathways"], opt_params):
         return
     
-    params_system = serialize_ptgpth_core(opt_params["dep_code"], opt_params["p_transf"], opt_params["p_orth"], opt_params["resources_mult"],save_params=False)
+    params_system = serialize_ptgpth_core(opt_params["dep_code"], opt_params["p_transf"], opt_params["p_orth"], opt_params["resources_mult"],quality_requirement=False, save_params=False)
 
     _, objective, dict_results = run_driver(params_system)
     results = get_results(dict_results, params_system, objective)
