@@ -9,6 +9,8 @@ backend/data/open_data/communes-france.csv
 *.pyc
 *.png
 *.ipynb_checkpoints
+frontend/node_modules/*
+frontend/node_modules_bak/*
 node_modules/*
 backend/data/raw/*
 experiments/*.json
