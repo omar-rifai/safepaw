@@ -6,6 +6,7 @@ node_modules/*
 *.ipynb_checkpoints
 experiments/
 data/raw/*
+backend/.pixi
 data/open_data/*
 !data/open_data/communes-50m.parquet
 !data/open_data/summary_maternity_capacity.csv
