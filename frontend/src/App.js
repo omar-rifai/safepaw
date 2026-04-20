@@ -2,6 +2,7 @@ import { useState, createContext } from "react";
 import { Divider, Typography, Box } from '@mui/material';
 
 import InputForm from "./components-js/InputForms";
+import InputJsonForm from "./components-js/InputJsonForm";
 import DashboardForm from "./components-js/DashboardForm";
 import ResultsForm from "./components-js/ResultsForm";
 import CustomMap from './components-js/Map';
@@ -15,6 +16,14 @@ function App() {
   const [inputData, setInputData] = useState({dict_instace: {}, demand_total:0, capacity_total:0});
   const [outputData, setOutputData] = useState({});
   const [deckGLData, setDeckGLData] = useState({});
+
+  if (false) {
+  return (
+    <div style={{ padding: 20 }}>
+      <InputJsonForm></InputJsonForm>
+    </div>
+  );
+}
 
   return (
     <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData }}>
