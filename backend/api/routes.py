@@ -10,33 +10,23 @@ def health():
     return {"status": "ok"}
 
 @api.post("/optimize")
-async def optimize(file_params: UploadFile) -> JSONResponse:
-    from backend.api.services import run_optimization, get_regions_metadata
+async def optimize(params: dict = Body(...)) -> JSONResponse:
+    from backend.api.services import run_optimization
     import traceback
 
-    try:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(await file_params.read())
-            params_filepath = tmp_file.name
-        
-        original_filename = file_params.filename
-        metadata_filepath = "backend/data/metadata_" + original_filename.split('_')[1]
-
-        regions = get_regions_metadata(metadata_filepath)
-        
-        status, objective_str, list_patient_transfers, list_facility_load, list_facility_load_regions = run_optimization(
-            params_filepath, metadata_filepath)
-
+    try: 
+        status, objective_str, dict_results = run_optimization(params)
+        solution_json = {
+            str(var): val.to_dict(orient="records")
+            for var, val in dict_results.items()
+        }
         return JSONResponse(
             status_code=200,
-            content={
+            content = {
                 "status": status,
                 "obj_val": objective_str,
-                "list_patient_transfers": [pt.as_geojson_feature() for pt in list_patient_transfers],
-                "list_facility_load": [pt.as_geojson_feature() for pt in list_facility_load],
-                "list_facility_load_regions" : [pt.as_geojson_feature() for pt in list_facility_load_regions],
-                "regions": regions
-            },
+                "results": solution_json
+            }
         )
 
     except ExecutableNotFound as e:

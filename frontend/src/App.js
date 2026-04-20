@@ -12,7 +12,7 @@ export const UIContext = createContext();
 
 function App() {
 
-  const [inputData, setInputData] = useState({});
+  const [inputData, setInputData] = useState({dict_instace: {}, demand_total:0, capacity_total:0});
   const [outputData, setOutputData] = useState({});
   const [deckGLData, setDeckGLData] = useState({});
 

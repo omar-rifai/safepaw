@@ -36,31 +36,24 @@ def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) ->
 
 
 
-def run_optimization(params_filepath: str | Path, metadata_filepath: str | Path) -> Tuple[str, str, list, list]:
-    from backend.core.utils import data_utils
+def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     from backend.core.main import run_driver
 
     # Check solver
     check_executable()
 
-    # Load input
-    params_system = data_utils.read_inputs(params_filepath)
-    params_metadata = data_utils.read_metadata(metadata_filepath)
-
+ 
     # Run optimization
     print("Starting optimization driver...")
-    status, objective, results = run_driver(params_system)
+    status, objective, results = run_driver(params)
     print("Optimization driver finished with status:", status)
 
     # Format output
-    objective_str = f"{objective:.2f}" if objective is not None else "N/A"
-    
-    list_patient_transfers = create_patientTransfers(results, params_system, params_metadata)
-    list_facility_load = create_facilityStats(results, params_system, params_metadata)
-    list_facility_load_regions = create_facilityStats(results, params_system, params_metadata, by_region=True)
+    objective_str = f"{objective:.2f}" if objective is not None else None
     
 
-    return status, objective_str, list_patient_transfers, list_facility_load, list_facility_load_regions
+
+    return status, objective_str, results
 
 
 def get_regions_metadata(metadata_filepath: str | Path)-> dict:
