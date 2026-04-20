@@ -27,17 +27,41 @@ def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
     return list_regions
 
 
-def get_Facilities(df_instance : pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1) -> list[Facility]:
-    """Creates Facility objects corresponding to unique nofinesset ids with (bed/days) as resource 
-    and availiable pathways dependent on to the facility type (1,2a,2b,3)"""
+def get_Facilities(region_name = None, dep_name = None,
+                   max_transferable_in : int = 10, max_transferable_out : int = 1) -> list[Facility]:
+    """
+    Creates Facility objects corresponding to unique nofinesset ids with (bed/days) as resource 
+    and availiable pathways dependent on to the facility type (1,2a,2b,3). We average the number of deliveries
+    per facility across the yearsand take the latest number of beds recorded
+    """
+    import ast 
+        
+    df_instance = pd.read_csv("backend/data/open_data/summary_maternity_capacity.csv")
+    df_instance.loc[df_instance["comm_code"] == "85166", "comm_code"] = "85194" # update the commune code of Olonne-sur-Mer
+    df_instance["coords"] = df_instance["coords"].apply(ast.literal_eval)
+    df_instance.sort_values(by=["year"], ascending=False, inplace=True)
+    if region_name: df_instance = df_instance[df_instance["region_name"] == region_name ]
+    if dep_name: df_instance = df_instance[df_instance["dep_name"] == dep_name ]
+    df_instance = (df_instance.groupby(
+        ["nofinesset","region_code", "region_name", "type", "dep_code",
+         "dep_name", "comm_code", "facility_name", "comm_name", "coords"],
+        as_index=False)
+    .agg(deliveries_per_facility=("deliveries_per_facility", "mean"),
+        beds=("beds", "first")))
+    df_instance = df_instance.drop_duplicates(subset=["nofinesset"], keep="first")
+
     all_ids = df_instance["nofinesset"].sort_values().to_list()
     linked_facilities_dict = {fid: [x for x in all_ids if x != fid] for fid in all_ids} 
     def row_to_facility(row):
         return Facility(
             facility_id = str(row['nofinesset']),
             facility_name = str(row['facility_name']),
-            region = row['comm_name'],
-            coordinates = list(row['coords']), 
+            facility_type = str(row["type"]),
+            model_region = row['comm_name'],
+            dep_code = row['dep_code'],
+            comm_code = row['comm_code'],
+            coordinates = list(row['coords']),
+            nbr_visits= row["deliveries_per_facility"],
             resources_capacity = {"cap" : int(row['beds'] * 365)},
             max_transferable_in = {"cap": max_transferable_in},
             max_transferable_out = {"cap": max_transferable_out},
@@ -60,7 +84,7 @@ def get_Instance(df_instance : pd.DataFrame, list_pathways: list, list_groups, l
     U_idx = list(set([k.quality_level for k in list_pathways]))
 
     return Instance(
-            d_total = int(df_instance["deliveries_per_facility"].sum()),
+            d_total = int(df_instance["nbr_visits"].sum()),
             d_gr = d_gr,
             under_q_g = {p: config["min_fraction_to_be_treated"]  for p in  list_groups},
             over_q_g = {p: config["max_fraction_to_be_treated"]  for p in  list_groups},
@@ -132,11 +156,11 @@ def _get_affinities(df_instance: pd.DataFrame, df_geo_comms: gpd.GeoDataFrame):
     from shapely.geometry import Point
     import geopandas as gpd
     distances = np.zeros((len(df_instance), len(df_geo_comms)))
-    facilities_points = gpd.GeoSeries([Point(c) for c in df_instance["coords"]], crs="EPSG:4326").to_crs(df_geo_comms.crs)
+    facilities_points = gpd.GeoSeries([Point(c) for c in df_instance["coordinates"]], crs="EPSG:4326").to_crs(df_geo_comms.crs)
     for i, comm_geometry in enumerate(df_geo_comms.geometry):
         distances[:, i] = facilities_points.distance(comm_geometry)
     scores = 1 / np.where(distances == 0, 100, distances)
-    affinities_dict = {comm_id: dict(zip(df_instance["nofinesset"].tolist(), scores[:, i])) \
+    affinities_dict = {comm_id: dict(zip(df_instance["facility_id"].tolist(), scores[:, i])) \
                        for i, comm_id in enumerate(df_geo_comms["code"].tolist())}
     return affinities_dict
 
@@ -149,7 +173,7 @@ def serialize_maternite(df_instance : pd.DataFrame) -> Union[dict, dict]:
     resources_ids = ["cap"]
 
     list_regions = get_Regions(df_instance)
-    list_facilities = get_Facilities(df_instance)
+    list_facilities = [Facility.model_validate(x) for x in df_instance.to_dict(orient="records")]
     list_resources = get_Resources(resources_ids)
     list_patients = get_PatientGroups(groups_ids)
     list_pathways = get_PatientPathways(groups_ids)
@@ -159,22 +183,3 @@ def serialize_maternite(df_instance : pd.DataFrame) -> Union[dict, dict]:
                pathways=list_pathways, activities= list_activities, instance=instance)
     params_system, params_metadata = convert_dm_to_json(maternite_data)
     return params_system, params_metadata
-
-
-
-def read_maternity() -> pd.DataFrame:
-    """Create Dataframe from summary_maternity_capacity.csv. We average the number of deliveries per facility across the years
-    and take the latest number of beds recorded"""
-    import ast 
-    df = pd.read_csv("backend/data/open_data/summary_maternity_capacity.csv")
-    df.loc[df["comm_code"] == "85166", "comm_code"] = "85194" # update the commune code of Olonne-sur-Mer
-    df["coords"] = df["coords"].apply(ast.literal_eval)
-    df.sort_values(by=["year"], ascending=False, inplace=True)
-    df= (df.groupby(
-        ["nofinesset","region_code", "region_name", "type", "dep_code",
-         "dep_name", "comm_code", "facility_name", "comm_name", "coords"],
-        as_index=False)
-    .agg(deliveries_per_facility=("deliveries_per_facility", "mean"),
-        beds=("beds", "first")))
-    df = df.drop_duplicates(subset=["nofinesset"], keep="first")
-    return df

@@ -436,7 +436,7 @@ def add_orth_facility(list_facilities: list[Facility], list_pathways, list_fines
     list_facilities.append(Facility(
             facility_id = "ORTH",
             facility_name = "" ,
-            region = default_can_code,
+            model_region = default_can_code,
             coordinates =default_coords , 
             resources_capacity = orth_resource_capacities,
             max_transferable_in = {l: 0 if l != "finance" else 100 for l in list_resources },
@@ -467,7 +467,7 @@ def add_dom_facility(list_facilities: list[Facility], list_pathways: list, list_
     list_facilities.append(Facility(
             facility_id = "DOM",
             facility_name = "" ,
-            region = default_can_code,
+            model_region = default_can_code,
             coordinates =default_coords, 
             resources_capacity = m_hl["DOM"],
             max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },

@@ -21,9 +21,14 @@ class Resource(BaseModel):
 class Facility(BaseModel):
     facility_id : str
     facility_name: Optional[str] = None
-    region: Optional[str] = None 
+    facility_type: Optional[str] = None
+    model_region: Optional[str] = None 
+    dep_code: Optional[str] = None
+    comm_code: Optional[str] = None
+    can_code: Optional[str] = None
     coordinates: list
     resources_capacity: Dict[str, int]
+    nbr_visits: Optional[float] = None
     available_pathways: List[str]
     linked_facilities: List[str]
     max_transferable_in : Dict[str, float] 

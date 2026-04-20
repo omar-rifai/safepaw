@@ -68,37 +68,34 @@ def get_maternite_dashboard(df_maternites):
     dashboard_stats = {}
 
     #nbr accouchements moyen par année 
-    avg_births_year = df_maternites["deliveries_per_facility"].mean()
+    avg_births_year = df_maternites["nbr_visits"].mean()
     dashboard_stats["Average yearly births / facility"] = round(avg_births_year)
 
     #nbr accouchements moyen par lit / année
-    avg_births_bed = (df_maternites["deliveries_per_facility"] / df_maternites["beds"]).mean()
+    print("HELLOOOO", df_maternites.iloc[0]["resources_capacity"])
+    avg_births_bed = (df_maternites["nbr_visits"] / [x["cap"]/365 for x in df_maternites["resources_capacity"]]).mean()
     dashboard_stats["Average yearly births / bed"] =  round(avg_births_bed)
 
    
     return dashboard_stats
 
 
-def get_facility_capacity_maternite(df_maternites) -> list:
+def get_facility_capacity(df) -> list:
     """ Returns a list of FacilityStats Instances """
     from backend.core.data_models.output_models import FacilityStats
 
     list_facilities_capacity = []
 
-    for _, h in df_maternites.iterrows():
-        
-        beds_capacity = int(df_maternites.loc[df_maternites["nofinesset"] == h["nofinesset"], "beds"].iloc[0])
-        coords = df_maternites.loc[df_maternites["nofinesset"] == h["nofinesset"],"coords"].iloc[0]
-        facility_type = df_maternites.loc[df_maternites["nofinesset"] == h["nofinesset"],"type"].iloc[0]
+    for _, h in df.iterrows():
 
         facility_instance = FacilityStats(
-            facility_id=h["facility_name"],
-            facility_type=facility_type,
-            coordinates=coords,
-            patient_group=None,
-            patient_pathway=None,
-            region_id=None,
-            capacities={"beds": beds_capacity}
+            facility_id = h["facility_name"],
+            facility_type = h["facility_type"],
+            coordinates = h["coordinates"],
+            patient_group = None,
+            patient_pathway = None,
+            region_id = None,
+            capacities = h["resources_capacity"]
         )
 
         list_facilities_capacity.append(facility_instance)

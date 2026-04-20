@@ -6,7 +6,7 @@ export function FacilityCapacityLayer({ capacities }) {
         return null;
     }
 
-    const maxTotalCapacityFacility = Math.max(...facilityCapacity.map(d => d.properties.capacities["beds"]))
+    const maxTotalCapacityFacility = Math.max(...facilityCapacity.map(d => d.properties.capacities["cap"]))
     
     console.log("debug:",facilityCapacity)
 
@@ -22,7 +22,7 @@ export function FacilityCapacityLayer({ capacities }) {
             id: 'facilities-capacity',
             data: facilityCapacity,
             getPosition: d => d.geometry.coordinates,
-            getRadius: d => Math.max(4 + 6 * (d.properties.capacities["beds"]  / maxTotalCapacityFacility), 6),
+            getRadius: d => Math.max(4 + 6 * (d.properties.capacities["cap"]  / maxTotalCapacityFacility), 6),
             getFillColor: d => typeColors[d.properties.facility_type] || [0, 0, 255, 100],
             getLineColor: [255, 255, 255, 180],
             lineWidthMinPixels: 2,
@@ -37,6 +37,6 @@ export function FacilityCapacityLayer({ capacities }) {
 
 export function getFacilityCapacityToolTip(info) {
     return {
-        text: `${info.object.properties.facility_id} \n(beds: ${parseInt(info.object.properties.capacities["beds"])})`
+        text: `${info.object.properties.facility_id} \n(beds: ${parseInt(info.object.properties.capacities["cap"]/365)})`
     };
 }
