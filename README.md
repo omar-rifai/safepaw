@@ -17,8 +17,17 @@ You can then run the experiments with the following command:
  pixi run -m backend/ python -m backend.core.main experiments/<file_name.json>
 ````
 
-Where `file_name.json` is one of the parameter files found in `experiments`. The outputs are stored in `experiments` as wells.
+Where `file_name.json` is one of the parameter files found in `experiments`. The outputs are stored in `experiments` as wells. For `Burdett` data we need to run
 
+````
+ pixi run -m backend python -m backend.core.mappers.datasets_mappers.burdett_serializer
+````
+
+and for PTH PTG data 
+
+````
+ pixi run -m backend python -m backend.core.mappers.datasets_mappers.ptgpth_serializer
+````
 
 > [!TIP]
-> Datasets available on: https://doi.org/10.5281/zenodo.19589604
+> Source datasets to use the serializers are available on: https://doi.org/10.5281/zenodo.19589604 on request
