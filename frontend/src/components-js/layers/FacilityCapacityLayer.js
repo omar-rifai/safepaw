@@ -36,7 +36,17 @@ export function FacilityCapacityLayer({ capacities }) {
 }
 
 export function getFacilityCapacityToolTip(info) {
-    return {
-        text: `${info.object.properties.facility_id} \n(beds: ${parseInt(info.object.properties.capacities["cap"]/365)})`
-    };
+  return info && {
+    
+    html: `
+        <h3>Facility:</h3> 
+        <div>${info.object.properties.facility_id}</div>
+        <h3>Resources:</h3>
+         <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object.properties.capacities).map(([k, v]) => `"${k}": ${v}\n`)}</div>
+        `,
+    style: {
+      backgroundColor: 'rgba(254, 254, 254, 1)',
+      fontSize: '0.8em'
+    }
+  };
 }
