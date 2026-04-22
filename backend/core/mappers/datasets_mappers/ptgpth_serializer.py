@@ -33,7 +33,7 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.D
     for row in df_finess.itertuples():     
         list_facilities.append(Facility(
             facility_id = row.nofinesset,
-            facility_name = "" ,
+            facility_name = row.rs,
             model_region = row.can_code,
             coordinates =[row.lat, row.lon] , 
             resources_capacity = m_hl[row.nofinesset] ,
@@ -108,12 +108,14 @@ def get_PatientPathways(A_idx: dict, list_pathways_ids: list, list_groups: list,
 
 def get_data(dep_code: str):
     """prepare the raw data in DataFrames."""
+    from backend.core.mappers.datasets_mappers.ptgpth_utils import verify_department_finess
     df_types_parcours, df_mco, df_ssr = load_data([int(dep_code)])
     df_types_parcours = df_types_parcours.groupby(["sej_type", "type_parcours", "SSR_TYPE"], as_index=False)["nb"].sum()
     df_types_parcours = df_types_parcours[df_types_parcours["nb"].fillna(0) >= 3]
     gdf_geo =  get_geo_polygon()
     gdf_summary = summarize_geo_data(gdf_geo, get_pop65p(), dep_code)
     df_finess = get_finess_info(df_mco, df_ssr, gdf_geo)
+    df_mco, df_ssr = verify_department_finess(df_mco, df_ssr, df_finess)
     return df_types_parcours, df_mco, df_ssr, gdf_summary, df_finess
 
 
@@ -171,6 +173,23 @@ def serialize_ptgpth_core(
             json.dump(params_system, fp)
 
     return params_system    
+
+
+def read_ptgpth(dep_name):
+    """Returns a pandas DataFrame with all the facilities in department  `dep_name`"""
+    df_deps = pd.read_csv("backend/data/open_data/departments.csv")
+    print(dep_name)
+    dep_code = str(df_deps[df_deps["name"]== dep_name].iloc[0]["code"])
+    df_types_parcours, df_mco, df_ssr, _, df_finess = get_data(dep_code)
+    list_patientGroups = list(set(df_types_parcours['sej_type'] +  "_" + df_types_parcours['type_parcours'].str.replace(" + ", "_", regex=False)))
+    list_pathways =  list(df_types_parcours["SSR_TYPE"].unique())
+    A_idx = get_activities_per_group_pathway(list_patientGroups, list_pathways)
+    t_gkal = get_required_resources(A_idx)
+
+    list_facilities = get_Facilities(df_mco, df_ssr, df_finess, df_types_parcours, dep_code, t_gkal, list_resources, list_pathways, 0)
+
+    return pd.DataFrame([x.model_dump(mode='json') for x in list_facilities if x.facility_id not in ["DOM", "ORTH"]])
+
 
 if __name__ == "__main__":
      import pyproj

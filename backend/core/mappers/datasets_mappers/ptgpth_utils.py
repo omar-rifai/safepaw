@@ -1,6 +1,7 @@
 import pandas as pd
 import geopandas as gpd
 from backend.core.data_models.input_models import Facility
+from typing import Tuple
 
 def get_pathways(df_types_parcours: pd.DataFrame):
     return list(df_types_parcours["SSR_TYPE"].unique())
@@ -43,12 +44,15 @@ def load_ssr_data(path: str, dep_code: str):
     """Read SSR data and keep Loire SSR_A rows only."""
     df = pd.read_csv(path, sep=";")
     df = df.rename(columns={'FI': 'FI_ET'})
+    df = df.fillna(0)
     return reduce_SSR_LOIRE(df, dep_code)
 
 def load_data(dep_code:str):
     types_parcours_loire = load_types_parcours("backend/data/raw/TYPES_PARCOURS.csv", 3, dep_code)
     df_mco = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_code)
     df_ssr = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_code)
+    if df_mco.empty or df_ssr.empty or types_parcours_loire.empty:
+        raise Exception(f"Data unavailable for department code: {dep_code}.")
     return types_parcours_loire, df_mco, df_ssr
 
 def reduce_TYPES_PARCOURS_LOIRE(data: pd.DataFrame, min_patients: int, dep_code: str) -> pd.DataFrame:
@@ -145,8 +149,8 @@ def _get_finance_capacity(m_hl, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
     return m_hl
 
 def _get_specialities_frac(df_mco: pd.DataFrame, list_finess: list) -> dict:
-    """Returns approx of facilities' capacity for a speciality. When there is no info on availability,
-        we assume the speciality is available (namely for GYNECO, URO, and ORL (flag field PTRUE=TRUE for all rows))"""
+    """Returns approx of facilities' capacity for a speciality. When no info is availabile, we assume the speciality is always available
+     (namely for GYNECO, URO, and ORL (flag field PTRUE=TRUE for all rows))"""
     total_cap_regional = {}
     
     for speciality in df_mco_flag_fields.keys():
@@ -261,32 +265,42 @@ def get_geo_polygon()->gpd.GeoDataFrame:
     gdf = gdf.rename(columns={"dep": "dep_code"})
     return gdf.to_crs("EPSG:4326")
 
+def verify_department_finess(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, df_finess: pd.DataFrame) -> Tuple[pd.DataFrame,pd.DataFrame]:
+        df_mco = df_mco[df_mco["FI_ET"].isin(df_finess["nofinesset"])]
+        df_ssr = df_ssr[df_ssr["FI_ET"].isin(df_finess["nofinesset"])]
+        return df_mco, df_ssr
 
 def get_finess_info(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, gdf_geo: gpd.GeoDataFrame) -> pd.DataFrame:
     """Returns a dataframe with the canton code of each finess"""
     from pyproj import Transformer
     from shapely.geometry import Point
     df_finess = pd.read_csv("backend/data/open_data/finess_2018.csv", sep=";", encoding="latin1",\
-                            usecols=["nofinesset", "coordx", "coordy"],  dtype={"coordx": str, "coordy": str},\
+                            usecols=["nofinesset", "rs", "coordx", "coordy"],  dtype={"coordx": str, "coordy": str},\
                             low_memory=False)
     
-    all_finess = pd.concat([df_ssr["FI_ET"], df_mco["FI_ET"]]).dropna().unique()
-    df_finess = df_finess[df_finess["nofinesset"].isin(all_finess)]
-    
     transformer = Transformer.from_crs(2154, 4326, always_xy=True)
-    df_finess["lon"], df_finess["lat"] = transformer.transform(
+    df_finess["lat"], df_finess["lon"] = transformer.transform(
         df_finess["coordx"].str.replace(",", "").astype(float),
         df_finess["coordy"].str.replace(",", "").astype(float)
     )
-    gdf_finess = gpd.GeoDataFrame(df_finess, geometry=[Point(xy) for xy in zip(df_finess["lon"],df_finess["lat"])], crs="EPSG:4326")
+    gdf_finess = gpd.GeoDataFrame(df_finess, geometry=[Point(xy) for xy in zip(df_finess["lat"],df_finess["lon"])], crs="EPSG:4326")
     gdf_finess = gpd.sjoin(gdf_finess, gdf_geo[["can_code", "geometry"]], how="left", predicate="intersects")
-    
-    return gdf_finess[["nofinesset","lon","lat","can_code"]]
-    
+    all_finess = pd.concat([df_ssr["FI_ET"], df_mco["FI_ET"]]).dropna().unique()
+    gdf_finess = gdf_finess[(gdf_finess["nofinesset"].isin(all_finess)) & (gdf_finess["can_code"].notnull())]
+
+    return gdf_finess[["nofinesset", "rs", "lat","lon","can_code"]]
+
+def pad_single(dep_code: str):
+    if not dep_code.isdigit():
+        raise("Unhandled department code number", dep_code)
+    if int(dep_code) < 10 and len(dep_code) == 1:
+        return "0" + dep_code
+    return dep_code
+
 def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, dep_code: str) ->gpd.GeoDataFrame:
     """Returns a dataframe of all the geographic information needed merged"""
     gdf_cantons = gdf_cantons.merge(df_pop65p, on= ["can_code","dep_code"], how="left")
-    gdf_cantons = gdf_cantons[gdf_cantons["dep_code"] == dep_code]
+    gdf_cantons = gdf_cantons[gdf_cantons["dep_code"] == pad_single(dep_code)]
     gdf_cantons.fillna(0)
     gdf_geo = gdf_cantons.dissolve(
         by="bureau",
