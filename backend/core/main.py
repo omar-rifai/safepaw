@@ -2,6 +2,7 @@ import pulp
 from backend.core.optimization import declare_constraints, set_obj_fn
 from backend.core.utils.data_utils import package_results, get_results
 import typer
+import os
 from typing import Any
 from pydantic import BaseModel
 from pathlib import Path
@@ -70,8 +71,10 @@ def run_driver(params_system, mode="default"):
     print("Declaring Constraints...")
     declare_constraints(LP, vars_system, params_system, mode)
     print("Starting solver...")
-
-    LP.solve(pulp.GUROBI(msg=1))
+    if "GRB_LICENSE_FILE" in os.environ:
+        LP.solve(pulp.GUROBI(msg=1))
+    else:
+        LP.solve(pulp.HiGHS(msg=1))
     dict_results = package_results(vars_system, params_system)
     status =  pulp.LpStatus[LP.status]
     objective = pulp.value(LP.objective)
