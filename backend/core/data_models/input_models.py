@@ -10,6 +10,9 @@ class Region(BaseModel):
     region_id: str
     region_lbl: Optional[str] = None
     coordinates: list
+    dep_code: Optional[str] = None
+    comm_code: Optional[str] = None
+    can_code: Optional[str] = None
     facilities_affinity: Dict[str, float] # {facility id: affinity_score}
 
 
@@ -22,10 +25,7 @@ class Facility(BaseModel):
     facility_id : str
     facility_name: Optional[str] = None
     facility_type: Optional[str] = None
-    model_region: Optional[str] = None 
-    dep_code: Optional[str] = None
-    comm_code: Optional[str] = None
-    can_code: Optional[str] = None
+    region_id: Optional[str] = None 
     coordinates: list
     resources_capacity: Dict[str, int]
     nbr_visits: Optional[float] = None
@@ -64,7 +64,7 @@ class Activity(BaseModel):
     associated_pathway: str
     associated_group: str
     transferable: bool
-    transfer_to: str
+    transfer_to: Optional[str] = None
     required_resources: Dict[str, float]
 
 

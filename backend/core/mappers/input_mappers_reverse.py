@@ -1,6 +1,5 @@
 from backend.core.data_models.input_models import SystemData, PatientsGroup, Region, Resource, Pathway, Facility, Activity, Instance
 
-
 def create_Patients_from_json(params_system: dict) -> list:
     """Returns list of Patient Objects from model params"""
     list_patients = []
@@ -12,8 +11,10 @@ def create_Regions_from_json(params_system: dict) -> list:
     """Returns list of Region Objects from model params"""
     list_regions = []
     for r in params_system["R"]:
-        list_regions.append(Region(region_id=r, coordinates=[],
-                                   facilities_affinity=params_system["w_rh"]))
+        list_regions.append(Region(region_id=r, coordinates=[], dep_code=params_system["region_metadata"][r]["dep_code"],
+                                   comm_code=params_system["region_metadata"][r]["comm_code"],
+                                   can_code= params_system["region_metadata"][r]["can_code"],
+                                   facilities_affinity=params_system["w_rh"][r]))
     return list_regions
 
 def create_Resources_from_json(params_system: dict) -> list:
@@ -52,10 +53,16 @@ def create_Facilities_from_json(params_system: dict) -> list:
             for k in params_system["K_idx"][g]:
                 if h in params_system["O_gk"][g][k]:
                     available_pathways.append(k)
-
+        return available_pathways
+    
     list_facilities = []
     for h in params_system["H"]:
-        list_facilities.append(Facility(facility_id=h, resources_capacity=params_system["m_hl"][h],
+        list_facilities.append(Facility(facility_id=h,
+                                        facility_type=params_system["facilities_metadata"][h]["type"],
+                                        region_id=params_system["facilities_metadata"][h]["region_id"],
+                                        coordinates=params_system["facilities_metadata"][h]["coords"],
+                                        resources_capacity= params_system["m_hl"][h],
+                                        nbr_visits=params_system["facilities_metadata"][h]["nbr_visits"],
                                         available_pathways=get_available_pathways(h),
                                         linked_facilities=params_system["J_h"][h],
                                         max_transferable_in=params_system["b_hl_in"][h],
@@ -68,17 +75,20 @@ def create_Activities_from_json(params_system: dict) -> list:
     for g in params_system["G"]:
         for k in params_system["K_idx"][g]:
             for a in params_system["A_idx"][g][k]:
+                is_transferable = (a in params_system["N_gka_1"][g][k])
+                transfer_to = None
+                if is_transferable: transfer_to = params_system["N_gka_2"][g][k][a]
                 list_activities.append(Activity(activity_id=a, associated_pathway=k,
-                                            associated_group=g, transferable= (a in params_system["N_gka_1"]),
-                                            transfer_to=params_system["N_gka2"][g][k][a],
+                                            associated_group=g, transferable= is_transferable,
+                                            transfer_to= transfer_to,
                                             required_resources=params_system["t_gkal"][g][k][a]))
     return list_activities
 
 def create_Instance_from_json(params_system: dict) -> list:
     """Returns Instance Object from model params"""
-    instance = Instance(params_system["D"], params_system["d_gr"], params_system["Under_q_g"], params_system["Over_q_g"],
-                        params_system["Under_q_gu"], params_system["Over_q_gu"], params_system["p_transf"], params_system["delta_l"],
-                        params_system["alpha"])
+    instance = Instance(d_total= params_system["D"],d_gr= params_system["d_gr"], under_q_g=params_system["Under_q_g"],over_q_g=params_system["Over_q_g"],
+                        under_q_gu=params_system["Under_q_gu"],over_q_gu= params_system["Over_q_gu"], p_transf=params_system["p_transf"],
+                         delta_l= params_system["delta_l"], alpha=params_system["alpha"])
     return instance
 
 def convert_dm_from_json(params_system: dict) ->SystemData:
@@ -91,5 +101,6 @@ def convert_dm_from_json(params_system: dict) ->SystemData:
     list_facilities = create_Facilities_from_json(params_system)
     list_activities = create_Activities_from_json(params_system)
     instance = create_Instance_from_json( params_system)
-    ModelInstance = SystemData(list_regions, list_resources, list_facilities, list_patients, list_pathways, list_activities, instance)
+    ModelInstance = SystemData(regions=list_regions,resources=list_resources, facilities=list_facilities,patients=list_patients,
+                               pathways=list_pathways, activities=list_activities, instance=instance)
     return ModelInstance

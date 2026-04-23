@@ -47,7 +47,7 @@ def get_Facilities(data: dict, df_pathways : pd.DataFrame, perc_allowed: float= 
         list_facilities.append(Facility(
                 facility_id = fid ,
                 facility_name = _get_facility_name(fid) ,
-                model_region = "" ,
+                region_id = "" ,
                 coordinates =  _get_facility_coordinates(fid) , 
                 resources_capacity =  _get_facility_capacities(fid, df_resources),
                 max_transferable_in = b_hl_in[fid],

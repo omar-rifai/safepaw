@@ -195,16 +195,6 @@ def read_configs(config_category, config_path="backend/config.yaml"):
 
 
 
-def create_metadata(params_system: dict, list_facilities: list[Facility], list_regions: list[Region], list_patients: list[PatientsGroup]) -> dict:
-    """Create dictionary with metadata from the problem instance not used in the optimization model"""
-
-    dict_metadata = {"facilities" : {h.facility_id: {"coordinates" : h.coordinates, "name": h.facility_name} for h in list_facilities}} | \
-          {"regions" : {r.region_id: {"coordinates" : r.coordinates, "name": r.region_id} for r in list_regions}} | \
-          {"patients": {p.group_id: {"name": p.group_id} for p in list_patients} }
-    return dict_metadata
-
-
-
 def read_geojson_projected(filename: str | Path) -> gpd.GeoDataFrame:
     import geopandas as gpd
     gdf = gpd.read_file(Path(filename))

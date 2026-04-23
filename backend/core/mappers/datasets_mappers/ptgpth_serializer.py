@@ -34,7 +34,7 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.D
         list_facilities.append(Facility(
             facility_id = row.nofinesset,
             facility_name = row.rs,
-            model_region = row.can_code,
+            region_id = row.can_code,
             coordinates =[row.lat, row.lon] , 
             resources_capacity = m_hl[row.nofinesset] ,
             max_transferable_in = {l: 0 if l != "finance" else 1000 for l in list_resources },

@@ -1,5 +1,4 @@
-from backend.core.data_models.input_models import Instance, SystemData
-
+from backend.core.data_models.input_models import Instance, SystemData, Facility, Region, Resource, PatientsGroup
 def validate_required_params(params, required_keys, msg):
     missing = [k for k in required_keys if k not in params]
     if missing:
@@ -182,6 +181,20 @@ def reconstruct_m_hl(list_facilities: list, params_system: dict) -> dict:
     return params_system
 
 
+def create_metadata(params_system: dict, list_facilities: list[Facility], list_regions: list[Region],
+                    list_resources: list[Resource], list_patients: list[PatientsGroup]) -> dict:
+    """Create dictionary with metadata from the problem instance not used in the optimization model"""
+
+    params_system["facilities_metadata"] = {h.facility_id: {"coords": h.coordinates, "name": h.facility_name,
+                                                            "region_id": h.region_id, "nbr_visits": h.nbr_visits,
+                                                            "type": h.facility_type}
+                                                            for h in list_facilities} 
+    params_system["regions_metadata"] = {r.region_id : {"dep_code": r.dep_code, "comm_code": r.comm_code, "can_code": r.can_code}
+                                        for r in list_regions}
+
+    return params_system
+
+
 def create_json_from_regions(list_regions: list, params_system: dict) -> dict:
     """Adds json parameters (R, w_rh) associated with a Region Object to params_system"""
     if "R" not in params_system:
@@ -243,7 +256,6 @@ def convert_dm_to_json(data: SystemData, params_system: dict | None = None) -> d
     """Calls converters for Patients, Regions, Resources, Pathways, Activities, Facilities and Instances to json
     also removes utility parameters from params_system
     """
-    from backend.core.utils.data_utils import create_metadata
     if params_system is None: params_system = {}
     params_system = create_json_from_patients(data.patients, params_system)
     params_system = create_json_from_regions(data.regions, params_system)
@@ -252,5 +264,5 @@ def convert_dm_to_json(data: SystemData, params_system: dict | None = None) -> d
     params_system = create_json_from_facilities(data.facilities, params_system)
     params_system = create_json_from_activities(data.activities, params_system)
     params_system = create_json_from_instance(data.instance, params_system)
-    params_metadata = create_metadata(params_system, data.facilities, data.regions, data.patients)
-    return params_system, params_metadata
+    params_system = create_metadata(params_system, data.facilities, data.regions, data.resources, data.patients)
+    return params_system

@@ -3,7 +3,10 @@ from typing import Union
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 import geopandas as gpd
 import numpy as np
+import typer
 
+FACILITY_TYPES = ["1", "2a", "2b", "3"]
+RESOURCES_IDS = ["cap"]
 DF_LABOURS_ALL = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
 DF_GEO_COMMS = gpd.read_parquet("backend/data/open_data/communes-50m.parquet")
 DF_GEO_COMMS_METERS= DF_GEO_COMMS.to_crs(epsg=2154)
@@ -17,17 +20,33 @@ DICT_COMM_CENTROIDS = dict(zip(
 ))
 
 
+def pad_single(dep_code: str):
+    if not dep_code.isdigit():
+        raise("Unhandled department code number", dep_code)
+    if int(dep_code) < 10 and len(dep_code) == 1:
+        return "0" + dep_code
+    return dep_code
+
+
 def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
     """Creates `Region` instance using public data on French communes (Commune code and coordinates)"""
-    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance["dep_code"])]
+    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance.apply(lambda x: x["region_id"][:2], axis=1))]
     df_geo_comms = DF_GEO_COMMS_METERS[DF_GEO_COMMS_METERS["code"].isin(df_labours["comm_code"])]
     affinities_dict = _get_affinities(df_instance, df_geo_comms)
-    communes_ids = list(df_geo_comms["code"].drop_duplicates().sort_values())
-    list_regions = [Region(region_id=c_id, coordinates=DICT_COMM_CENTROIDS[c_id], facilities_affinity=affinities_dict[c_id]) for c_id in communes_ids]
+    list_regions = []
+    for _, row in df_geo_comms.iterrows():
+        list_regions.append(Region(region_id=row["code"],
+                                   coordinates=DICT_COMM_CENTROIDS[row["code"]],
+                                   facilities_affinity=affinities_dict[row["code"]],
+                                   dep_code=row["departement"],
+                                   comm_code=row["code"],
+                                   region_lbl=row["nom"]
+                                   ))
+    
     return list_regions
 
 
-def get_Facilities(region_name = None, dep_name = None,
+def get_Facilities(region_code: str = None, dep_code :str = None,
                    max_transferable_in : int = 10, max_transferable_out : int = 1) -> list[Facility]:
     """
     Creates Facility objects corresponding to unique nofinesset ids with (bed/days) as resource 
@@ -40,8 +59,10 @@ def get_Facilities(region_name = None, dep_name = None,
     df_instance.loc[df_instance["comm_code"] == "85166", "comm_code"] = "85194" # update the commune code of Olonne-sur-Mer
     df_instance["coords"] = df_instance["coords"].apply(ast.literal_eval)
     df_instance.sort_values(by=["year"], ascending=False, inplace=True)
-    if region_name: df_instance = df_instance[df_instance["region_name"] == region_name ]
-    if dep_name: df_instance = df_instance[df_instance["dep_name"] == dep_name ]
+    if region_code: 
+        print("here", region_code, type(region_code))
+        df_instance = df_instance[df_instance["region_code"].astype(str) == str(region_code)]
+    if dep_code: df_instance = df_instance[df_instance["dep_code"] == pad_single(dep_code)]
     df_instance = (df_instance.groupby(
         ["nofinesset","region_code", "region_name", "type", "dep_code",
          "dep_name", "comm_code", "facility_name", "comm_name", "coords"],
@@ -57,9 +78,7 @@ def get_Facilities(region_name = None, dep_name = None,
             facility_id = str(row['nofinesset']),
             facility_name = str(row['facility_name']),
             facility_type = str(row["type"]),
-            model_region = row['comm_name'],
-            dep_code = row['dep_code'],
-            comm_code = row['comm_code'],
+            region_id = row['comm_code'],
             coordinates = list(row['coords']),
             nbr_visits= row["deliveries_per_facility"],
             resources_capacity = {"cap" : int(row['beds'] * 365)},
@@ -102,7 +121,7 @@ def get_demand_lower_bounds(df_instance : pd.DataFrame) -> list[list[float]]:
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")
     labour_types_distribution =  config["labour_types_distribution"]
-    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance["dep_code"])]
+    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance.apply(lambda x: x["region_id"][:2], axis=1))]
     df_labours = df_labours.drop(columns=["region_code"])
     df_comm_avg = (df_labours
         .groupby(["comm_code"], as_index=False)
@@ -165,21 +184,37 @@ def _get_affinities(df_instance: pd.DataFrame, df_geo_comms: gpd.GeoDataFrame):
     return affinities_dict
 
 
-def serialize_maternite(df_instance : pd.DataFrame) -> Union[dict, dict]:
+def serialize_maternity_core(df_instance : pd.DataFrame, save_params: bool = False) -> Union[dict, dict]:
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.data_models.input_models import SystemData
-    groups_ids = ["1", "2a", "2b", "3"]
-    resources_ids = ["cap"]
+    import json
 
     list_regions = get_Regions(df_instance)
     list_facilities = [Facility.model_validate(x) for x in df_instance.to_dict(orient="records")]
-    list_resources = get_Resources(resources_ids)
-    list_patients = get_PatientGroups(groups_ids)
-    list_pathways = get_PatientPathways(groups_ids)
-    list_activities = get_Activities(groups_ids)
-    instance = get_Instance(df_instance, list_pathways, groups_ids, resources_ids)
+    list_resources = get_Resources(RESOURCES_IDS)
+    list_patients = get_PatientGroups(FACILITY_TYPES)
+    list_pathways = get_PatientPathways(FACILITY_TYPES)
+    list_activities = get_Activities(FACILITY_TYPES)
+    instance = get_Instance(df_instance, list_pathways, FACILITY_TYPES, RESOURCES_IDS)
     maternite_data = SystemData(regions = list_regions, resources=list_resources, facilities=list_facilities, patients=list_patients ,\
                pathways=list_pathways, activities= list_activities, instance=instance)
-    params_system, params_metadata = convert_dm_to_json(maternite_data)
-    return params_system, params_metadata
+    params_system  = convert_dm_to_json(maternite_data)
+    if save_params :
+        with open("experiments/params_maternity.json", "w") as fp:
+            json.dump(params_system, fp)
+    return params_system
+
+
+
+def serialize_maternity(
+        region_code: str = typer.Option(None, help="French region code (as string)"),
+        dep_code: str = typer.Option(None, help="French department code (as string)"),
+        save_params: bool = typer.Option(True)
+        ):
+    df_instance = pd.DataFrame([x.model_dump(mode="python") for x in get_Facilities(region_code= region_code, dep_code= dep_code)])
+    return serialize_maternity_core(df_instance, save_params)
+
+
+if __name__ == "__main__":
+     typer.run(serialize_maternity)
