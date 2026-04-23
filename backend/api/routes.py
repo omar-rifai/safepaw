@@ -77,7 +77,7 @@ async def optimize_maternite(payload = Body(...)) -> JSONResponse:
 @api.post("/update_maternites")
 async def update_maternites(payload = Body(...)) -> JSONResponse:
     from backend.api.services import get_facility_capacity
-    from backend.api.services import get_maternite_dashboard
+    from backend.api.services import get_maternite_dashboard, get_region_code, get_department_code
     from backend.core.mappers.datasets_mappers.maternite_serializer import get_Facilities
     import pandas as pd
     import traceback
@@ -92,8 +92,8 @@ async def update_maternites(payload = Body(...)) -> JSONResponse:
             region_name =  payload.get("region")
             dep_name = payload.get("department")
 
-            df_instance = pd.DataFrame([x.model_dump(mode="python") for x in get_Facilities(region_name, dep_name)])
-
+            df_instance = pd.DataFrame([x.model_dump(mode="python") for x in get_Facilities(get_region_code(region_name),
+                                                                                            get_department_code(dep_name))])
             if "global_capacity" in payload:
                 perc = payload["global_capacity"] / 100
                 df_instance["resources_capacity"] = df_instance["resources_capacity"].apply(lambda x :  x | {"cap": int(x["cap"] + x["cap"] * perc)})
@@ -157,16 +157,20 @@ async def read_maternites(payload = Body(...)) -> JSONResponse:
 async def read_maternites(payload = Body(...)) -> JSONResponse:
     import traceback
     import pandas as pd
+    from backend.api.services import get_department_code, get_region_code
     from backend.api.services import get_facility_capacity
     from backend.api.services import get_maternite_dashboard
     from backend.core.mappers.datasets_mappers.maternite_serializer import get_Facilities
 
     try:
-        
         region_name =  payload.get("region")
+        region_code = get_region_code(region_name)
+        
         dep_name = payload.get("department")
+        if dep_name : dep_code = get_department_code(dep_name)
+        else: dep_code = None
 
-        df_instance = pd.DataFrame([x.model_dump(mode="python") for x in get_Facilities(region_name, dep_name)])
+        df_instance = pd.DataFrame([x.model_dump(mode="python") for x in get_Facilities(region_code, dep_code)])
         dashboard_stats = get_maternite_dashboard(df_instance)
         list_facility_load = get_facility_capacity(df_instance)
 
@@ -177,6 +181,40 @@ async def read_maternites(payload = Body(...)) -> JSONResponse:
                 "dashboard_stats": dashboard_stats,
                 "region": region_name,
                 "department": dep_name,
+                "list_facility_load": list_facility_load,
+                "demand_total":  int(df_instance["nbr_visits"].sum()),
+                "capacity_total": sum([int(x["cap"]/365) for x in df_instance["resources_capacity"]])
+            },
+        )
+
+    except Exception:
+        print("Error in api.maternites route:")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+
+@api.post("/read_maternites_file")
+async def read_maternites(params: dict = Body(...)) -> JSONResponse:
+    import traceback
+    import pandas as pd
+    from backend.core.mappers.input_mappers_reverse import create_Facilities_from_json
+    from backend.api.services import get_facility_capacity
+    from backend.api.services import get_maternite_dashboard
+
+    try:
+        df_instance = pd.DataFrame([x.model_dump(mode="python") for x in create_Facilities_from_json(params)])
+        print("here", df_instance)
+        dashboard_stats = get_maternite_dashboard(df_instance)
+        list_facility_load = get_facility_capacity(df_instance)
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "dict_instance": df_instance.to_dict(orient="records"),
+                "dashboard_stats": dashboard_stats,
+                "region": None,
+                "department": None,
                 "list_facility_load": list_facility_load,
                 "demand_total":  int(df_instance["nbr_visits"].sum()),
                 "capacity_total": sum([int(x["cap"]/365) for x in df_instance["resources_capacity"]])

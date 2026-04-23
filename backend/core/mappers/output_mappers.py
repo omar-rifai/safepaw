@@ -1,6 +1,6 @@
 import numpy as np 
 
-def create_facilityStats(results: dict, params_system: dict, params_metadata: dict, by_region: bool = False,
+def create_facilityStats(results: dict, params_system: dict, by_region: bool = False,
                          by_group: bool = False,  by_pathway: bool = False, ) -> list:
     """Creates list of  FacilityStats instances, either total per facility or per facility per region."""
     from backend.core.data_models.output_models import FacilityStats
@@ -32,9 +32,9 @@ def create_facilityStats(results: dict, params_system: dict, params_metadata: di
         r = getattr(row, "region", None)
         
         facility_instance = FacilityStats(
-            facility_id=params_metadata["facilities"][h]["name"],
+            facility_id=h,
             facility_type=None,
-            coordinates=params_metadata["facilities"][h]["coordinates"],
+            coordinates=params_system["facilities_metadata"][h]["coords"],
             patient_group=g,
             patient_pathway=k,
             region_id=str(r),
