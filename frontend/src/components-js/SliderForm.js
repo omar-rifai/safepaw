@@ -55,28 +55,3 @@ export function DynamicSlider({ label, value, SetValue, frac = false, dict_key})
         </FormControl>
     )
 }
-
-
-export function LegacySlider({ text_label, min_val, max_val, step, curr_val, onChange }) {
-    return (
-        <Box mb={2} sx={{ width: '100%' }}>
-            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                <Typography sx={{ minWidth: 250, flex: '0 1 auto', textAlign: 'left' }} variant="body1">
-                    {text_label} : {curr_val}
-                </Typography>
-
-                <input
-                    id="slider"
-                    type="range"
-                    min={min_val}
-                    max={max_val}
-                    step={step}
-                    value={curr_val}
-                    onChange={(e) => onChange(parseFloat(e.target.value))}
-                    style={{ flexGrow: 1, maxWidth: '200px' }} // slider takes remaining space
-                />
-            </Stack >
-        </Box>
-
-    )
-} 
