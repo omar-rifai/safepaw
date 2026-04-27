@@ -13,8 +13,6 @@ def get_department_code(dep_name: str) -> str:
 
 def get_region_code(region_name: str)-> str:
     df_regions = pd.read_csv("backend/data/open_data/regions.csv")
-    print("here", region_name)
-    print(df_regions["nom_region"].unique())
     region_code = str(df_regions[df_regions["nom_region"]==region_name]["code_region"].iloc[0])
     return region_code
 
