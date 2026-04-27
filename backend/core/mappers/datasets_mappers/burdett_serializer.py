@@ -365,11 +365,11 @@ def serialize_burdett_core(
 
     burdett_data = SystemData(regions = list_regions, resources=list_resources, facilities=list_facilities, patients=list_patients ,\
                 pathways=list_pathways, activities= list_activities, instance=instance)
-    params_system, _ = convert_dm_to_json(burdett_data)
+    params_system = convert_dm_to_json(burdett_data)
 
     if save_params:
         os.makedirs("experiments", exist_ok=True)
-        with open("experiments/temp_burdett.json", "w") as fp:
+        with open("experiments/params_burdett.json", "w") as fp:
             json.dump(params_system, fp)
     return params_system
 
