@@ -165,11 +165,11 @@ def serialize_ptgpth_core(
     instance = get_Instance(gdf_summary, df_types_parcours, list_patientGroups, list_resources, p_transf, quality_levels)
     sys_data = SystemData(regions = list_Regions, resources=list_Resources, facilities=list_Facilities,
                           patients=list_PatientsGroups , pathways=list_Pathways, activities= list_Activities, instance=instance)
-    params_system, _ = convert_dm_to_json(sys_data)
+    params_system = convert_dm_to_json(sys_data)
     
     if save_params:
         os.makedirs("experiments", exist_ok=True)
-        with open("experiments/params_ptgpth_" + str(dep_code) + "_" + str(round(p_transf,2))+ "_" + str(round(p_orth,2))+ "_" + str(round(resources_mult,2)) + ".json", "w") as fp:
+        with open("experiments/params_ptgpth.json", "w") as fp:
             json.dump(params_system, fp)
 
     return params_system    
@@ -178,7 +178,6 @@ def serialize_ptgpth_core(
 def read_ptgpth(dep_name):
     """Returns a pandas DataFrame with all the facilities in department  `dep_name`"""
     df_deps = pd.read_csv("backend/data/open_data/departments.csv")
-    print(dep_name)
     dep_code = str(df_deps[df_deps["name"]== dep_name].iloc[0]["code"])
     df_types_parcours, df_mco, df_ssr, _, df_finess = get_data(dep_code)
     list_patientGroups = list(set(df_types_parcours['sej_type'] +  "_" + df_types_parcours['type_parcours'].str.replace(" + ", "_", regex=False)))

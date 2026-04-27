@@ -463,7 +463,7 @@ def get_default_geo_info(gdf_geo):
     """return the default region code and coordinates for DOM and ORTH facilities"""
     can_code_largest = gdf_geo[gdf_geo["population"]==gdf_geo["population"].max()]["can_code"].iloc[0]
     gdf_proj = gdf_geo.to_crs(epsg=3857)
-    centroid =  gdf_proj[ gdf_proj["population"]== gdf_proj["population"].max()]["geometry"].centroid
+    centroid =  gdf_proj[ gdf_proj["population"]== gdf_proj["population"].max()]["geometry"].iloc[0].centroid
     coordinates = [centroid.x, centroid.y]
     return can_code_largest, coordinates
 
