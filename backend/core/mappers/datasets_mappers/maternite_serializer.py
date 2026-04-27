@@ -60,7 +60,6 @@ def get_Facilities(region_code: str = None, dep_code :str = None,
     df_instance["coords"] = df_instance["coords"].apply(ast.literal_eval)
     df_instance.sort_values(by=["year"], ascending=False, inplace=True)
     if region_code: 
-        print("here", region_code, type(region_code))
         df_instance = df_instance[df_instance["region_code"].astype(str) == str(region_code)]
     if dep_code: df_instance = df_instance[df_instance["dep_code"] == pad_single(dep_code)]
     df_instance = (df_instance.groupby(
@@ -188,7 +187,7 @@ def serialize_maternity_core(df_instance : pd.DataFrame, save_params: bool = Fal
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.data_models.input_models import SystemData
-    import json
+    import json, os
 
     list_regions = get_Regions(df_instance)
     list_facilities = [Facility.model_validate(x) for x in df_instance.to_dict(orient="records")]
@@ -201,6 +200,7 @@ def serialize_maternity_core(df_instance : pd.DataFrame, save_params: bool = Fal
                pathways=list_pathways, activities= list_activities, instance=instance)
     params_system  = convert_dm_to_json(maternite_data)
     if save_params :
+        os.makedirs("experiments", exist_ok=True)
         with open("experiments/params_maternity.json", "w") as fp:
             json.dump(params_system, fp)
     return params_system
