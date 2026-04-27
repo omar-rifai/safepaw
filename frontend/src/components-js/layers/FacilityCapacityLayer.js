@@ -8,8 +8,6 @@ export function FacilityCapacityLayer({ capacities }) {
 
     const maxTotalCapacityFacility = Math.max(...facilityCapacity.map(d => d.properties.capacities["cap"]))
     
-    console.log("debug:",facilityCapacity)
-
     const typeColors = {
         "1": [173, 216, 230, 180],  // light blue
         "2a": [100, 200, 150, 180], // teal/greenish
