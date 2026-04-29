@@ -11,9 +11,9 @@ def create_Regions_from_json(params_system: dict) -> list:
     """Returns list of Region Objects from model params"""
     list_regions = []
     for r in params_system["R"]:
-        list_regions.append(Region(region_id=r, coordinates=[], dep_code=params_system["region_metadata"][r]["dep_code"],
-                                   comm_code=params_system["region_metadata"][r]["comm_code"],
-                                   can_code= params_system["region_metadata"][r]["can_code"],
+        list_regions.append(Region(region_id=r, coordinates=[], dep_code=params_system["regions_metadata"][r]["dep_code"],
+                                   comm_code=params_system["regions_metadata"][r]["comm_code"],
+                                   can_code= params_system["regions_metadata"][r]["can_code"],
                                    facilities_affinity=params_system["w_rh"][r]))
     return list_regions
 
@@ -58,6 +58,7 @@ def create_Facilities_from_json(params_system: dict) -> list:
     list_facilities = []
     for h in params_system["H"]:
         list_facilities.append(Facility(facility_id=h,
+                                        facility_name=params_system["facilities_metadata"][h]["name"],
                                         facility_type=params_system["facilities_metadata"][h]["type"],
                                         region_id=params_system["facilities_metadata"][h]["region_id"],
                                         coordinates=params_system["facilities_metadata"][h]["coords"],

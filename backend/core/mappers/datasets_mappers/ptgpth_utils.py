@@ -287,7 +287,7 @@ def get_finess_info(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, gdf_geo: gpd.Geo
     gdf_finess = gpd.sjoin(gdf_finess, gdf_geo[["can_code", "geometry"]], how="left", predicate="intersects")
     all_finess = pd.concat([df_ssr["FI_ET"], df_mco["FI_ET"]]).dropna().unique()
     gdf_finess = gdf_finess[(gdf_finess["nofinesset"].isin(all_finess)) & (gdf_finess["can_code"].notnull())]
-
+    
     return gdf_finess[["nofinesset", "rs", "lat","lon","can_code"]]
 
 def pad_single(dep_code: str):
@@ -462,8 +462,7 @@ def add_orth_facility(list_facilities: list[Facility], list_pathways, list_fines
 def get_default_geo_info(gdf_geo):
     """return the default region code and coordinates for DOM and ORTH facilities"""
     can_code_largest = gdf_geo[gdf_geo["population"]==gdf_geo["population"].max()]["can_code"].iloc[0]
-    gdf_proj = gdf_geo.to_crs(epsg=3857)
-    centroid =  gdf_proj[ gdf_proj["population"]== gdf_proj["population"].max()]["geometry"].iloc[0].centroid
+    centroid = gdf_geo.geometry.iloc[gdf_geo["population"].idxmax()].centroid
     coordinates = [centroid.x, centroid.y]
     return can_code_largest, coordinates
 
@@ -489,3 +488,13 @@ def add_dom_facility(list_facilities: list[Facility], list_pathways: list, list_
             linked_facilities = list_finess,
             available_pathways= list_pathways))
     return list_facilities
+
+def getFacilityType(nofinesset, df_mco, df_ssr):
+    if nofinesset in df_mco["FI_ET"].unique() and nofinesset in df_ssr["FI_ET"].unique():
+        return "Polyclinic"
+    elif nofinesset in df_mco["FI_ET"].unique():
+        return "MCO"
+    elif nofinesset in df_ssr["FI_ET"].unique():
+        return "SSR"
+    else:
+        return "Other"

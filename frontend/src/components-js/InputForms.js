@@ -1,37 +1,43 @@
-import { Tabs, Tab, Box } from '@mui/material';
-import JsonInputForm from "./InputJsonForm.js"
-import ManualInputForm from "./InputManualForm.js"
-import {  useState, useContext } from "react";
-import { DataContext } from "../App.js";
+
+import './forms.css'
+import { useState,  useContext, } from 'react'
+import { Stack, Tabs, Tab } from "@mui/material";
+import { DataContext } from '../App';
+import FacilitiesForm from './FacilitiesForm';
+
+import PersonalInjuryIcon from '@mui/icons-material/PersonalInjury';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import RouteIcon from '@mui/icons-material/Route';
+import VaccinesIcon from '@mui/icons-material/Vaccines';
+import TuneIcon from '@mui/icons-material/Tune';
 
 
-export default function inputForms() {
 
-    const {setOutputData } = useContext(DataContext);
 
-    const [activeTab, setActiveTab] = useState("manual")
+export default function ManualInputForm() {
+    const [activeTab, setActiveTab] = useState("tab-facilities")
+    const { setOutputData } = useContext(DataContext);
     const handleChange = (_, val) => {
         setActiveTab(val);
-        setOutputData (null)
+        setOutputData(null)
     };
 
+   
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', ml:2 }}>
-            <Tabs value={activeTab} onChange={handleChange}>
-                <Tab label="Parameters" value="manual"></Tab>
 
+        <Stack >
+            <Tabs value={activeTab}  onChange={handleChange} variant="scrollable"
+                scrollButtons="auto">
+                <Tab label="Facilities" value="tab-facilities" sx={{ fontSize: 10}} icon={<LocalHospitalIcon sx={{ fontSize: 20 }} />} />
+                <Tab label="Pathways" value="tab-pathways" sx={{ fontSize: 10 }} icon={<RouteIcon sx={{ fontSize: 20 }} />} />
+                <Tab label="Patient Groups" value="tab-patients" sx={{ fontSize: 10 }} icon={<PersonalInjuryIcon sx={{ fontSize: 20 }} />} wrapped />
+                <Tab label="Resources" value="tab-resources" sx={{ fontSize: 10 }} icon={<VaccinesIcon sx={{ fontSize: 20 }} />} wrapped />
+                <Tab label="Instance" value="tab-instance" sx={{ fontSize: 10 }} icon={<TuneIcon sx={{ fontSize: 20 }} />} />
             </Tabs>
-
-            <Box sx={{ flex: 1, overflowY: 'auto', pr: 3 }}>
-                {activeTab === "custom" && 
-                    <JsonInputForm/>
-                }
-                { activeTab === "manual" &&
-                    <ManualInputForm/>
-                }
-            </Box>
-
-        </Box>
+            {activeTab == "tab-facilities" &&
+                <FacilitiesForm/>
+            }
+        </Stack >
     );
-
 }
+

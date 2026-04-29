@@ -16,12 +16,12 @@ export default function customMap() {
 
   const { inputData, outputData } = useContext(DataContext);
   const { deckGLData, setDeckGLData } = useContext(UIContext)
-
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
-  const regionGeoJSON = useRegionGeoJSON(inputData?.region)
-
+  
+  const regionGeoJSON = inputData?.bbox;
+  console.log("bbox in map component", inputData.instance?.facilities?.map(d=>d["coordinates"]))
   const [viewState, setViewState] = useState({
     longitude: 2.5,
     latitude: 46.7,
@@ -93,16 +93,15 @@ export default function customMap() {
 
     const list_layers = []
 
-    if (inputData?.list_facility_load) {
+    if (inputData?.instance?.facilities) {
       const layer_facilityLoads = FacilityCapacityLayer({
-        capacities: inputData.list_facility_load,
+        facilities: inputData.instance?.facilities,
       });
       list_layers.push(layer_facilityLoads)
     }
     return list_layers;
 
   }, [inputData]);
-
 
   useEffect(() => {
     console.log("input data:", inputData);
@@ -129,7 +128,6 @@ export default function customMap() {
 
 
   useEffect(() => {
-    console.log("visibleLayers", visibleLayers);
     if (layers.length > 0) {
       setVisibleLayers(prev =>
         layers.reduce(
@@ -165,7 +163,7 @@ export default function customMap() {
           }
         </FormGroup>
       }
-      <Box sx={{ height: "90%", position: "relative" }} >
+      <Box sx={{ height: "100%", position: "relative" }} >
         <div
             style={{
               width: '100%',
@@ -190,7 +188,7 @@ export default function customMap() {
               attributionControl={false}
             />
           
-          <Legend layers={renderedLayers} />
+          <Legend inputData={inputData} outputData={outputData} />
         </DeckGL>
         </div>
       </Box>

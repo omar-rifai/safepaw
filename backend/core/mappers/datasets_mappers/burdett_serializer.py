@@ -5,21 +5,21 @@ import re
 import typer
 
 hospitals = {
-    "BPH": {"name": "Brisbane Private Hospital", "coordinates": [-27.4646, 153.0226]},
-    "GCUH": {"name": "Gold Coast University Hospital", "coordinates": [-27.9595, 153.3819]},
-    "GCPR": {"name": "Gold Coast Private", "coordinates": [-27.9622, 153.3853]},
-    "JFN": {"name": "John Flynn Private", "coordinates": [-28.153879, 153.488510]},
-    "LOG": {"name": "Logan Hospital", "coordinates": [-27.6700, 153.1418]},
-    "NW": {"name": "North West Hospital", "coordinates": [-27.3940, 152.9929]},
-    "PA": {"name": "Princess Alexandra", "coordinates": [-27.4990, 153.0332]},
-    "PIN": {"name": "Pindara Hospital", "coordinates": [-28.0070776, 153.390936]},
-    "PRCH": {"name": "Prince Charles Hospital", "coordinates": [-27.3899, 153.0234]},
-    "QE2": {"name": "Queen Elizabeth 2 Jubilee", "coordinates": [-27.5594, 153.0489]},
-    "RBWH": {"name": "Royal Brisbane & Women's", "coordinates": [-27.4471, 153.0282]},
-    "RED": {"name": "Redland Hospital", "coordinates": [-27.5405, 153.2521]},
-    "ROB": {"name": "Robina Hospital", "coordinates": [-28.0711, 153.3760]},
-    "STAN": {"name": "St Andrews", "coordinates": [-34.9342, 138.6150]},
-    "WES": {"name": "West Hospital", "coordinates": [-27.4778, 152.9978]},
+    "BPH": {"name": "Brisbane Private Hospital", "coordinates": [153.0226, -27.4646]},
+    "GCUH": {"name": "Gold Coast University Hospital", "coordinates": [153.3819, -27.9595]},
+    "GCPR": {"name": "Gold Coast Private", "coordinates": [153.3853, -27.9622]},
+    "JFN": {"name": "John Flynn Private", "coordinates": [153.488510, -28.153879]},
+    "LOG": {"name": "Logan Hospital", "coordinates": [153.1418, -27.6700]},
+    "NW": {"name": "North West Hospital", "coordinates": [152.9929, -27.3940]},
+    "PA": {"name": "Princess Alexandra", "coordinates": [153.0332, -27.4990]},
+    "PIN": {"name": "Pindara Hospital", "coordinates": [153.390936, -28.0070776]},
+    "PRCH": {"name": "Prince Charles Hospital", "coordinates": [153.0234, -27.3899]},
+    "QE2": {"name": "Queen Elizabeth 2 Jubilee", "coordinates": [153.0489, -27.5594]},
+    "RBWH": {"name": "Royal Brisbane & Women's", "coordinates": [153.0282, -27.4471]},
+    "RED": {"name": "Redland Hospital", "coordinates": [153.2521, -27.5405]},
+    "ROB": {"name": "Robina Hospital", "coordinates": [153.3760, -28.0711]},
+    "STAN": {"name": "St Andrews", "coordinates": [153.021088, -27.461105]},
+    "WES": {"name": "West Hospital", "coordinates": [152.9978, -27.4778]}
 }
 
 

@@ -5,7 +5,7 @@ import { useContext } from "react";
 import { DataContext } from "../App";
 
 
-export function DynamicSlider({ label, value, SetValue, frac = false, dict_key}) {
+export function DynamicSlider({ label, value, SetValue, radioValue, jsonFileData, frac = false, dict_key }) {
 
     const { inputData, setInputData } = useContext(DataContext);
 
@@ -13,15 +13,17 @@ export function DynamicSlider({ label, value, SetValue, frac = false, dict_key})
     const max = frac ? 1 : 50
     const step = frac ? 0.1 : 10;
 
-    const handleChange =  async (event, newVal) => {
+    const handleChange = async (event, newVal) => {
         SetValue(newVal);
 
         try {
+            const json_body = (radioValue == "file" ? jsonFileData : { ...inputData, [dict_key]: newVal, "radioValue": radioValue })
+            console.log("json body", json_body)
             const response = await fetch("api/update_maternites",
                 {
                     method: 'POST',
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ...inputData, [dict_key]: newVal })
+                    body: JSON.stringify(json_body)
                 }
             );
 
@@ -30,13 +32,13 @@ export function DynamicSlider({ label, value, SetValue, frac = false, dict_key})
 
             setInputData(updatedData);
         }
-        catch(err) {
+        catch (err) {
             console.error("Failed to update inputData.", err)
         }
     };
 
     useEffect(() => {
-        frac? SetValue(0): SetValue(0);
+        frac ? SetValue(0) : SetValue(0);
     }, [inputData.department]);
 
     return (
@@ -46,10 +48,11 @@ export function DynamicSlider({ label, value, SetValue, frac = false, dict_key})
                 color={frac ? "secondary" : "primary"}
                 step={step}
                 marks
+                disabled = {radioValue == "file" ? true : false}
                 min={min} max={max}
-                value={value} 
+                value={value}
                 valueLabelDisplay="auto"
-                valueLabelFormat={(v) => frac? v : `${v > 0 ? "+" : ""}${v} %`}
+                valueLabelFormat={(v) => frac ? v : `${v > 0 ? "+" : ""}${v} %`}
                 onChange={handleChange}
             ></Slider>
         </FormControl>

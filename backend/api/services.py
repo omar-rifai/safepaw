@@ -45,6 +45,20 @@ def run_optimization_maternite(df_instance : pd.DataFrame, transfers : float) ->
     return status, average_distance, [], list_facility_load, list_facility_load_regions, list(params_system["regions_metadata"].keys())
 
 
+def get_instance_region(df_instance):
+    """Returns the region estimated from the instance dataset. We use the fact that the `region_id` field (commune code) starts with the departments number,
+    and assume we are only dealing with one region
+    """
+    if len(df_instance) == 0:
+        return None
+    else:
+        try:
+            dep_code = df_instance.iloc[0]["region_id"][:2]
+            df_deps = pd.read_csv("backend/data/open_data/departements-france.csv")
+            region_name = df_deps[df_deps["code_departement"].astype(str)==dep_code]["nom_region"].iloc[0]
+        except Exception:
+            return None
+    return region_name
 
 def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     """Returns status, objective function as str and a dict of result variables"""

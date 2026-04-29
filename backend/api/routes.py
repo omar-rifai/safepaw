@@ -1,7 +1,7 @@
-from fastapi import APIRouter, UploadFile, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
-import tempfile
+import pandas as pd
 
 api = APIRouter()
 
@@ -72,156 +72,45 @@ async def optimize_maternite(payload = Body(...)) -> JSONResponse:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+def get_bounding_box(params: dict):
+    from shapely.geometry import box, mapping
+    coords = []
+    for h in params["facilities_metadata"]:
+        coords.append(params["facilities_metadata"][h]["coords"])
 
+    xs = [c[0] for c in coords]
+    ys = [c[1] for c in coords]
 
-@api.post("/update_maternites")
-async def update_maternites(payload = Body(...)) -> JSONResponse:
-    from backend.api.services import get_facility_capacity
-    from backend.api.services import get_maternite_dashboard, get_region_code, get_department_code
-    from backend.core.mappers.datasets_mappers.maternite_serializer import get_Facilities
-    import pandas as pd
-    import traceback
+    bbox = box(min(xs), min(ys), max(xs), max(ys))
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": mapping(bbox),
+                "properties": {}
+            }
+        ]
+    }
 
-    try:
-        if not payload.get("region"):
-            return JSONResponse(
-                status_code=200,
-                content=payload,
-            )
-        else:
-            region_name =  payload.get("region")
-            dep_name = payload.get("department")
-
-            df_instance = pd.DataFrame([x.model_dump(mode="python") for x in get_Facilities(get_region_code(region_name),
-                                                                                            get_department_code(dep_name))])
-            if "global_capacity" in payload:
-                perc = payload["global_capacity"] / 100
-                df_instance["resources_capacity"] = df_instance["resources_capacity"].apply(lambda x :  x | {"cap": int(x["cap"] + x["cap"] * perc)})
-                
-            if "demand" in payload:
-                perc = payload["demand"] / 100
-                df_instance["nbr_visits"] = df_instance["nbr_visits"].apply(lambda x : int(x + x * perc))
-            
-            list_facility_load = get_facility_capacity(df_instance)
-            dashboard_stats = get_maternite_dashboard(df_instance)
-        
-        return JSONResponse(status_code=200, content={**payload,  "dict_instance": df_instance.to_dict(orient="records"),
-                                                       "list_facility_load": list_facility_load,
-                                                       "dashboard_stats": dashboard_stats,
-                                                       "demand_total":  int(df_instance["nbr_visits"].sum()),
-                                                       "capacity_total": int(sum([x["cap"] for x in df_instance["resources_capacity"]]))
-                                                       })
-        
-    except Exception as e:
-        print("Error in update route:")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-
-
-@api.post("/read_transplants")
-async def read_maternites(payload = Body(...)) -> JSONResponse:
-    import traceback
-    from backend.api.services import get_facility_capacity
-    from backend.api.services import get_maternite_dashboard
-    from backend.core.mappers.datasets_mappers.ptgpth_serializer import read_ptgpth
-
-    try:
-    
-        department = payload.get("department")
-        df_instance = read_ptgpth(dep_code=str(department))
-        
-        list_facility_load = get_facility_capacity(df_instance)
-        dashboard_stats = get_maternite_dashboard(df_instance)
-       
-        return JSONResponse(
-            status_code=200,
-            content={
-                "dict_instance": df_instance.to_dict(orient="records"),
-                "dashboard_stats": dashboard_stats,
-                "department": department,
-                "list_facility_load": list_facility_load,
-                "demand_total":  int(df_instance["deliveries_per_facility"].sum()),
-                "capacity_total": int(df_instance["beds"].sum())
-            },
-        )
-
-    except Exception:
-        print("Error in api.maternites route:")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@api.post("/read_maternites")
-async def read_maternites(payload = Body(...)) -> JSONResponse:
-    import traceback
-    import pandas as pd
-    from backend.api.services import get_department_code, get_region_code
-    from backend.api.services import get_facility_capacity
-    from backend.api.services import get_maternite_dashboard
-    from backend.core.mappers.datasets_mappers.maternite_serializer import get_Facilities
-
-    try:
-        region_name =  payload.get("region")
-        region_code = get_region_code(region_name)
-        
-        dep_name = payload.get("department")
-        if dep_name : dep_code = get_department_code(dep_name)
-        else: dep_code = None
-
-        df_instance = pd.DataFrame([x.model_dump(mode="python") for x in get_Facilities(region_code, dep_code)])
-        dashboard_stats = get_maternite_dashboard(df_instance)
-        list_facility_load = get_facility_capacity(df_instance)
-
-        return JSONResponse(
-            status_code=200,
-            content={
-                "dict_instance": df_instance.to_dict(orient="records"),
-                "dashboard_stats": dashboard_stats,
-                "region": region_name,
-                "department": dep_name,
-                "list_facility_load": list_facility_load,
-                "demand_total":  int(df_instance["nbr_visits"].sum()),
-                "capacity_total": sum([int(x["cap"]/365) for x in df_instance["resources_capacity"]])
-            },
-        )
-
-    except Exception:
-        print("Error in api.maternites route:")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-
-@api.post("/read_maternites_file")
+@api.post("/read_file")
 async def read_maternites(params: dict = Body(...)) -> JSONResponse:
     import traceback
-    import pandas as pd
-    from backend.core.mappers.input_mappers_reverse import create_Facilities_from_json
-    from backend.api.services import get_facility_capacity
-    from backend.api.services import get_maternite_dashboard
+    from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
 
     try:
-        df_instance = pd.DataFrame([x.model_dump(mode="python") for x in create_Facilities_from_json(params)])
-        print("here", df_instance)
-        dashboard_stats = get_maternite_dashboard(df_instance)
-        list_facility_load = get_facility_capacity(df_instance)
+        
+        instance = convert_dm_from_json(params)
 
         return JSONResponse(
             status_code=200,
             content={
-                "dict_instance": df_instance.to_dict(orient="records"),
-                "dashboard_stats": dashboard_stats,
-                "region": None,
-                "department": None,
-                "list_facility_load": list_facility_load,
-                "demand_total":  int(df_instance["nbr_visits"].sum()),
-                "capacity_total": sum([int(x["cap"]/365) for x in df_instance["resources_capacity"]])
+                "instance": instance.to_json_dict(),
+                "bbox": get_bounding_box(params)
             },
         )
 
     except Exception:
-        print("Error in api.maternites route:")
+        print("Error in api.read_file route:")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")

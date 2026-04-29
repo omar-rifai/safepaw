@@ -4,7 +4,7 @@ import os
 from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 from backend.core.mappers.datasets_mappers.ptgpth_utils import load_data, get_geo_polygon, summarize_geo_data, get_pop65p,\
     get_finess_info, get_resources_capacities, get_region_affinities, get_required_resources, get_transfer_to, get_transferable,\
-    get_activities_per_group_pathway, get_demand_lower_bounds, list_resources, add_orth_facility, add_dom_facility
+    get_activities_per_group_pathway, get_demand_lower_bounds, list_resources, add_orth_facility, add_dom_facility, getFacilityType
 
 pathway_benefit = {"HC":1, "DOM":2, "HC_HDJ": 1.25, "HDJ":1.5}
 
@@ -21,11 +21,10 @@ def get_Regions(df_finess: pd.DataFrame, gdf_summary: pd.DataFrame) -> list[Regi
 def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.DataFrame,  df_types_parcours: pd.DataFrame, dep_code: int,
                     t_gkal: dict, list_resources: list, list_pathways: list, p_orth:float, multiplier=1.0) -> list[Facility]:
     """Creates Facility objects corresponding to unique nofinesset ids """
-
+    
     list_facilities = []
     gdf_cantons = get_geo_polygon()
     gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
-    #df_finess = get_finess_info(df_mco, df_ssr, gdf_geo)
     list_finess = list(df_finess["nofinesset"].unique())
     list_finess.extend(["DOM", "ORTH"])
     m_hl = get_resources_capacities(t_gkal, list_finess, df_types_parcours, df_ssr, df_mco, multiplier)
@@ -33,6 +32,7 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.D
     for row in df_finess.itertuples():     
         list_facilities.append(Facility(
             facility_id = row.nofinesset,
+            facility_type = getFacilityType(row.nofinesset, df_mco, df_ssr),
             facility_name = row.rs,
             region_id = row.can_code,
             coordinates =[row.lat, row.lon] , 
