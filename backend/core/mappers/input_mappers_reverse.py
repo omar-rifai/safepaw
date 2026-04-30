@@ -33,10 +33,9 @@ def create_Pathways_from_json(params_system: dict) -> list:
                 return u
 
     list_pathways = []
-    k_ids = params_system["K_g"].keys()
-    for k in k_ids:
-        for g in params_system["G"]:
-            if k in params_system["K_idx"][g]:
+
+    for g in params_system["G"]:
+        for k in params_system["K_idx"][g]:
                 list_pathways.append(Pathway(pathway_id=k, associated_group_id=g,
                                             quality_level=get_quality_level(g,k),
                                             list_activities=params_system["A_idx"][g][k],

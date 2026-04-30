@@ -25,7 +25,7 @@ const VisuallyHiddenInput = styled('input')({
 
 function App() {
 
-  const [inputData, setInputData] = useState({ dict_instace: {}, demand_total: 0, capacity_total: 0 });
+  const [inputData, setInputData] = useState({});
   const [outputData, setOutputData] = useState({});
   const [deckGLData, setDeckGLData] = useState({});
 
@@ -43,9 +43,27 @@ function App() {
     })
     const result = await response.json();
     setInputData(result);
-
+    setOutputData(null)
   };
 
+
+  const optimizeInstance = async () => {
+    console.log("Calling optimize_instance..")
+    if (!Object.hasOwn(inputData, "instance")) {
+
+      console.log("no input data instance for optimization")
+      return;
+    }
+    const response_convert = await fetch("/api/optimize", {
+      method: "POST",
+      body: JSON.stringify({"data":inputData.instance, steps:{"preprocess":true, "optimize":true, "postprocess":true}}),
+      headers: { "Content-Type": "application/json" }
+    })
+
+    const payload = await response_convert.json()
+    setOutputData(payload)
+    console.log(payload)
+  };
 
   return (
     <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData }}>
@@ -85,14 +103,20 @@ function App() {
         <Divider />
 
         <Stack sx={{ mt: 15 }} spacing={2}>
-          <Grid container spacing={5} sx={{justifyContent: "space-evenly", alignItems: "center"}}>
-            <Grid size={8} sx={{ width: 400 }}>
+          <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "center" }}>
+            <Grid size={8} sx={{ width: 500 }}>
               <InputForm />
+              <Grid
+                container
+                sx={{ mt: 2, display: "flex", justifyContent: "end" }} >
+                <Button variant="outlined" onClick={optimizeInstance}>Optimize</Button>
+              </Grid>
             </Grid>
             <Grid size={7} sx={{ minWidth: 550, height: 600 }}>
               <CustomMap />
             </Grid>
           </Grid>
+
           <Box sx={{ width: '100%', height: '100%' }}>
             <Divider sx={{ mt: 8 }} />
             <ResultsForm />

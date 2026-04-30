@@ -4,7 +4,7 @@ import { WebMercatorViewport } from '@deck.gl/core';
 import { useState, useEffect } from 'react'
 
 
-export function getInitializeViewFromGeoJSON(geojson, width = 800, height = 600, padding = 20) {
+export function getInitializeViewFromGeoJSON(geojson, width = 800, height = 600, padding = 200) {
 
     if (!geojson || !geojson.features?.length) {
         return { longitude: 2.5, latitude: 46.7, zoom: 5, pitch: 0, bearing: 0 };
@@ -23,7 +23,7 @@ export function getInitializeViewFromGeoJSON(geojson, width = 800, height = 600,
 export function useRegionGeoJSON(regionName) {
 
     const [regionGeoJSON, setRegionGeoJSON] = useState(null)
-
+    
     useEffect(() => {
         fetch("data/regions.geojson")
             .then(res => res.json())

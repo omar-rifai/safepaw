@@ -1,7 +1,7 @@
 
 import { DataGrid } from '@mui/x-data-grid';
 import { Card } from '@mui/material'
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { DataContext } from '../App';
 
 export default function PathwaysForm() {

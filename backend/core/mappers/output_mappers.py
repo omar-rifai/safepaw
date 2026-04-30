@@ -1,5 +1,8 @@
 import numpy as np 
 
+import pandas as pd
+
+
 def create_facilityStats(results: dict, params_system: dict, by_region: bool = False,
                          by_group: bool = False,  by_pathway: bool = False, ) -> list:
     """Creates list of  FacilityStats instances, either total per facility or per facility per region."""
@@ -7,8 +10,8 @@ def create_facilityStats(results: dict, params_system: dict, by_region: bool = F
     
     list_facilities_loads = []
     
-    Delta_plus = results["Delta_plus"]
-    Delta_moins = results["Delta_moins"]
+    Delta_plus = pd.DataFrame(results["Delta_plus"])
+    Delta_moins = pd.DataFrame(results["Delta_moins"])
 
 
     df_loads = _compute_load(results, by_region,by_group,by_pathway, params_system)
@@ -47,8 +50,9 @@ def create_facilityStats(results: dict, params_system: dict, by_region: bool = F
     return list_facilities_loads
 
 def _compute_load(results, by_region, by_group, by_pathway, params_system):
+
     all_dims = ["facility", "group", "pathway", "region", "activity"]
-    df_P = results["P_gkrah"] 
+    df_P = pd.DataFrame(results["P_gkrah"])
     sum_dims = ["activity"]
     if not by_region:
         sum_dims.append("region")

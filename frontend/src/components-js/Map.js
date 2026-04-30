@@ -21,7 +21,6 @@ export default function customMap() {
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
   
   const regionGeoJSON = inputData?.bbox;
-  console.log("bbox in map component", inputData.instance?.facilities?.map(d=>d["coordinates"]))
   const [viewState, setViewState] = useState({
     longitude: 2.5,
     latitude: 46.7,
@@ -168,7 +167,7 @@ export default function customMap() {
             style={{
               width: '100%',
               height: '100%',
-              outline: '1px solid #000',
+              outline: '2px solid #b8b8b9ff',
               boxSizing: 'border-box',
             }}
         >
