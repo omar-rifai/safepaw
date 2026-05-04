@@ -10,6 +10,7 @@ class FacilityStats(BaseModel):
     patient_pathway: Optional[str] = None
     region_id : Optional[str] = None
     load: Optional[float] = None
+    usage: Optional[dict] = Field(default_factory=dict)
     capacities: Optional[dict] = Field(default_factory=dict)
     transfers_in: Optional[dict] = Field(default_factory=dict)
     transfers_out: Optional[dict] = Field(default_factory=dict)

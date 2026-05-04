@@ -27,12 +27,12 @@ async def optimize(payload: dict = Body(...)) -> JSONResponse:
             solution = {str(var): val.to_dict(orient="records") for var, val in dict_results.items()}
         
             if payload["steps"]["postprocess"] and payload["steps"]["optimize"]:
-                list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityStats(solution, params)]
+                list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityStats(dict_results, params)]
     
                 return JSONResponse(status_code=200, content = {"status": status, "results": {"list_facility_load": list_facility_load,
                                                                                                "regions": list(params["regions_metadata"].keys())}})
             
-            return JSONResponse(status_code=200, content = {"status": status, "obj_val": objective_str,"results": solution})
+            return JSONResponse(status_code=200, content = {"status": status, "obj_val": objective_str,"results": dict_results})
         
         return JSONResponse(status_code=200, content = {"status": None, "obj_val": None,"results": params})
 

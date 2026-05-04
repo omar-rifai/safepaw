@@ -77,7 +77,7 @@ export function getFacilityCapacityToolTip(info) {
 
     html: `
         <h3>Facility:</h3> 
-        <div>${info.object["facility_id"]}</div>
+        <div>${info.object["facility_name"]}</div>
         <h3>Resources:</h3>
          <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object["resources_capacity"]).map(([k, v]) => `"${k}": ${v}\n`)}</div>
         `,

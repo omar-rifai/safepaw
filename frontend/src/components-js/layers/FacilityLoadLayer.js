@@ -1,10 +1,10 @@
 import { ScatterplotLayer } from "@deck.gl/layers";
 
 
+var max_capacities;
+function getMaxCapacities(loads) {
 
-function getMaxCapacities(facilityLoad) {
-
-    return facilityLoad.reduce((acc, facility) => {
+    return loads.reduce((acc, facility) => {
         const capacities = facility.properties.capacities;
         for (const [resource, value] of Object.entries(capacities)) {
             if (!(resource in acc) || value > acc[resource]) {
@@ -16,13 +16,23 @@ function getMaxCapacities(facilityLoad) {
 }
 
 
+function jitter([lng, lat], amount = 0.00045) {
+  return [
+    lng + (Math.random() - 0.5) * amount,
+    lat + (Math.random() - 0.5) * amount
+  ];
+}
+
+
 function getNormalizedCapacityAvg(facilityLoad, max_capacities) {
 
     const normalized = Object.entries(facilityLoad.properties.capacities).map(
         ([r, v]) => {
+            const delta_plus = Math.round(facilityLoad.properties.transfers_in[r])
+            const delta_minus = Math.round(facilityLoad.properties.transfers_out[r])
             const curr_max = max_capacities[r];
             if (!curr_max) return 0;
-            return v / curr_max
+            return (v + delta_plus - delta_minus) / curr_max
         }
     );
     const sum = normalized.reduce((a, b) => a + b, 0);
@@ -31,30 +41,35 @@ function getNormalizedCapacityAvg(facilityLoad, max_capacities) {
 }
 
 
+function getAvgUsage(facilityLoad) {
+
+    const use_ratios = Object.values(facilityLoad.properties.usage)
+
+    const sum = use_ratios.reduce((a, b) => a + b, 0);
+    const avg = sum / use_ratios.length
+    console.log("average use:",use_ratios)
+    return avg 
+}
+
 export function FacilityLoadLayer({ loads, setDeckGLData }) {
 
     if (!loads || loads.length === 0) {
         return null;
     }
-    const facilityLoad = loads;
 
-
-    const max_capacities = getMaxCapacities(facilityLoad)
-    //const maxTotalCapacityFacility = Math.max(...facilityLoad.map(d => getNormalizedCapacityAvg(d, max_capacities).normalized_avg));
+    max_capacities = getMaxCapacities(loads)
 
     return new ScatterplotLayer
         ({
             id: 'facilities-volume',
-            data: facilityLoad,
-            getPosition: d => d.geometry.coordinates,
+            data: loads,
+            getPosition: d => jitter(d.geometry.coordinates),
             getRadius: d => {
                 const capacity = getNormalizedCapacityAvg(d,max_capacities)
                 return [4 + 6 * capacity]
             },
             getFillColor: d => {
-                const load = Number(d.properties.load)
-                const usage = getNormalizedCapacityAvg(d,max_capacities) ? Math.min(load * 4.6 / getNormalizedCapacityAvg(d,max_capacities), 1) : 0
-
+                const usage = getAvgUsage(d) ? getAvgUsage(d) : 0
                 return [
                     Math.round(255 * usage),
                     0,
@@ -77,17 +92,17 @@ export function FacilityLoadLayer({ loads, setDeckGLData }) {
 
 export function getFacilityToolTip(info) {
 
-    const delta_plus = Math.round(info.object.properties.transfers_in["cap"])
-    const delta_minus = Math.round(info.object.properties.transfers_out["cap"])
-    const capacity = Math.round(info.object.properties.capacities["cap"])
-    const capacity_w_trf = capacity + Number(delta_plus) - Number(delta_minus)
-    const load = Number(info.object.properties.load)
-    const usage = capacity_w_trf ? Number(load * 4.6 / capacity_w_trf).toPrecision(2) * 100 : 0
+    return info && {
 
-    return {
-        text: `Facility: ${info.object.properties.facility_id}\n
-        Patients: ${Math.round(load)}\n
-        Beds: ${capacity / 365} + ${delta_plus / 365} - ${delta_minus / 365} \n 
-        Usage(%): ${usage.toPrecision(3)} `
-    };
+    html: `
+        <h3>Facility:</h3> 
+        <div>${info.object.properties["facility_id"]}</div>
+        <h3>Resources Use:</h3>
+        <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object.properties["usage"]).map(([k, v]) => `"${k}": ${v}\n`)}</div>
+        `,
+    style: {
+      backgroundColor: 'rgba(254, 254, 254, 1)',
+      fontSize: '0.8em'
+    }
+  };
 }

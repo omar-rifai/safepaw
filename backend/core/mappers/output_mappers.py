@@ -15,6 +15,7 @@ def create_facilityStats(results: dict, params_system: dict, by_region: bool = F
 
 
     df_loads = _compute_load(results, by_region,by_group,by_pathway, params_system)
+    hl_usage = _get_hl_usage(results, params_system)
 
     delta_plus_value = Delta_plus.groupby(["facility","resource"], dropna=False)["value"].sum().reset_index()
     delta_moins_values = Delta_moins.groupby(["facility","resource"], dropna=False)["value"].sum().reset_index()
@@ -42,6 +43,7 @@ def create_facilityStats(results: dict, params_system: dict, by_region: bool = F
             patient_pathway=k,
             region_id=str(r),
             load=row.load,
+            usage=hl_usage[h],
             capacities=capacity_cache[h],
             transfers_in=transfers_in_cache[h],
             transfers_out=transfers_out_cache[h]
@@ -65,6 +67,27 @@ def _compute_load(results, by_region, by_group, by_pathway, params_system):
     df_loads.rename(columns={"value": "load"}, inplace=True)
     df_loads["load"]  *= params_system["D"]
     return df_loads
+
+def _get_hl_usage(results:dict, params_system:dict) -> dict:
+    """Returns the resources (l) usage by facility (h) """
+    P = results["P_gkrah"].groupby(["group", "pathway", "region","activity", "facility"])["value"].sum().to_dict()
+    Delta_plus = results["Delta_plus"].groupby(["facility", "resource"])["value"].sum().to_dict()
+    Delta_moins = results["Delta_moins"].groupby(["facility", "resource"])["value"].sum().to_dict()
+    usage = {h: {l: 0 for l in params_system["L"]} for h in params_system["H"]}
+    for l in params_system["L"]:
+        nominator = 0
+        denominator = 0
+        for h in params_system["H"]:
+            for g in params_system["G"]:
+                for k in params_system["K_idx"][g]:
+                    for r in params_system["R"]:
+                        for a in params_system["A_idx"][g][k]:
+                                nominator += params_system["t_gkal"][g][k][a][l] * P[(g, k, r, a, h)] * params_system["D"]
+       
+            denominator += params_system["m_hl"][h][l] + Delta_plus[(h,l)] - Delta_moins[(h,l)]
+            usage[h][l] = nominator / denominator if denominator != 0 else 0
+    return usage
+
 
 
 def get_average_distance(results, params_system):
