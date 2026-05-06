@@ -369,7 +369,7 @@ def serialize_burdett_core(
 
     if save_params:
         os.makedirs("experiments", exist_ok=True)
-        with open("experiments/temp_burdett.json", "w") as fp:
+        with open("experiments/params_burdett_" + str(round(perc_allowed,2)) + ".json", "w") as fp:
             json.dump(params_system, fp)
     return params_system
 
