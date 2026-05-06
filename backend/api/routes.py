@@ -23,9 +23,8 @@ async def optimize(payload: dict = Body(...)) -> JSONResponse:
             params = payload["data"]
         
         if payload["steps"]["optimize"]:
-            status, objective_str, dict_results = run_optimization(params)  
-            solution = {str(var): val.to_dict(orient="records") for var, val in dict_results.items()}
-        
+            status, objective_str, dict_results = run_optimization(params, params["mode"])  
+
             if payload["steps"]["postprocess"] and payload["steps"]["optimize"]:
                 list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityStats(dict_results, params)]
     
@@ -46,30 +45,37 @@ async def optimize(payload: dict = Body(...)) -> JSONResponse:
 
 
 
-def get_bounding_box(params: dict):
-    from shapely.geometry import box, mapping
-    coords = []
-    for h in params["facilities_metadata"]:
-        coords.append(params["facilities_metadata"][h]["coords"])
 
-    xs = [c[0] for c in coords]
-    ys = [c[1] for c in coords]
+@api.put("/facilities/{id}")
 
-    bbox = box(min(xs), min(ys), max(xs), max(ys))
-    return {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": mapping(bbox),
-                "properties": {}
-            }
-        ]
-    }
+async def update_facility(id: int, payload: dict = Body(...)) -> JSONResponse:
+    import traceback
+    from backend.api.services import unify_updated_facility
+    try:
+        facilities = payload["facilities"]
+        updated = payload["updated"]
+        for h in facilities:
+            if str(h["facility_id"]) == str(id):
+                unified = unify_updated_facility(payload["mode"], updated)
+                print("before:", h)
+                print("unified:", unified)
+                h.update(unified)
+                print("after:", h)
+        return JSONResponse(status_code=200, content = {"facilities": facilities})
+        
+    except ExecutableNotFound as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    except Exception as e:
+        print("Error in optimize route:", e)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @api.post("/read_file")
 async def read_maternites(params: dict = Body(...)) -> JSONResponse:
     import traceback
+    from backend.api.services import get_bounding_box
     from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
 
     try:

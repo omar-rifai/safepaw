@@ -7,18 +7,22 @@ import { DataContext } from '../App';
 export default function PathwaysForm() {
     const { inputData } = useContext(DataContext);
 
-    const columns = [{ field: 'facility_id', headerName: 'ID', width: 150 },
-    { field: 'facility_type', headerName: 'Type', width: 90, editable: true }];
+    const columns = [
+         { field: 'associated_group_id', headerName: 'Patients Group' },
+        { field: 'pathway_id', headerName: 'Rehab Group', width: 130 },
+   
+    { field: "list_activities", headerName: "Activities List", width:400 }
+    ];
 
 
-    const rows = inputData.instance.facilities
+    const rows = inputData.instance?.pathways
 
     function getRowId(row) {
-        return row.facility_id;
+        return (row.pathway_id + row.associated_group_id);
     }
 
     return (
-        < Card sx={{ m: 5 }}>
+        < Card>
 
             <DataGrid
                 rows={rows}

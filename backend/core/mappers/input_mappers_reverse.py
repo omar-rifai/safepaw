@@ -88,7 +88,7 @@ def create_Instance_from_json(params_system: dict) -> list:
     """Returns Instance Object from model params"""
     instance = Instance(d_total= params_system["D"],d_gr= params_system["d_gr"], under_q_g=params_system["Under_q_g"],over_q_g=params_system["Over_q_g"],
                         under_q_gu=params_system["Under_q_gu"],over_q_gu= params_system["Over_q_gu"], p_transf=params_system["p_transf"],
-                         delta_l= params_system["delta_l"], alpha=params_system["alpha"])
+                         delta_l= params_system["delta_l"], alpha=params_system["alpha"], mode=params_system["mode"])
     return instance
 
 def convert_dm_from_json(params_system: dict) ->SystemData:

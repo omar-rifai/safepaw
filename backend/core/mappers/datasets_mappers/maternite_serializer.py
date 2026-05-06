@@ -110,7 +110,8 @@ def get_Instance(df_instance : pd.DataFrame, list_pathways: list, list_groups, l
             over_q_gu = {p: {u: config["max_fraction_to_be_treated"] for u in U_idx} for p in list_groups},
             p_transf = config["allowed_transfer_fraction"],
             delta_l = {l: config["resource_transfer_unit"] for l in list_resources},
-            alpha = config["alpha"]
+            alpha = config["alpha"],
+            mode= "maternity"
         )
 
 

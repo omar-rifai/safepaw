@@ -62,7 +62,6 @@ function App() {
 
     const payload = await response_convert.json()
     setOutputData(payload)
-    console.log(payload)
   };
 
   return (
@@ -104,7 +103,7 @@ function App() {
 
         <Stack sx={{ mt: 15 }} spacing={2}>
           <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "center" }}>
-            <Grid size={8} sx={{ width: 500 }}>
+            <Grid size={8} sx={{ width:600, minWidth: 500 }}>
               <InputForm />
               <Grid
                 container
@@ -112,7 +111,7 @@ function App() {
                 <Button variant="outlined" onClick={optimizeInstance}>Optimize</Button>
               </Grid>
             </Grid>
-            <Grid size={7} sx={{ minWidth: 550, height: 600 }}>
+            <Grid size={7} sx={{ minWidth: 550, height: 500 }}>
               <CustomMap />
             </Grid>
           </Grid>

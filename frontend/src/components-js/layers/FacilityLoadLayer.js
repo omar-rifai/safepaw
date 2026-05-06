@@ -47,7 +47,6 @@ function getAvgUsage(facilityLoad) {
 
     const sum = use_ratios.reduce((a, b) => a + b, 0);
     const avg = sum / use_ratios.length
-    console.log("average use:",use_ratios)
     return avg 
 }
 
@@ -98,7 +97,7 @@ export function getFacilityToolTip(info) {
         <h3>Facility:</h3> 
         <div>${info.object.properties["facility_id"]}</div>
         <h3>Resources Use:</h3>
-        <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object.properties["usage"]).map(([k, v]) => `"${k}": ${v}\n`)}</div>
+        <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object.properties["usage"]).map(([k, v]) => `"${k}": ${v.toPrecision(2)}\n`)}</div>
         `,
     style: {
       backgroundColor: 'rgba(254, 254, 254, 1)',

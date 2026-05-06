@@ -249,6 +249,7 @@ def create_json_from_instance(instance: Instance, params_system: dict) -> dict:
     params_system["p_transf"] = instance.p_transf
     params_system["delta_l"] = instance.delta_l
     params_system["alpha"] = instance.alpha
+    params_system["mode"] = instance.mode
     return params_system 
 
 

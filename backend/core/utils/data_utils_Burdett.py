@@ -60,7 +60,6 @@ def get_patients_blocking(params,P):
     for g in list_gk_saturated:
         for k in list_gk_saturated[g]:
             u = get_u_from_k(g,k,params["I_gu"])
-            print(g,k, p_saturated)
             p_saturated += params["Under_q_gu"][g][u]*params["Under_q_g"][g]
 
     return p_saturated

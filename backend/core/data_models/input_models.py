@@ -58,6 +58,7 @@ class Instance(BaseModel):
     p_transf: float # max allowable percentage of patients to be tranfered
     delta_l: Dict  # resource id : transfer unit
     alpha: float
+    mode: str = "default" # the optimization ``mode'' we want to run
 
 class Activity(BaseModel):
     activity_id: str
