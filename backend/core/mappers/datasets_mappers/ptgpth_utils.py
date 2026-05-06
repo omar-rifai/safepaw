@@ -133,7 +133,7 @@ def _get_finance_capacity(m_hl, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
             ssr_finance += t_gkal[g][k]["DAY_HC"]["finance"] * row["nb"]
        
         
-    m_hl["DOM"]["finance"] = dom_finance
+    m_hl["DOMf"]["finance"] = dom_finance
     for h in df_ssr["FI_ET"].unique():
         m_hl[h]["finance"] = ssr_finance  / len(df_ssr["FI_ET"].unique())
     for h in  df_mco["FI_ET"].unique():
@@ -209,7 +209,7 @@ def _get_resource_capacity(m_hl_init: dict, list_finess: list, df_activity: pd.D
         total_consumption_resource = float((resource_consumption * df_types_parcours["nb"].sum()))
     #case dealing with the stay-at-home patients
     if df_activity is None:
-         m_hl["DOM"][resource_name] = math.ceil(total_consumption_resource)
+         m_hl["DOMf"][resource_name] = math.ceil(total_consumption_resource)
     else:  
         for h in list_finess:
             if h in df_activity["FI_ET"].unique():
@@ -309,7 +309,7 @@ def get_region_affinities(gdf_summary: pd.DataFrame,df_finess: pd.DataFrame) -> 
     orth_can_code, _ = get_default_geo_info(gdf_summary)
     for r in all_regions:
         list_adjacent = gdf_summary[gdf_summary["can_code"]==r]["adjacent"]
-        w_rh[r] = {"DOM":2, "ORTH":get_orth_wrh(orth_can_code,r, list_adjacent)}
+        w_rh[r] = {"DOMf":2, "ORTHf":get_orth_wrh(orth_can_code,r, list_adjacent)}
 
         for _,row in df_finess.iterrows():
             h = row["nofinesset"]
@@ -434,7 +434,7 @@ def add_orth_facility(list_facilities: list[Facility], list_pathways, list_fines
     orth_resource_capacities = get_frac_resource_capacities(list_facilities, p_orth)
     default_can_code, default_coords = get_default_geo_info(gdf_geo)
     list_facilities.append(Facility(
-            facility_id = "ORTH",
+            facility_id = "ORTHf",
             facility_name = "" ,
             region = default_can_code,
             coordinates =default_coords , 
@@ -465,11 +465,11 @@ def add_dom_facility(list_facilities: list[Facility], list_pathways: list, list_
     default_can_code, default_coords = get_default_geo_info(gdf_geo)
     
     list_facilities.append(Facility(
-            facility_id = "DOM",
+            facility_id = "DOMf",
             facility_name = "" ,
             region = default_can_code,
             coordinates =default_coords, 
-            resources_capacity = m_hl["DOM"],
+            resources_capacity = m_hl["DOMf"],
             max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },
             max_transferable_out = {l: 0 if l != "finance" else 1 for l in list_resources },
             linked_facilities = list_finess,

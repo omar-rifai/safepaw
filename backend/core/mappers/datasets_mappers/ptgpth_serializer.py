@@ -27,7 +27,7 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.D
     gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
     #df_finess = get_finess_info(df_mco, df_ssr, gdf_geo)
     list_finess = list(df_finess["nofinesset"].unique())
-    list_finess.extend(["DOM", "ORTH"])
+    list_finess.extend(["DOMf", "ORTHf"])
     m_hl = get_resources_capacities(t_gkal, list_finess, df_types_parcours, df_ssr, df_mco, multiplier)
 
     for row in df_finess.itertuples():     
