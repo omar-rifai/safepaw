@@ -8,6 +8,7 @@ build/
 backend/data/open_data/communes-france.csv
 *.pyc
 *.png
+*.zip
 *.ipynb_checkpoints
 frontend/node_modules/*
 frontend/node_modules_bak/*
@@ -15,6 +16,8 @@ node_modules/*
 backend/data/raw/*
 experiments/*.json
 experiments/*.csv
+experiments/params_ptgpth/*
+experiments/params_burdett/*
 
 # npm logs
 npm-debug.log*
