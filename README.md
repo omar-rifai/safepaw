@@ -30,4 +30,4 @@ and for PTH PTG data
 ````
 
 > [!TIP]
-> Source datasets to use the serializers are available on: https://doi.org/10.5281/zenodo.19589604 on request
+> Ready-to-use anonymized parameter files can be found on the following link : https://doi.org/10.5281/zenodo.20051926
