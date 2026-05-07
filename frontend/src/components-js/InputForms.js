@@ -3,9 +3,9 @@ import './forms.css'
 import { useState, useContext, } from 'react'
 import { Stack, Tabs, Tab } from "@mui/material";
 import { DataContext } from '../App';
-import FacilitiesForm from './FacilitiesForm';
-import PathwaysForm from './PathwaysForm';
-import InstanceForm from './InstanceForm';
+import FacilitiesForm from './tabs/FacilitiesForm';
+import InstanceForm from './tabs/InstanceForm';
+import ResourcesForm from './tabs/ResourcesForm';
 
 import PersonalInjuryIcon from '@mui/icons-material/PersonalInjury';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -33,12 +33,13 @@ export default function ManualInputForm() {
                 scrollButtons="auto">
                 <Tab label="Facilities" value="tab-facilities" sx={{ fontSize: 10 }} icon={<LocalHospitalIcon sx={{ fontSize: 20 }} />} />
                 <Tab label="Pathways" value="tab-pathways" sx={{ fontSize: 10 }} icon={<RouteIcon sx={{ fontSize: 20 }} />} />
-                <Tab label="Patient Groups" value="tab-patients" sx={{ fontSize: 10 }} icon={<PersonalInjuryIcon sx={{ fontSize: 20 }} />} wrapped />
-                <Tab label="Resources" value="tab-resources" sx={{ fontSize: 10 }} icon={<VaccinesIcon sx={{ fontSize: 20 }} />} wrapped />
-                <Tab label="Instance" value="tab-instance" sx={{ fontSize: 10 }} icon={<TuneIcon sx={{ fontSize: 20 }} />} />
+                <Tab label="Patient Groups" value="tab-patients" sx={{ fontSize: 10 }} icon={<PersonalInjuryIcon sx={{ fontSize: 20 }} />}  />
+                <Tab label="Resources" value="tab-resources" sx={{ fontSize: 10 }} icon={<VaccinesIcon sx={{ fontSize: 20 }} />} />
+                <Tab label="Model Configuration" value="tab-instance" sx={{ fontSize: 10, maxWidth:100 }} icon={<TuneIcon sx={{ fontSize: 20 }} />}   wrapped />
             </Tabs>
             {activeTab == "tab-facilities" && <FacilitiesForm />}
             {activeTab == "tab-instance" && <InstanceForm />}
+            {activeTab == "tab-resources" && <ResourcesForm />}
         </Stack >
     );
 }

@@ -5,11 +5,11 @@ import { useMemo, useRef, useState, useEffect, useContext } from 'react';
 import { getInitializeViewFromGeoJSON, useRegionGeoJSON } from '../utils/mapInitializer';
 import { DataContext, UIContext } from "../App";
 import { Box, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
-import PatientsTransfersLayer from './layers/PatientsTransfersLayer';
-import Legend from './layers/Legend';
-import { RegionFacilityLoadLayer, getRegionFacilityToolTip } from './layers/RegionFacilityLoadLayer';
-import { FacilityLoadLayer, getFacilityToolTip } from './layers/FacilityLoadLayer'
-import { FacilityCapacityLayer, getFacilityCapacityToolTip } from './layers/FacilityCapacityLayer'
+import PatientsTransfersLayer from './map-layers/PatientsTransfersLayer';
+import Legend from './map-layers/Legend';
+import { RegionFacilityLoadLayer, getRegionFacilityToolTip } from './map-layers/RegionFacilityLoadLayer';
+import { FacilityLoadLayer, getFacilityToolTip } from './map-layers/FacilityLoadLayer'
+import { FacilityCapacityLayer, getFacilityCapacityToolTip } from './map-layers/FacilityCapacityLayer'
 
 
 export default function customMap() {
