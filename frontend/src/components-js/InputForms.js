@@ -5,6 +5,7 @@ import { Stack, Tabs, Tab } from "@mui/material";
 import { DataContext } from '../App';
 import FacilitiesForm from './FacilitiesForm';
 import PathwaysForm from './PathwaysForm';
+import InstanceForm from './InstanceForm';
 
 import PersonalInjuryIcon from '@mui/icons-material/PersonalInjury';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -37,7 +38,7 @@ export default function ManualInputForm() {
                 <Tab label="Instance" value="tab-instance" sx={{ fontSize: 10 }} icon={<TuneIcon sx={{ fontSize: 20 }} />} />
             </Tabs>
             {activeTab == "tab-facilities" && <FacilitiesForm />}
-            {activeTab == "tab-pathways" && <PathwaysForm />}
+            {activeTab == "tab-instance" && <InstanceForm />}
         </Stack >
     );
 }
