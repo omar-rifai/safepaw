@@ -24,9 +24,9 @@ Where `file_name.json` is one of the parameter files found in `experiments`.
 
  The outputs are stored in `experiments` as wells. Open source datasets on French maternity Facilities are available for testing using: 
 ````
- pixi run -m backend python -m backend.core.mappers.datasets_mappers.maternite_serializer --dep-code 
+ pixi run -m backend python -m backend.core.mappers.datasets_mappers.maternite_serializer --dep-code <dep_code> (or --region-code <region_code>)
 ````
 
-where `dep-code` is a french department code
+where `<dep_code>` and `<region_code>` are respectively, french department and region code
 
 
