@@ -16,8 +16,7 @@ node_modules/*
 backend/data/raw/*
 experiments/*.json
 experiments/*.csv
-experiments/params_ptgpth/*
-experiments/params_burdett/*
+experiments/pub/*
 
 # npm logs
 npm-debug.log*
