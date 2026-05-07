@@ -22,7 +22,7 @@ Where `file_name.json` is one of the parameter files found in `experiments`.
 > [!TIP]
 > Ready-to-use anonymized parameter files can be found on the following link : https://doi.org/10.5281/zenodo.20051926
 
- The outputs are stored in `experiments` as wells. Open source datasets on French maternity Facilities are available for testing using: 
+ The outputs are stored in `experiments` as well. Open source datasets on French maternity Facilities are available for testing using: 
 ````
  pixi run -m backend python -m backend.core.mappers.datasets_mappers.maternite_serializer --dep-code <dep_code> (or --region-code <region_code>)
 ````
