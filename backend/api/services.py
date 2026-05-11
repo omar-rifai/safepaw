@@ -1,7 +1,11 @@
 
 from typing import Tuple
 import logging
+
+from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 from backend.core.data_models.input_models import Facility
+from backend.core.data_models.output_models import FacilityCapacity
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -36,6 +40,18 @@ def get_bounding_box(params: dict):
             }
         ]
     }
+
+
+def get_facilities_capacities(session: Session) -> list[FacilityCapacity]:
+    return [
+        FacilityCapacity(
+            facility_id=f.id,
+            coordinates=[f.lat, f.lon],
+            facility_type=f.facility_type,
+            resources_capacity= f.resources_capacity if f.facility_resources else {})
+        for f in session.exec(select(Facility).options(selectinload(Facility.facility_resources))).all()
+    ]
+
 
 
 def unify_updated_facility(mode, updated: dict) -> dict:

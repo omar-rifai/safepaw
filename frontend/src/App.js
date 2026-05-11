@@ -42,7 +42,10 @@ function App() {
 
     })
     const result = await response.json();
-    setInputData(result);
+    setInputData(prev => ({
+      ...prev,
+      ...result
+    }));
     setOutputData(null)
   };
 
@@ -56,7 +59,7 @@ function App() {
     }
     const response_convert = await fetch("/api/optimize", {
       method: "POST",
-      body: JSON.stringify({"data":inputData.instance, steps:{"preprocess":true, "optimize":true, "postprocess":true}}),
+      body: JSON.stringify({ "data": inputData.instance, steps: { "preprocess": true, "optimize": true, "postprocess": true } }),
       headers: { "Content-Type": "application/json" }
     })
 
@@ -103,7 +106,7 @@ function App() {
 
         <Stack sx={{ mt: 15 }} spacing={2}>
           <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "center" }}>
-            <Grid size={8} sx={{ width:600, minWidth: 500 }}>
+            <Grid size={8} sx={{ width: 600, minWidth: 500 }}>
               <InputForm />
               <Grid
                 container

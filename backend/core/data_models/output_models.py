@@ -2,6 +2,13 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
+class FacilityCapacity(BaseModel):
+    facility_id: str
+    facility_type: str = None
+    resources_capacity: dict = Field(default_factory=dict)
+    coordinates: list
+
+
 class FacilityStats(BaseModel):
     facility_id: str
     facility_type: Optional[str] = None

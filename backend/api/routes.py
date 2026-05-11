@@ -77,13 +77,21 @@ async def read_maternites(params: dict = Body(...)) -> JSONResponse:
     import traceback
     from backend.api.services import get_bounding_box
     from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
+    from backend.api.services import get_facilities_capacities
+    from sqlmodel import create_engine, SQLModel, Session
 
     try:
-        instance = convert_dm_from_json(params)
+        request_engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+        SQLModel.metadata.create_all(request_engine)
+        with Session(request_engine) as session:
+            convert_dm_from_json(params, session)
+            facilities_capacities = get_facilities_capacities(session)
+
+        print("facilities_capacities:", facilities_capacities)
         return JSONResponse(
             status_code=200,
             content={
-                "instance": instance.to_json_dict(),
+                "facilities_capacities":[f.model_dump() for f in facilities_capacities],
                 "bbox": get_bounding_box(params)
             },
         )

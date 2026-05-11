@@ -35,8 +35,8 @@ def get_Regions(df_instance: pd.DataFrame) -> list[Region]:
     for _, row in df_geo_comms.iterrows():
         list_regions.append(Region(id=row["code"],
                                    lbl=row["nom"],
-                                   lat=DICT_COMM_CENTROIDS[row["code"]][1],
-                                   lon=DICT_COMM_CENTROIDS[row["code"]][0],
+                                   lat=DICT_COMM_CENTROIDS[row["code"]][0],
+                                   lon=DICT_COMM_CENTROIDS[row["code"]][1],
                                    dep_code=row["departement"],
                                    comm_code=row["code"]
                                    ))
@@ -57,8 +57,8 @@ def get_Facilities(df_instance: pd.DataFrame) -> list[Facility]:
             name = str(row['facility_name']),
             facility_type = str(row["type"]),
             region_id = row['comm_code'],
-            lat = row['coords'][1],
-            lon = row['coords'][0],
+            lat = row['coords'][0],
+            lon = row['coords'][1],
             nbr_visits= row["deliveries_per_facility"])
     
     list_facilities = df_instance.apply(row_to_facility, axis=1).tolist()
@@ -123,7 +123,7 @@ def serialize_maternity_core(df_instance, save_params: bool = False) -> Union[di
     from sqlmodel import Session, create_engine,  SQLModel
 
 
-    DATABASE_URL = "sqlite:///"
+    DATABASE_URL = "sqlite://"
     engine = create_engine(DATABASE_URL)
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:

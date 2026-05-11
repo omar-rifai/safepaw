@@ -92,9 +92,9 @@ export default function customMap() {
 
     const list_layers = []
 
-    if (inputData?.instance?.facilities) {
+    if (inputData?.facilities_capacities) {
       const layer_facilityLoads = FacilityCapacityLayer({
-        facilities: inputData.instance?.facilities,
+        facilities: inputData.facilities_capacities || [],
       });
       list_layers.push(layer_facilityLoads)
     }

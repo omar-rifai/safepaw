@@ -56,7 +56,7 @@ def get_CaseMixRatios(df_instance: pd.DataFrame):
 
     config = read_configs("data_maternity")
     labour_types_distribution =  config["labour_types_distribution"]
-    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance.apply(lambda x: x["region_code"], axis=1))]
+    df_labours = DF_LABOURS_ALL[DF_LABOURS_ALL["dep_code"].isin(df_instance.apply(lambda x: x["dep_code"], axis=1))]
     df_labours = df_labours.drop(columns=["region_code"])
     df_comm_avg = (df_labours
         .groupby(["comm_code"], as_index=False)

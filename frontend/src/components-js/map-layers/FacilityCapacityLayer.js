@@ -3,7 +3,7 @@ import chroma from "chroma-js"
 
 function getMaxCapacities(facilities) {
   return facilities.reduce((acc, facility) => {
-    const capacities = facility.resources_capacity;
+    const capacities = facility?.resources_capacity;
     for (const [resource, value] of Object.entries(capacities)) {
       if (!(resource in acc) || value > acc[resource]) {
         acc[resource] = value;
@@ -22,6 +22,7 @@ function getNormalizedCapacityAvg(facility, max_capacities) {
       return v / max_capacities[r]
     }
   );
+
   const sum = normalized.reduce((a, b) => a + b, 0);
   const avg = sum / normalized.length
   return { ...facility, normalized_avg: avg }
@@ -44,12 +45,10 @@ function jitter([lng, lat], amount = 0.00045) {
 
 export function FacilityCapacityLayer({ facilities }) {
 
-  //facilities = (facilities || []).filter(d => d["region_id"]);
   if (facilities.length === 0) {
     return null;
   }
-
-
+ 
   const max_capacities = getMaxCapacities(facilities)
   const facilities_w_avg = facilities.map(f => getNormalizedCapacityAvg(f, max_capacities))
 
@@ -68,8 +67,6 @@ export function FacilityCapacityLayer({ facilities }) {
         getRadius: facilities_w_avg,
       }
     })
-
-
 }
 
 export function getFacilityCapacityToolTip(info) {
@@ -79,7 +76,7 @@ export function getFacilityCapacityToolTip(info) {
         <h3>Facility:</h3> 
         <div>${info.object["facility_name"]}</div>
         <h3>Resources:</h3>
-         <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object["resources_capacity"]).map(([k, v]) => `"${k}": ${v}\n`)}</div>
+         <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object["resources_capacity"])?.map(([k, v]) => `"${k}": ${v}\n`)}</div>
         `,
     style: {
       backgroundColor: 'rgba(254, 254, 254, 1)',

@@ -18,6 +18,11 @@ def reconstruct_L_from_resources(list_resources: list, params_system: dict) -> d
     params_system["L"] = [r.id for r in list_resources]
     return params_system
 
+def reconstruct_delta_l_from_resources(list_resources: list, params_system: dict) -> dict:
+    """ Adds delta_l (Transfer unit for each resource type l) to params_system"""
+    params_system["delta_l"] = {r.id: r.transfer_unit for r in list_resources}
+    return params_system
+
 
 def reconstruct_I_gu(list_pathways: list, params_system: dict) -> dict:
     """ Adds Set of pathways available to group g that fall under care quality level u to params_system"""
@@ -187,7 +192,7 @@ def create_metadata(params_system: dict, list_facilities: list[Facility], list_r
     """Create dictionary with metadata from the problem instance not used in the optimization model"""
 
     params_system["facilities_metadata"] = {h.id: {"coords": [h.lat, h.lon], "name": h.name,
-                                                            "id": h.id, "nbr_visits": h.nbr_visits,
+                                                            "id": h.id, "nbr_visits": h.nbr_visits, "region_id": h.region_id,
                                                             "type": h.facility_type}
                                                             for h in list_facilities} 
     params_system["regions_metadata"] = {r.id : {"dep_code": r.dep_code, "comm_code": r.comm_code, "can_code": r.can_code}
@@ -208,6 +213,7 @@ def create_json_from_regions(list_regions: list, params_system: dict) -> dict:
 def create_json_from_resources(list_resources: list, params_system: dict) -> dict:
     """ Adds json parameters) associated with a Resource Object to params_system"""
     params_system = reconstruct_L_from_resources(list_resources, params_system)
+    params_system = reconstruct_delta_l_from_resources(list_resources, params_system)
     return params_system
 
 
