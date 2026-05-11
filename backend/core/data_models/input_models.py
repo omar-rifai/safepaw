@@ -1,116 +1,160 @@
 ## Create Dataclasses
-from __future__ import annotations
-from pydantic import BaseModel
-from typing import Optional, List, Dict
-
-from pathlib import Path
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Relationship
 
 
-class Region(BaseModel):
-    region_id: str
-    region_lbl: Optional[str] = None
-    coordinates: list
-    dep_code: Optional[str] = None
-    comm_code: Optional[str] = None
-    can_code: Optional[str] = None
-    facilities_affinity: Dict[str, float] # {facility id: affinity_score}
+
+class FacilityAffinity(SQLModel, table=True):
+    facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)
+    region_id : str = Field(default = None, foreign_key="region.id", primary_key=True)
+    affinity_score: float
 
 
-class Resource(BaseModel):
-    resource_id: str
-    resource_type: Optional[str] = None
-    associated_facility: Optional[Facility] = None
+class FacilityResources(SQLModel, table=True):
+    facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)
+    resource_id: str = Field(default = None, foreign_key="resource.id", primary_key=True)
+    capacity: int
+    max_transferable_in: float
+    max_transferable_out: float 
 
-class Facility(BaseModel):
-    facility_id : str
-    facility_name: Optional[str] = None
-    facility_type: Optional[str] = None
-    region_id: Optional[str] = None 
-    coordinates: list
-    resources_capacity: Dict[str, int]
-    nbr_visits: Optional[float] = None
-    available_pathways: List[str]
-    linked_facilities: List[str]
-    max_transferable_in : Dict[str, float] 
-    max_transferable_out : Dict[str, float]
-
-class PatientsGroup(BaseModel):
-    group_id: str
-    group_lbl: Optional[str] = None
-    possible_pathways: List[str] # pathway IDs
+class FacilityPathways(SQLModel, table=True):
+    facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)  
+    pathway_id: str = Field(default = None, foreign_key="pathway.id", primary_key=True)
 
 
-class Pathway(BaseModel):
-    pathway_id : str
-    associated_group_id : str
+class LinkedFacilities(SQLModel, table=True):
+    facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)  
+    linked_facility_id: str = Field(default = None, foreign_key="facility.id", primary_key=True)  
+    
+
+class ActivityResources(SQLModel, table=True):
+    activity_id: str  = Field(default = None, foreign_key="activity.id", primary_key=True)  
+    resource_id: str = Field(default = None, foreign_key="resource.id", primary_key=True)  
+    required_capacity: int
+
+
+
+class CaseMixRatios(SQLModel, table=True):
+    group_id: str  = Field(default = None, foreign_key="patientsgroup.id", primary_key=True)  
+    region_id: str  = Field(default = None, foreign_key="region.id", primary_key=True)  
+    ratio: float
+
+class TreatmentBounds(SQLModel, table=True):
+    group_id: str  = Field(default = None, foreign_key="patientsgroup.id", primary_key=True)  
+    min_treatment_bound: float
+    max_treatment_bound: float
+
+
+class QualityBounds(SQLModel, table=True):
+    group_id: str  = Field(default = None, foreign_key="patientsgroup.id", primary_key=True)  
+    quality_id: str = Field(default = None, primary_key=True)
+    min_quality_bound: float
+    max_quality_bound: float
+
+
+""" Base Objects """
+
+
+class Region(SQLModel, table=True):
+    id: str = Field(default=None, primary_key=True)
+    lbl: str | None
+    lat: str | None
+    lon: str | None
+    region_code: str | None
+    dep_code: str | None
+    comm_code: str | None
+    can_code: str | None
+
+    affinities: List["FacilityAffinity"] = Relationship()
+
+    @property
+    def facilities_affinity(self) -> dict:
+        return {fa.facility_id: fa.affinity_score for fa in self.affinities}
+
+
+class Resource(SQLModel, table=True):
+    id: str = Field(default=None, primary_key=True)
+    transfer_unit: float  
+
+class Facility(SQLModel, table=True):
+    id : str = Field(default=None, primary_key=True)
+    name: str | None
+    facility_type: str | None
+    region_id: str = Field(default=None, foreign_key="region.id")
+    lat : str | None
+    lon : str | None
+    nbr_visits: Optional[int] = None
+    facility_resources: List["FacilityResources"] = Relationship()
+    facility_pathways: List["FacilityPathways"] = Relationship()
+    linked: List["LinkedFacilities"] = Relationship(
+        sa_relationship_kwargs={
+            "foreign_keys": "[LinkedFacilities.facility_id]",
+            "primaryjoin": "Facility.id == LinkedFacilities.facility_id"
+        }
+    )
+
+    @property
+    def resources_capacity(self) -> dict:
+        return {fr.resource_id: fr.capacity for fr in self.facility_resources}
+
+    @property
+    def max_transferable_in(self) -> dict:
+        return {fr.resource_id: fr.max_transferable_in for fr in self.facility_resources}
+
+    @property
+    def max_transferable_out(self) -> dict:
+        return {fr.resource_id: fr.max_transferable_out for fr in self.facility_resources}
+
+    @property
+    def available_pathways(self) -> list:
+        return [fp.pathway_id for fp in self.facility_pathways]
+
+    @property
+    def linked_facilities(self) -> list:
+        return [lf.linked_facility_id for lf in self.linked]
+
+
+class PatientsGroup(SQLModel, table=True):
+    id: str = Field(default=None, primary_key=True)   
+    lbl:str | None
+    pathways: List["Pathway"] = Relationship(back_populates="group")
+
+
+class Pathway(SQLModel, table=True):
+    id : str = Field(default=None, primary_key=True)
+    group_id : str = Field(foreign_key="patientsgroup.id") 
     quality_level: str 
-    list_activities : List[str]
     group_benefit : float
+    activities: List["Activity"] = Relationship(back_populates="pathway")
+    group : Optional["PatientsGroup"] = Relationship(back_populates="pathways")
 
-
-class Instance(BaseModel):
-    d_total: int
-    d_gr : Dict  # [group_id][region ID] : min treatment threshold
-    under_q_g: Dict
-    over_q_g: Dict
-    under_q_gu: Dict #[group_id][treatment lvl] : min treatment proportion
-    over_q_gu: Dict
-    p_transf: float # max allowable percentage of patients to be tranfered
-    delta_l: Dict  # resource id : transfer unit
-    alpha: float
-    mode: str = "default" # the optimization ``mode'' we want to run
-
-class Activity(BaseModel):
-    activity_id: str
-    associated_pathway: str
-    associated_group: str
+class Activity(SQLModel, table=True):
+    id: str = Field(default=None, primary_key=True)
+    pathway_id: str = Field(default=None, foreign_key="pathway.id")
     transferable: bool
-    transfer_to: Optional[str] = None
-    required_resources: Dict[str, float]
+    transfer_to: str | None = Field(default=None, foreign_key="activity.id")
+    pathway: Optional["Pathway"] = Relationship(back_populates="activities")
+    activity_resources: List["ActivityResources"] = Relationship()
+
+    @property
+    def associated_pathway(self) -> str:
+        return self.pathway_id
+
+    @property
+    def associated_group(self) -> str:
+        return self.pathway.group_id if self.pathway else None
+
+    @property
+    def required_resources(self) -> dict:
+        return {ar.resource_id: ar.required_capacity for ar in self.activity_resources}
 
 
-class SystemData(BaseModel):
-    regions : List[Region]
-    resources: List[Resource]
-    facilities: List[Facility]
-    patients: List[PatientsGroup]
-    pathways : List[Pathway]    
-    activities : List[Activity] 
-    instance : Instance
-
-     
-    def to_json_str(self) -> str:
-        """
-        Serialize to json string
-        """
-        return self.model_dump_json()
-
-
-    def to_json_dict(self) -> str:
-        """
-        Serialize to json dict
-        """
-        return self.model_dump()
-
+class Instance(SQLModel, table=True):
+    id: str = Field(default="default",primary_key=True) # the optimization ``mode'' we want to run
+    perc_demand: float
+    perc_capacity: float
+    perc_transfers: float
+    alpha: float
+    
  
-    def save_json(self, path: str | Path, indent: int = 2):
-        """
-        Save to json file
-        """
-        Path(path).write_text(self.model_dump_json(indent=indent))
-
-    @classmethod
-    def from_json(cls, json_str: str) -> SystemData:
-        """
-        load from json string
-        """
-        return cls.model_validate_json(json_str)
-
-
-    @classmethod
-    def load_json(cls, path: str | Path) -> SystemData:
-        """
-        load from json file
-        """
-        data = Path(path).read_text()
-        return cls.model_validate_json(data)
+    
