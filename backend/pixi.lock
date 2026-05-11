@@ -62,6 +62,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gflags-2.2.2-h5888daf_1005.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/giflib-5.2.2-hd590300_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/glog-0.7.1-hbabe93e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/greenlet-3.5.0-py314h42812f9_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h11-0.16.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h2-4.3.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/highspy-1.13.1-np2py314h6477eea_0.conda
@@ -203,7 +204,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/six-1.17.0-pyhe01879c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/snappy-1.2.2-h03e3b7b_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/sniffio-1.3.1-pyhd8ed1ab_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/sqlalchemy-2.0.49-py314h0f05182_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.52.0-h04a0ce9_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/sqlmodel-0.0.38-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.50.0-pyhfdc7a7d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.6.0-pyhecae5ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/tk-8.6.13-noxft_h366c992_103.conda
@@ -287,6 +290,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/gflags-2.2.2-hac325c4_1005.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/giflib-5.2.2-h10d778d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/glog-0.7.1-h2790a97_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/greenlet-3.5.0-py314h2883b87_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h11-0.16.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h2-4.3.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/highspy-1.13.1-np2py314h613bbd0_0.conda
@@ -421,7 +425,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/six-1.17.0-pyhe01879c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/snappy-1.2.2-h01f5ddf_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/sniffio-1.3.1-pyhd8ed1ab_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/sqlalchemy-2.0.49-py314h0b69929_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/sqlite-3.52.0-hd4d344e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/sqlmodel-0.0.38-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.50.0-pyhfdc7a7d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.6.0-pyhecae5ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/tk-8.6.13-h7142dee_3.conda
@@ -505,6 +511,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/gflags-2.2.2-hf9b8971_1005.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/giflib-5.2.2-h93a5062_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/glog-0.7.1-heb240a5_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/greenlet-3.5.0-py314he609de1_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h11-0.16.0-pyhcf101f3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/h2-4.3.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/highspy-1.13.1-np2py314hdd732f0_0.conda
@@ -639,7 +646,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/six-1.17.0-pyhe01879c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/snappy-1.2.2-hada39a4_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/sniffio-1.3.1-pyhd8ed1ab_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/sqlalchemy-2.0.49-py314ha14b1ff_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/sqlite-3.52.0-h77b7338_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/sqlmodel-0.0.38-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.50.0-pyhfdc7a7d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.6.0-pyhecae5ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/tk-8.6.13-h010d191_3.conda
@@ -2223,6 +2232,50 @@ packages:
   purls: []
   size: 112215
   timestamp: 1718284365403
+- conda: https://conda.anaconda.org/conda-forge/linux-64/greenlet-3.5.0-py314h42812f9_0.conda
+  sha256: 4f41009034ccf1a9b7a56d0cebf884fdfeede9dd73eb3ed0ff3438b21e4e5f3a
+  md5: d92bd1c6aa279f0c2e9add8aa5a8c846
+  depends:
+  - python
+  - libgcc >=14
+  - __glibc >=2.17,<3.0.a0
+  - libstdcxx >=14
+  - python_abi 3.14.* *_cp314
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/greenlet?source=hash-mapping
+  size: 265197
+  timestamp: 1777328968106
+- conda: https://conda.anaconda.org/conda-forge/osx-64/greenlet-3.5.0-py314h2883b87_0.conda
+  sha256: 2d17c186d1daf30c0169289b00d7ac7c0b2838eb325a5a98e1414522546d8da3
+  md5: 793cf9c4ad743935a1265a12eb641872
+  depends:
+  - python
+  - libcxx >=19
+  - __osx >=11.0
+  - python_abi 3.14.* *_cp314
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/greenlet?source=hash-mapping
+  size: 259124
+  timestamp: 1777329159128
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/greenlet-3.5.0-py314he609de1_0.conda
+  sha256: de17b34f1b406230278cca08971760458eee93842c1ed96cae8928e251d90a34
+  md5: 31f67ba5ec2031df340a1074c0f5cad3
+  depends:
+  - python
+  - libcxx >=19
+  - __osx >=11.0
+  - python 3.14.* *_cp314
+  - python_abi 3.14.* *_cp314
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/greenlet?source=hash-mapping
+  size: 261029
+  timestamp: 1777329159800
 - pypi: https://files.pythonhosted.org/packages/18/4d/3ce4f83b5631bbda7f59321453341e8b7ecf927dffb569084178248a8c0a/gurobipy-13.0.1-cp314-cp314-macosx_10_15_universal2.whl
   name: gurobipy
   version: 13.0.1
@@ -7377,6 +7430,53 @@ packages:
   - pkg:pypi/sniffio?source=compressed-mapping
   size: 15698
   timestamp: 1762941572482
+- conda: https://conda.anaconda.org/conda-forge/linux-64/sqlalchemy-2.0.49-py314h0f05182_0.conda
+  sha256: 85b8d29abab6896abc18956a6e6cff3cba939b63440039be8471f5ca51096686
+  md5: 40330dd2ec87f319b1c4dffe0db4f4e7
+  depends:
+  - python
+  - greenlet !=0.4.17
+  - typing-extensions >=4.6.0
+  - libgcc >=14
+  - __glibc >=2.17,<3.0.a0
+  - python_abi 3.14.* *_cp314
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/sqlalchemy?source=hash-mapping
+  size: 4030326
+  timestamp: 1775241332871
+- conda: https://conda.anaconda.org/conda-forge/osx-64/sqlalchemy-2.0.49-py314h0b69929_0.conda
+  sha256: 0a545da66dcccc633c2821440be93c57494f25135ec90c36b930550c7cfd1ceb
+  md5: 929a324091e1c8bc1b3c199844903d83
+  depends:
+  - python
+  - greenlet !=0.4.17
+  - typing-extensions >=4.6.0
+  - __osx >=11.0
+  - python_abi 3.14.* *_cp314
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/sqlalchemy?source=hash-mapping
+  size: 4022051
+  timestamp: 1775241486433
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/sqlalchemy-2.0.49-py314ha14b1ff_0.conda
+  sha256: e47582d5d3fb68178eed5120bc215f1822f2305b264aa99a1a7e5522c1acbe67
+  md5: 3b9d0fb8571612200e2fb8a006643067
+  depends:
+  - python
+  - greenlet !=0.4.17
+  - typing-extensions >=4.6.0
+  - python 3.14.* *_cp314
+  - __osx >=11.0
+  - python_abi 3.14.* *_cp314
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/sqlalchemy?source=hash-mapping
+  size: 4032469
+  timestamp: 1775241421861
 - conda: https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.52.0-h04a0ce9_0.conda
   sha256: c9af81e7830d9c4b67a7f48e512d060df2676b29cac59e3b31f09dbfcee29c58
   md5: 7d9d7efe9541d4bb71b5934e8ee348ea
@@ -7419,6 +7519,21 @@ packages:
   purls: []
   size: 180864
   timestamp: 1772819525725
+- conda: https://conda.anaconda.org/conda-forge/noarch/sqlmodel-0.0.38-pyhcf101f3_0.conda
+  sha256: 21ce8003caa1229e905eae69d2883e363c8118c7b44bcec904f8064f2889cb9c
+  md5: 7292a1fd23d2ce38dd1ac90d344be9b9
+  depends:
+  - python >=3.10
+  - sqlalchemy >=2.0.14,<2.1.0
+  - pydantic >=2.11.0
+  - typing_extensions >=4.5.0
+  - python
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/sqlmodel?source=hash-mapping
+  size: 30940
+  timestamp: 1775227899617
 - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.50.0-pyhfdc7a7d_0.conda
   sha256: ab9ab67faa3cf12f45f5ced316e2c50dc72b4046cd275612fae756fe9d4cf82c
   md5: 68bcb398c375177cf117cf608c274f9d
