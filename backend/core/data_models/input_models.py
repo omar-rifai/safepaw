@@ -81,9 +81,9 @@ class Facility(SQLModel, table=True):
     name: str | None
     facility_type: str | None
     region_id: str = Field(default=None, foreign_key="region.id")
-    lat : str | None
-    lon : str | None
-    nbr_visits: Optional[int] = None
+    lat : float| None
+    lon : float | None
+    nbr_visits: Optional[float] = None
     facility_resources: List["FacilityResources"] = Relationship()
     facility_pathways: List["FacilityPathways"] = Relationship()
     linked: List["LinkedFacilities"] = Relationship(

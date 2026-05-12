@@ -6,17 +6,17 @@ import { useContext } from 'react';
 import { DataContext } from '../../App';
 
 
-export default function ResourcesForm() {
+export default function PatientsGroupForm() {
     const { inputData } = useContext(DataContext);
-    const resources = inputData.entries?.resources || inputData.instance?.resources || [];
-    const columns = [{ field: 'resource_id', headerName: 'Resource ID', width: 130 }, { field: 'transfer_unit', headerName: 'Transfer Unit' },
+    const groups = inputData.entries?.patients_groups || inputData.instance?.patients_groups || [];
+    const columns = [{ field: 'group_id', headerName: 'Group ID', width: 130 }, { field: 'lbl', headerName: 'Label' }, { field: 'pathways', headerName: 'Pathways' }
     ];
 
 
-    const rows = resources
+    const rows =groups
 
     function getRowId(row) {
-        return (row.resource_id);
+        return (row.group_id);
     }
 
     return (

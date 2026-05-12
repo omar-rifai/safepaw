@@ -54,6 +54,24 @@ def get_facilities_capacities(session: Session) -> list[FacilityCapacity]:
 
 
 
+def get_DataGridEntries(session: Session) -> dict:
+    from backend.core.data_models.output_models import FacilityRow,PathwayRow, PatientsGroupRow, ResourceRow, DataGridEntries
+    from backend.core.data_models.input_models import Facility, Pathway, Resource, PatientsGroup
+
+    facilities = session.exec(select(Facility)).all()
+    pathways = session.exec(select(Pathway)).all()
+    resources = session.exec(select(Resource)).all()
+    patients_groups = session.exec(select(PatientsGroup)).all()
+    entries = [DataGridEntries(
+        facilities=[FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type) for f in facilities],
+        pathways=[PathwayRow(pathway_id=p.id, group_id=p.group_id, quality_level=p.quality_level, group_benefit=p.group_benefit, activities=[a.id for a in p.activities]) for p in pathways],
+        resources=[ResourceRow(resource_id=r.id, transfer_unit=r.transfer_unit) for r in resources],
+        patients_groups=[PatientsGroupRow(group_id=pg.id, lbl=pg.lbl, pathways=[p.id for p in pg.pathways]) for pg in patients_groups]
+    )]
+    return entries[0].model_dump() if entries else {}
+
+
+
 def unify_updated_facility(mode, updated: dict) -> dict:
     from backend.core.mappers.datasets_mappers.maternite_serializer import _get_available_pathways
     if mode == "maternity":

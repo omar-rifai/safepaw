@@ -4,8 +4,9 @@ import { useState, useContext, } from 'react'
 import { Stack, Tabs, Tab } from "@mui/material";
 import { DataContext } from '../App';
 import FacilitiesForm from './tabs/FacilitiesForm';
-import InstanceForm from './tabs/InstanceForm';
+import PathwaysForm from './tabs/PathwaysForm';
 import ResourcesForm from './tabs/ResourcesForm';
+import PatientsGroupForm from './tabs/PatientsGroupForm'
 
 import PersonalInjuryIcon from '@mui/icons-material/PersonalInjury';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -38,8 +39,9 @@ export default function ManualInputForm() {
                 <Tab label="Model Configuration" value="tab-instance" sx={{ fontSize: 10, maxWidth:100 }} icon={<TuneIcon sx={{ fontSize: 20 }} />}   wrapped />
             </Tabs>
             {activeTab == "tab-facilities" && <FacilitiesForm />}
-            {activeTab == "tab-instance" && <InstanceForm />}
+            {activeTab == "tab-pathways" && <PathwaysForm />}
             {activeTab == "tab-resources" && <ResourcesForm />}
+            {activeTab == "tab-patients" && <PatientsGroupForm />}
         </Stack >
     );
 }

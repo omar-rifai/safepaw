@@ -7,12 +7,13 @@ import Select from '@mui/material/Select';
 
 export default function FacilitiesForm() {
     const { inputData, setInputData } = useContext(DataContext);
+    const facilities = inputData.entries?.facilities || inputData.instance?.facilities || [];
 
     function hasValues(facilities, col) {
         return Array.isArray(facilities) && facilities.some(d => d[col] != null)
     }
 
-    const facilityTypeOptions = [...new Set((inputData.instance?.facilities.map
+    const facilityTypeOptions = [...new Set((facilities.map
         (f => f.facility_type)
         .filter(v => v != null)
     ))];
@@ -20,12 +21,6 @@ export default function FacilitiesForm() {
 
     const handRowUpdate = async (newRow, oldRow) => {
 
-        const updatedResources = { ...(oldRow.resources_capacity || {}), };
-        Object.keys(newRow).forEach(key => {
-            if (key in updatedResources) {
-                updatedResources[key] = newRow[key];
-            }
-        });
 
         const updated_row = { ...oldRow, facility_type: newRow.facility_type};
 
@@ -33,9 +28,9 @@ export default function FacilitiesForm() {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                "facilities": inputData.instance.facilities,
+                "facilities": facilities,
                 "updated": updated_row,
-                "mode": inputData.instance.instance.mode
+                "mode": "maternity"
             })
         })
             .catch(console.error);
@@ -79,13 +74,13 @@ export default function FacilitiesForm() {
     }
 
     const columns = [{ field: 'facility_id', headerName: 'ID', width: 100 },
-    ...hasValues(inputData.instance?.facilities, "facility_name") ? [{ field: 'facility_name', headerName: 'Name', width: 300, editable: false }] : [],
-    ...hasValues(inputData.instance?.facilities, "facility_type") ? [{
+    ...hasValues(facilities, "facility_name") ? [{ field: 'facility_name', headerName: 'Name', width: 300, editable: false }] : [],
+    ...hasValues(facilities, "facility_type") ? [{
         field: 'facility_type', headerName: 'Type', width: 60, editable: true, renderEditCell: typeEditCellComponent
     }] : [],
     ];
 
-    const rows = inputData.instance?.facilities || [];
+    const rows = facilities || [];
 
     function getRowId(row) {
         return row.facility_id;

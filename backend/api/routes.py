@@ -12,7 +12,7 @@ def health():
 async def optimize(payload: dict = Body(...)) -> JSONResponse:
     from backend.api.services import run_optimization
     from backend.core.mappers.input_mappers import convert_dm_to_json
-    from backend.core.mappers.output_mappers import create_facilityStats
+    from backend.core.mappers.output_mappers import create_facilityLoad
     from backend.core.data_models.input_models import SystemData
     import traceback
     try: 
@@ -26,7 +26,7 @@ async def optimize(payload: dict = Body(...)) -> JSONResponse:
             status, objective_str, dict_results = run_optimization(params, params["mode"])  
 
             if payload["steps"]["postprocess"] and payload["steps"]["optimize"]:
-                list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityStats(dict_results, params)]
+                list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityLoad(dict_results, params)]
     
                 return JSONResponse(status_code=200, content = {"status": status, "results": {"list_facility_load": list_facility_load,
                                                                                                "regions": list(params["regions_metadata"].keys())}})
@@ -77,7 +77,7 @@ async def read_maternites(params: dict = Body(...)) -> JSONResponse:
     import traceback
     from backend.api.services import get_bounding_box
     from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
-    from backend.api.services import get_facilities_capacities
+    from backend.api.services import get_facilities_capacities, get_DataGridEntries
     from sqlmodel import create_engine, SQLModel, Session
 
     try:
@@ -86,12 +86,13 @@ async def read_maternites(params: dict = Body(...)) -> JSONResponse:
         with Session(request_engine) as session:
             convert_dm_from_json(params, session)
             facilities_capacities = get_facilities_capacities(session)
+            data_grid_entries = get_DataGridEntries(session)
 
-        print("facilities_capacities:", facilities_capacities)
         return JSONResponse(
             status_code=200,
             content={
                 "facilities_capacities":[f.model_dump() for f in facilities_capacities],
+                "entries": data_grid_entries,
                 "bbox": get_bounding_box(params)
             },
         )

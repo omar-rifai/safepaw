@@ -6,16 +6,13 @@ import { DataContext } from '../../App';
 
 export default function PathwaysForm() {
     const { inputData } = useContext(DataContext);
-
-    const columns = [
-         { field: 'associated_group_id', headerName: 'Patients Group' },
-        { field: 'pathway_id', headerName: 'Rehab Group', width: 130 },
-   
-    { field: "list_activities", headerName: "Activities List", width:400 }
+    const pathways = inputData.entries?.pathways || inputData.instance?.pathways || [];
+    const columns = [{ field: 'pathway_id', headerName: 'Pathway ID', width: 130 }, { field: 'group_id', headerName: 'Patients Group' },
+    { field: "activities", headerName: "Activities List", width: 400 }
     ];
 
 
-    const rows = inputData.instance?.pathways
+    const rows = pathways
 
     function getRowId(row) {
         return (row.pathway_id + row.associated_group_id);

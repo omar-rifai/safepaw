@@ -9,7 +9,35 @@ class FacilityCapacity(BaseModel):
     coordinates: list
 
 
-class FacilityStats(BaseModel):
+class FacilityRow(BaseModel):
+    facility_id: str
+    facility_name: str
+    facility_type: str
+    
+
+class PathwayRow(BaseModel):
+    pathway_id: str
+    group_id: str
+    quality_level: str
+    group_benefit: float
+    activities: list
+
+class ResourceRow(BaseModel):
+    resource_id: str
+    transfer_unit: float
+
+class PatientsGroupRow(BaseModel):
+    group_id: str
+    lbl: Optional[str] = None
+    pathways: list
+
+class DataGridEntries(BaseModel):
+    facilities: list[FacilityRow] = Field(default_factory=list)
+    pathways: list[PathwayRow] = Field(default_factory=list)
+    resources: list[ResourceRow] = Field(default_factory=list)
+    patients_groups: list[PatientsGroupRow] = Field(default_factory=list)
+
+class FacilityLoad(BaseModel):
     facility_id: str
     facility_type: Optional[str] = None
     coordinates: list

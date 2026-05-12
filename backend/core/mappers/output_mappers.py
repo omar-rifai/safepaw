@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 
 
-def create_facilityStats(results: dict, params_system: dict, by_region: bool = False,
+def create_facilityLoad(results: dict, params_system: dict, by_region: bool = False,
                          by_group: bool = False,  by_pathway: bool = False, ) -> list:
-    """Creates list of  FacilityStats instances, either total per facility or per facility per region."""
-    from backend.core.data_models.output_models import FacilityStats
+    """Creates list of  FacilityLoad instances, either total per facility or per facility per region."""
+    from backend.core.data_models.output_models import FacilityLoad
     
     list_facilities_loads = []
     
@@ -35,7 +35,7 @@ def create_facilityStats(results: dict, params_system: dict, by_region: bool = F
         k = getattr(row, "pathway", None)
         r = getattr(row, "region", None)
         
-        facility_instance = FacilityStats(
+        facility_instance = FacilityLoad(
             facility_id=h,
             facility_type=None,
             coordinates=params_system["facilities_metadata"][h]["coords"],
