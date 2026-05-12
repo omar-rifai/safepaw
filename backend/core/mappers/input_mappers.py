@@ -1,4 +1,4 @@
-from backend.core.data_models.input_models import Instance, Facility, Region, Resource, PatientsGroup, CaseMixRatios, QualityBounds, TreatmentBounds
+from backend.core.data_models.input_models import Instance, Facility, Region, Pathway,  CaseMixRatios, QualityBounds, TreatmentBounds
 
 
 def validate_required_params(params, required_keys, msg):
@@ -31,7 +31,7 @@ def reconstruct_I_gu(list_pathways: list, params_system: dict) -> dict:
     for g in params_system["G"]:
         I_g = {}
         for u in params_system["U_idx"][g]:
-            I_g[u] = [k.id for k in [x for x in list_pathways if x.group_id == g] if k.quality_level==u]
+            I_g[u] = [k.id for k in [x for x in list_pathways if g in [g.id for g in x.groups]] if k.quality_level==u]
         I_gu[g] = I_g
     params_system["I_gu"] = I_gu
     return params_system
@@ -42,7 +42,7 @@ def reconstruct_c_gk(list_pathways: list, params_system: dict) -> dict:
     validate_required_params(params_system, ["G"], "Construct patient groups first.")
     c_gk = {}
     for g in params_system["G"]:
-        c_gk[g] = {k.id: k.group_benefit for k in [k for k in list_pathways if k.group_id == g]}
+        c_gk[g] = {k.id: k.group_benefit[g] for k in [k for k in list_pathways if  g in [g.id for g in k.groups]]}
     params_system["c_gk"] = c_gk
     return params_system
 
@@ -52,7 +52,7 @@ def reconstruct_U_from_pathways(list_pathways: list, params_system: dict) -> dic
     validate_required_params(params_system, ["G"], "Construct patient groups first.")
     U_idx = {}
     for g in params_system["G"]:
-        U_idx[g] = [k.quality_level for k in list_pathways if k.group_id == g]
+        U_idx[g] = [k.quality_level for k in list_pathways if g in [g.id for g in k.groups]]
     params_system["U_idx"] =  U_idx
     return params_system
 
@@ -95,14 +95,18 @@ def reconstruct_b_hl(list_facilities: list, params_system: dict) -> dict:
     return params_system
 
 
-def reconstruct_t_gkal(list_activities: list, params_system: dict) -> dict:
+def reconstruct_t_gkal(session, list_activities: list, params_system: dict) -> dict:
     """Adds t_gkal (Consumption of resource l required to perform care activity a of pathway k of group g) to params_system"""
     validate_required_params(params_system, ["G", "K_idx"], "Construct patient groups and pathways first.")
+
     t = {g : {k: {} for k in params_system["K_idx"][g]} for g in params_system["G"]}  
 
     for a in list_activities:
-        g, k =  a.associated_group, a.associated_pathway
-        t[g][k][a.id] = a.required_resources 
+        ks = a.associated_pathways
+        for k in ks:
+            list_gs = session.get(Pathway, k).groups
+            for g in list_gs:
+                t[g.id][k][a.id] = a.required_resources 
     
     params_system["t_gkal"] = t
     return params_system
@@ -118,7 +122,7 @@ def reconstruct_wrh(list_regions: list, params_system: dict) -> dict:
     return params_system
 
 
-def reconstruct_A_gk_from_activities(list_activities: list, params_system: dict) -> dict:
+def reconstruct_A_gk_from_activities(session, list_activities: list, params_system: dict) -> dict:
     """ Adds A_gk (num activities for pathway k of group g) to params_system"""
     validate_required_params(params_system, ["K_idx"], "Construct pathways first.")
     
@@ -126,10 +130,13 @@ def reconstruct_A_gk_from_activities(list_activities: list, params_system: dict)
     A_idx = {g: {k: [] for k in params_system["K_idx"][g]} for g in params_system["G"]}
 
     for a in list_activities:
-        g, k = a.associated_group, a.associated_pathway
-        if g in A and k in A[g]:
-            A[g][k] += 1
-            A_idx[g][k].append(a.id)
+        ks = a.associated_pathways
+        for k in ks:
+            list_gs = session.get(Pathway, k).groups
+            for g in list_gs:
+                if g.id in A and k in A[g.id]:
+                    A[g.id][k] += 1
+                    A_idx[g.id][k].append(a.id)
     params_system["A_gk"] = A
     params_system["A_idx"] = A_idx
     return params_system
@@ -140,8 +147,8 @@ def reconstruct_Kg_from_pathways(list_pathways: list, params_system: dict) -> di
     K_g = {}
     K_idx = {}
     for g in params_system["G"]:
-        K_g[g] = len([n for n in list_pathways if n.group_id == g])
-        K_idx[g] = [n.id for n in list_pathways if n.group_id == g]
+        K_g[g] = len([k for k in list_pathways if g in [g.id for g in k.groups]])
+        K_idx[g] = [k for k in list_pathways if g in [g.id for g in k.groups]]
     params_system["K_g"] = K_g 
     params_system["K_idx"] = K_idx
     return params_system
@@ -153,13 +160,13 @@ def get_K_idx(list_pathways: list, params_system: dict) -> dict:
     validate_required_params(params_system, ["G"], msg="Construct patient groups first")
     K_idx = {}
     for g in params_system["G"]:
-        K_idx[g] = [n.id for n in list_pathways if n.group_id == g]
+        K_idx[g] = [k.id for k in list_pathways if g in [g.id for g in k.groups]]
     params_system["K_idx"] = K_idx
     
     return params_system
 
 
-def reconstruct_N_gka(list_activities: list, params_system: dict):
+def reconstruct_N_gka(session, list_activities: list, params_system: dict):
     """
     (1) N_gka_1: All activities of pathway k of group g to be considered for potential transfers
     (2) N_gka_2: Next activity a to be considered for potential transfers after activity a of pathway k of group g
@@ -171,10 +178,13 @@ def reconstruct_N_gka(list_activities: list, params_system: dict):
     for a in list_activities:
         if not a.transferable:
             continue
-        g, k = a.associated_group, a.associated_pathway
-        B[g][k].append(a.id)      
-        N[g][k][a.id] = a.transfer_to
-        
+        ks = a.associated_pathways
+        for k in ks:
+            list_gs = session.get(Pathway, k).groups 
+            for g in list_gs:
+                B[g.id][k].append(a.id)      
+                N[g.id][k][a.id] = a.transfer_to
+    
     params_system["N_gka_1"] = B
     params_system["N_gka_2"] = N
     return params_system
@@ -217,11 +227,11 @@ def create_json_from_resources(list_resources: list, params_system: dict) -> dic
     return params_system
 
 
-def create_json_from_activities(list_activities: list, params_system: dict) -> dict:
+def create_json_from_activities(session, list_activities: list, params_system: dict) -> dict:
     """ Adds json parameters (A_gk, t_gkal, N_gka1, N_gka2) associated with a Activity Object to params_system"""
-    params_system = reconstruct_A_gk_from_activities(list_activities, params_system)
-    params_system = reconstruct_t_gkal(list_activities, params_system)
-    params_system = reconstruct_N_gka(list_activities, params_system)
+    params_system = reconstruct_A_gk_from_activities(session, list_activities, params_system)
+    params_system = reconstruct_t_gkal(session, list_activities, params_system)
+    params_system = reconstruct_N_gka(session, list_activities, params_system)
     return params_system
 
 def create_json_from_facilities(list_facilities: list, params_system: dict) -> dict:
@@ -325,7 +335,7 @@ def convert_dm_to_json(session, params_system: dict | None = None) -> dict:
     params_system = create_json_from_resources(list_resources, params_system)
     params_system = create_json_from_pathways(list_pathways, params_system)
     params_system = create_json_from_facilities(list_facilities, params_system)
-    params_system = create_json_from_activities(list_activities, params_system)
+    params_system = create_json_from_activities(session, list_activities, params_system)
     params_system = create_json_from_instance(list_instances[0], params_system)
     params_system = create_json_fromCaseMixRatios(list_case_mix_ratios, params_system)
     params_system = create_json_fromQualityBounds(list_quality_bounds, params_system)

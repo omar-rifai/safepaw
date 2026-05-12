@@ -3,6 +3,20 @@ from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 
 
+class GroupPathways(SQLModel, table=True):
+    group_id: str = Field(foreign_key="patientsgroup.id",primary_key=True)
+    pathway_id: str = Field(foreign_key="pathway.id",primary_key=True)
+    
+    
+
+class GroupBenefit(SQLModel, table=True):
+    pathway_id: str = Field(foreign_key="pathway.id",primary_key=True)
+    group_id: str = Field(foreign_key="patientsgroup.id",primary_key=True)
+    benefit: float
+
+class PathwayActivities(SQLModel, table=True):
+    pathway_id: str = Field(foreign_key="pathway.id",primary_key=True)
+    activity_id: str = Field(foreign_key="activity.id", primary_key=True)
 
 class FacilityAffinity(SQLModel, table=True):
     facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)
@@ -117,32 +131,31 @@ class Facility(SQLModel, table=True):
 class PatientsGroup(SQLModel, table=True):
     id: str = Field(default=None, primary_key=True)   
     lbl:str | None
-    pathways: List["Pathway"] = Relationship(back_populates="group")
+    pathways: List["Pathway"] = Relationship(back_populates="groups",
+                                             link_model=GroupPathways)
 
 
 class Pathway(SQLModel, table=True):
     id : str = Field(default=None, primary_key=True)
-    group_id : str = Field(foreign_key="patientsgroup.id") 
     quality_level: str 
-    group_benefit : float
-    activities: List["Activity"] = Relationship(back_populates="pathway")
-    group : Optional["PatientsGroup"] = Relationship(back_populates="pathways")
+    activities: List["Activity"] = Relationship(back_populates="pathways", link_model=PathwayActivities)
+    groups : List["PatientsGroup"] = Relationship(back_populates="pathways", link_model=GroupPathways)
+    group_benefits : list["GroupBenefit"] = Relationship()
+
+    @property
+    def group_benefit(self) -> dict:
+        return {gb.group_id: gb.benefit for gb in self.group_benefits}
 
 class Activity(SQLModel, table=True):
     id: str = Field(default=None, primary_key=True)
-    pathway_id: str = Field(default=None, foreign_key="pathway.id")
     transferable: bool
     transfer_to: str | None = Field(default=None, foreign_key="activity.id")
-    pathway: Optional["Pathway"] = Relationship(back_populates="activities")
+    pathways: List["Pathway"] = Relationship(back_populates="activities", link_model=PathwayActivities)
     activity_resources: List["ActivityResources"] = Relationship()
 
     @property
-    def associated_pathway(self) -> str:
-        return self.pathway_id
-
-    @property
-    def associated_group(self) -> str:
-        return self.pathway.group_id if self.pathway else None
+    def associated_pathways(self) ->  list:
+        return [pathways.id for pathways in self.pathways]
 
     @property
     def required_resources(self) -> dict:

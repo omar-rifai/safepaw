@@ -2,19 +2,19 @@ import pandas as pd
 import geopandas as gpd
 from backend.core.data_models.input_models import Facility
 from typing import Tuple
+from backend.core.data_models.input_models import FacilityAffinity, FacilityResources, FacilityPathways, LinkedFacilities, ActivityResources,\
+    CaseMixRatios, TreatmentBounds, QualityBounds, GroupPathways, GroupBenefit, PathwayActivities
 
-def get_pathways(df_types_parcours: pd.DataFrame):
-    return list(df_types_parcours["SSR_TYPE"].unique())
 
 nb_kine_preop = {"PTG":10, "PTH":15}
 specialities = ["CSC", "DERMA", "ENDO", "GASTRO", "GYNECO", "OPH", "ORL", "RHUMA", "URO"]
-list_resources = ["CHIR/ORTHO", "ANES", "KINE_MCO", "DAY_HC", "KINE_DOM", "KINE_SSR", "finance"]
-list_resources.extend(specialities)
+list_resources_ids = ["CHIR/ORTHO", "ANES", "KINE_MCO", "DAY_HC", "KINE_DOM", "KINE_SSR", "finance"]
+list_resources_ids.extend(specialities)
 
 # number of resource units needed for each resource type -> groupprefix_pathway
-post_op_scenarios = {"DAY_HC":{"PTG_HC":28,"PTH_HC":21,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":21,"PTH_HC_HDJ":14,"PTG_HDJ":0,"PTH_HDJ":0},
-                     "KINE_SSR":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":0,"PTH_DOM":0,"PTG_HC_HDJ":20,"PTH_HC_HDJ":15,"PTG_HDJ":25,"PTH_HDJ":20},
-                     "KINE_DOM":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":25,"PTH_DOM":20,"PTG_HC_HDJ":0,"PTH_HC_HDJ":0,"PTG_HDJ":0,"PTH_HDJ":0}}
+post_op_scenarios = {"DAY_HC":{"PTG_HC":28,"PTH_HC":21,"PTG_DOM":0,"PTH_DOM":0,"PTG_HCHDJ":21,"PTH_HCHDJ":14,"PTG_HDJ":0,"PTH_HDJ":0},
+                     "KINE_SSR":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":0,"PTH_DOM":0,"PTG_HCHDJ":20,"PTH_HCHDJ":15,"PTG_HDJ":25,"PTH_HDJ":20},
+                     "KINE_DOM":{"PTG_HC":0,"PTH_HC":0,"PTG_DOM":25,"PTH_DOM":20,"PTG_HCHDJ":0,"PTH_HCHDJ":0,"PTG_HDJ":0,"PTH_HDJ":0}}
 
 finance_costs= {"PTG": {"CHIR/ORTHO_pre":46, "ANES" : 46, "CSC": 34.75, "DERMA": 40,"ENDO": 40, "GASTRO": 40, "GYNECO": 40,
                   "OPH":40, "ORL":40, "RHUMA":40, "URO":40, "KINE_MCO": 9.95, "CHIR/ORTHO+ANES": 4365.61, "DAY_HC":769.56, "KINE_SSR":126.80,"KINE_DOM": 370.99, "CHIR/ORTHO_post":46},
@@ -26,11 +26,101 @@ df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU",
                             "URO": "PTRUE", "ORL": "PTRUE"}
 
 
+def get_FacilityAffinity(df_finess: pd.DataFrame, gdf_summary: pd.DataFrame):
+    list_finess = list(df_finess["nofinesset"].unique()) + ["DOM" + "ORTH"]
+    affinities = get_region_affinities(gdf_summary, df_finess)
+    return [
+        FacilityAffinity(facility_id= nofinesset,region_id= can_code, affinity_score = affinities[can_code][nofinesset]) 
+            for nofinesset, can_code in zip(list_finess,gdf_summary["can_code"])]
+
+
+def get_FacilityResources(t_gkal: dict, list_resources_ids: list,df_mco : pd.DataFrame, df_ssr : pd.DataFrame,
+                          df_finess:pd.DataFrame,  df_types_parcours: pd.DataFrame, p_orth, multiplier=1.0):
+    list_finess = list(df_finess["nofinesset"].unique()) + ["DOM"]
+    m_hl = get_resources_capacities(t_gkal, list_finess, df_types_parcours, df_ssr, df_mco, multiplier)
+    
+    max_transferable_in = {l: 0 if l != "finance" else 1000 for l in list_resources_ids }
+    max_transferable_out = {l: 0 if l != "finance" else 1000 for l in list_resources_ids }
+    list_facility_resources = [FacilityResources(facility_id=h, resource_id=l, capacity=m_hl[h][l],
+                               max_transferable_in=max_transferable_in[l], max_transferable_out=max_transferable_out[l])
+                            for h in m_hl.keys() for l in list_resources_ids]
+    
+    orth_resource_capacities = get_frac_resource_capacities(m_hl, p_orth)
+    list_facility_resources.extend(FacilityResources(facility_id="ORTH", resource_id=l, capacity=orth_resource_capacities[l],
+                                                     max_transferable_in=max_transferable_in[l], max_transferable_out=max_transferable_out[l]) for l in orth_resource_capacities)
+    return list_facility_resources
+
+
+def get_PathwayActivities(A_idx):
+    return [PathwayActivities(pathway_id=p, activity_id=a)
+            for group_dict in A_idx.values()
+            for p, activities in group_dict.items()
+            for a in activities]
+
+def get_GroupBenefit(list_pathways_ids: list, list_patientsGroups_ids: list, pathway_benefit:dict) -> list:
+    return [GroupBenefit(pathway_id=k, group_id=g, benefit=pathway_benefit[k.split("_")[-1]]) 
+            for k in list_pathways_ids for g in list_patientsGroups_ids ]
+
+
+def get_GroupPathways(list_pathways_ids):
+    return [GroupPathways(group_id="_".join(k.split("_")[:-1]), pathway_id=k) for k in list_pathways_ids]
+
+def get_FacilityPathways(list_pathways_ids, list_facilities):
+    return [FacilityPathways(facility_id=h.id, pathway_id=k) for h in list_facilities for k in list_pathways_ids]
+
+
+def get_LinkedFacilities(list_facilities):
+    return [LinkedFacilities(facility_id=h1.id, linked_facility_id=h2.id) for h1 in list_facilities for h2 in list_facilities]
+
+
+def get_ActivityResources(t_gkal: dict, A_idx) -> list:
+    unique = {}
+    for g in A_idx:
+        for k in A_idx[g]:
+            for a in A_idx[g][k]:
+                for l, cap in t_gkal[g][k][a].items():
+                    if (a, l) not in unique:
+                        unique[(a, l)] = cap
+    return [ActivityResources(activity_id=a, resource_id=l, required_capacity=cap) 
+            for (a, l), cap in unique.items()]
+
+def get_CaseMixRatios(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame):
+    """ Represents the lower bound on patients asssigments per patient group, per canton"""
+    d_gr = {}
+    df_groups = df_types_parcours.copy()
+    df_groups = df_groups.groupby(["sej_type", "type_parcours"], as_index=False)["nb"].sum()
+    for _, row in df_groups.iterrows():
+        group = row["sej_type"] + "_" + row["type_parcours"].replace(" + ", "_")
+        frac_visits  = row["nb"] / df_groups["nb"].sum()
+        d_gr[group] = {}
+        for _, gdf_row in gdf_summary.iterrows():
+            can_code = gdf_row["can_code"]
+            frac_pop = gdf_row["pop65p"] / gdf_summary["pop65p"].sum()   
+            d_gr[group][can_code] = float( frac_visits * frac_pop)/2
+    return [CaseMixRatios(group_id=g, region_id=r, ratio=d_gr[g][r]) for g in d_gr.keys() for r in d_gr[g].keys()]
+
+def get_TreatmentBounds(list_groups) -> list:
+    return [TreatmentBounds(group_id=g.id, min_treatment_bound=0, max_treatment_bound=1) for g in list_groups]
+
+def get_QualityBounds(quality_levels: dict, list_groups_ids):
+    if len(set(quality_levels.values())) > 1 :  quality_objectives = {quality_levels["DOM"]: 0.75, quality_levels["HDJ"]:0.05,
+                                                                      quality_levels["HCHDJ"]:0.05, quality_levels["HC"]:0.2 }
+    else: quality_objectives = {"0": 1}
+    return [QualityBounds(group_id=g, quality_id=u,
+                          min_quality_bound=quality_objectives[u],
+                          max_quality_bound=quality_objectives[u]) for g in list_groups_ids for u in list(set(quality_levels.values()))]
+
+
+def get_pathways(df_types_parcours: pd.DataFrame):
+    return list(df_types_parcours["SSR_TYPE"].unique())
+
+
 def load_types_parcours(path: str, min_patients: int, dep_code:str):
     """Read and filter TYPES_PARCOURS for Loire."""
     df = pd.read_csv(path)
-    df_loire = reduce_TYPES_PARCOURS_LOIRE(df, min_patients, dep_code)
-    return df_loire
+    df = reduce_TYPES_PARCOURS(df, min_patients, dep_code)
+   
+    return df
 
 def load_mco_data(path: str, dep_code: str):
     """Read MCO data and keep Loire rows only."""
@@ -47,17 +137,18 @@ def load_ssr_data(path: str, dep_code: str):
     df = df.fillna(0)
     return reduce_SSR_LOIRE(df, dep_code)
 
-def load_data(dep_code:str):
-    types_parcours_loire = load_types_parcours("backend/data/raw/TYPES_PARCOURS.csv", 3, dep_code)
-    df_mco = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_code)
-    df_ssr = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_code)
-    if df_mco.empty or df_ssr.empty or types_parcours_loire.empty:
-        raise Exception(f"Data unavailable for department code: {dep_code}.")
-    return types_parcours_loire, df_mco, df_ssr
+def load_data(dep_codes:list):
+    types_parcours = load_types_parcours("backend/data/raw/TYPES_PARCOURS.csv", 3, dep_codes)
+    df_mco = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_codes)
+    df_ssr = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_codes)
+    if df_mco.empty or df_ssr.empty or types_parcours.empty:
+        raise Exception(f"Data unavailable for departments codes: {dep_codes}.")
+    return types_parcours, df_mco, df_ssr
 
-def reduce_TYPES_PARCOURS_LOIRE(data: pd.DataFrame, min_patients: int, dep_code: str) -> pd.DataFrame:
+def reduce_TYPES_PARCOURS(data: pd.DataFrame, min_patients: int, dep_code: str) -> pd.DataFrame:
     """Keep only Loire departments and groups with enough patients."""
     df = data[data['BEN_RES_DPT'].isin(dep_code)].copy()
+    df["SSR_TYPE"] = df["SSR_TYPE"].str.replace("_", "")
     df['SSR_TYPE'] = df['SSR_TYPE'].fillna('DOM')
     grouped = df.groupby(['BEN_RES_DPT', 'sej_type', 'type_parcours', 'SSR_TYPE'], as_index=False)['nb'].sum()
     grouped['group_key'] = grouped['sej_type'].astype(str) + grouped['type_parcours'].astype(str)
@@ -102,6 +193,7 @@ def get_resources_capacities(t_gkal: dict, list_finess: list, df_types_parcours:
                                             df_types_parcours["sej_type"].str.cat(df_types_parcours["SSR_TYPE"], sep="_")),
                                 "KINE_DOM", None, post_op_scenarios["KINE_DOM"])
     m_hl = _get_finance_capacity(m_hl, df_ssr, df_mco, t_gkal, df_types_parcours) 
+    
     return {x: {l : int(m_hl[x][l] * multiplier) for l in m_hl[x]}for x in m_hl}
 
 
@@ -118,7 +210,7 @@ def _get_finance_capacity(m_hl, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
 
     for _, row in df_visits.iterrows():
         g = row["group"]
-        k = row["SSR_TYPE"]
+        k = g + "_" + row["SSR_TYPE"]
         
         for a in standard_pathway:
             mco_finance += t_gkal[g][k][a]["finance"] * row["nb"]
@@ -132,7 +224,7 @@ def _get_finance_capacity(m_hl, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
             ssr_finance += t_gkal[g][k]["DAY_HC"]["finance"] * row["nb"]
         elif k == "HDJ":
             ssr_finance += t_gkal[g][k]["KINE_SSR"]["finance"] * row["nb"]
-        elif k == "HC_HDJ":
+        elif k == "HCHDJ":
             ssr_finance += t_gkal[g][k]["KINE_SSR"]["finance"] * row["nb"]
             ssr_finance += t_gkal[g][k]["DAY_HC"]["finance"] * row["nb"]
        
@@ -315,7 +407,7 @@ def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, de
     gdf_geo["adjacent"] = [gdf_geo.loc[gdf_geo.geometry.touches(geom),"can_code"].to_list() for geom in gdf_geo.geometry]
     return gdf_geo
 
-def get_region_affinities(gdf_summary: pd.DataFrame,df_finess: pd.DataFrame) -> dict:
+def get_region_affinities(gdf_summary: pd.DataFrame, df_finess: pd.DataFrame) -> dict:
     """Returns a dict with the affinities of each facility to each region"""
     w_rh = {}
     all_regions = list(gdf_summary["can_code"].unique())
@@ -343,7 +435,7 @@ def get_orth_wrh(can_code, r, list_adjacent):
         return 1
     else: return 0.5
 
-def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: list) -> dict:
+def get_activities_per_group_pathway(list_pathways_ids: list) -> dict:
     """Returns a dictionary with the activities for each group/pathway"""
     #STEP 1: CHIR/ORTHO (pre-op)
     #STEP 2: ANES (pre-op)
@@ -353,21 +445,24 @@ def get_activities_per_group_pathway(list_patientGroups: list, list_pathways: li
     #STEP 6: Post-op KINE allocation (varies by scenario)
     #STEP 7: CHIR/ORTHO (final post-op)
     A_idx = {}
-    for g in list_patientGroups:
-        A_idx[g] = {}
-        for k in list_pathways:
-            A_idx[g][k] = []
-            A_idx[g][k].extend(["CHIR/ORTHO_pre", "ANES"])
-            specialists_activities = g.split("_")[1:]
-            if not "standard" in specialists_activities:
-                A_idx[g][k].extend(specialists_activities)
-            A_idx[g][k].extend(["KINE_MCO"])
-            A_idx[g][k].extend(["CHIR/ORTHO+ANES"])
-            for activity, scenarios in post_op_scenarios.items():
-                for s in scenarios:
-                    if str(g.split("_")[0] + "_" + k) == s and post_op_scenarios[activity][s] != 0:
-                        A_idx[g][k].extend([activity])
-            A_idx[g][k].extend(["CHIR/ORTHO_post"])
+
+    for k in list_pathways_ids:
+        g = "_".join(k.split("_")[:-1])
+        if g not in A_idx:
+            A_idx[g] = {}
+        A_idx[g][k] = []
+        A_idx[g][k].extend(["CHIR/ORTHO_pre", "ANES"])
+        specialists_activities = g.split("_")[1:]
+        if not "standard" in specialists_activities:
+            A_idx[g][k].extend(specialists_activities)
+        A_idx[g][k].extend(["KINE_MCO"])
+        A_idx[g][k].extend(["CHIR/ORTHO+ANES"])
+        scenario = k.split("_")[-1]
+        for activity, scenarios in post_op_scenarios.items():
+            for s in scenarios:
+                if str(g.split("_")[0] + "_" + scenario) == s and post_op_scenarios[activity][s] != 0:
+                    A_idx[g][k].extend([activity])
+        A_idx[g][k].extend(["CHIR/ORTHO_post"])
     return A_idx
     
 def get_transferable(A_idx: dict) -> dict:
@@ -395,23 +490,9 @@ def get_transfer_to(A_idx: dict) -> dict:
     return transfer_to
 
 
-def get_demand_lower_bounds(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame) -> dict:
-    """ Returns ``d_gr'', the lower bound on patients asssigments per patient group, per canton"""
-    d_gr = {}
-    df_groups = df_types_parcours.copy()
-    df_groups = df_groups.groupby(["sej_type", "type_parcours"], as_index=False)["nb"].sum()
-    for _, row in df_groups.iterrows():
-        group = row["sej_type"] + "_" + row["type_parcours"].replace(" + ", "_")
-        frac_visits  = row["nb"] / df_groups["nb"].sum()
-        d_gr[group] = {}
-        for _, gdf_row in gdf_summary.iterrows():
-            can_code = gdf_row["can_code"]
-            frac_pop = gdf_row["pop65p"] / gdf_summary["pop65p"].sum()   
-            d_gr[group][can_code] = float( frac_visits * frac_pop)/2
-    return d_gr
 
 
-def get_required_resources(A_idx):
+def get_required_resources(A_idx, list_resources_ids):
     """Return a dictionary of dims groups x pathways x activities with required resources of each type"""
     default_activities_consumption = {"CHIR/ORTHO_pre": 1, "ANES": 1, "CHIR/ORTHO_post": 1} | {x : 1 for x in specialities}
     dict_required_resources = {}
@@ -421,7 +502,7 @@ def get_required_resources(A_idx):
         for k in A_idx[g].keys():
             dict_required_resources[g][k]={}
             for a in A_idx[g][k]:
-                dict_required_resources[g][k][a] = {l:0 for l in list_resources}
+                dict_required_resources[g][k][a] = {l:0 for l in list_resources_ids}
                 if "pre" in a or "post" in a:
                     l = a.split("_")[0]
                 else: l = a
@@ -429,8 +510,8 @@ def get_required_resources(A_idx):
                     dict_required_resources[g][k][a][l] = default_activities_consumption[a]
                     dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
                 elif a in post_op_scenarios:
-                    dict_required_resources[g][k][a][l] = post_op_scenarios[a][ main_group + "_" + k]
-                    dict_required_resources[g][k][a]["finance"] = post_op_scenarios[a][ main_group + "_" + k] * finance_costs[main_group][a]
+                    dict_required_resources[g][k][a][l] = post_op_scenarios[a][ main_group + "_" + k.split("_")[-1]]
+                    dict_required_resources[g][k][a]["finance"] = post_op_scenarios[a][ main_group + "_" + k.split("_")[-1]] * finance_costs[main_group][a]
                 elif a == "KINE_MCO":
                     dict_required_resources[g][k][a][l] = nb_kine_preop[main_group]
                     dict_required_resources[g][k][a]["finance"] = nb_kine_preop[main_group] * finance_costs[main_group][a]
@@ -443,21 +524,6 @@ def get_required_resources(A_idx):
 
 
 
-def add_orth_facility(list_facilities: list[Facility], list_pathways, list_finess: list, gdf_geo: pd.DataFrame,  p_orth:float) -> list[Facility]:
-    """Append a virtual facility corresponding to patients' home"""
-    orth_resource_capacities = get_frac_resource_capacities(list_facilities, p_orth)
-    default_can_code, default_coords = get_default_geo_info(gdf_geo)
-    list_facilities.append(Facility(
-            facility_id = "ORTH",
-            facility_name = "" ,
-            model_region = default_can_code,
-            coordinates =default_coords , 
-            resources_capacity = orth_resource_capacities,
-            max_transferable_in = {l: 0 if l != "finance" else 100 for l in list_resources },
-            max_transferable_out = {l: 0 if l != "finance" else 100 for l in list_resources },
-            linked_facilities = list_finess,
-            available_pathways= list_pathways))
-    return list_facilities
 
 def get_default_geo_info(gdf_geo):
     """return the default region code and coordinates for DOM and ORTH facilities"""
@@ -466,28 +532,11 @@ def get_default_geo_info(gdf_geo):
     coordinates = [centroid.x, centroid.y]
     return can_code_largest, coordinates
 
-def get_frac_resource_capacities(list_facilities: list[Facility], p_orth:float) -> dict:
+def get_frac_resource_capacities(m_hl, p_orth:float) -> dict:
     """Calculate the ORTHOPEDIC center resource capacities as a percentage of the other facilities capacities"""
-    frac_resources = {r: int(p_orth*sum(x.resources_capacity[r] for x in list_facilities)) for r in list_facilities[0].resources_capacity}
+    frac_resources = {l: p_orth * sum(m_hl[h][l] for h in m_hl.keys()) for l in next(iter(m_hl.values())).keys()}
     frac_resources["KINE_DOM"] = 0
     return frac_resources
-
-def add_dom_facility(list_facilities: list[Facility], list_pathways: list, list_finess: list,
-                     gdf_geo: pd.DataFrame, m_hl: dict) -> list[Facility]:
-    """Append a virtual facility corresponding to patients' home"""
-    default_can_code, default_coords = get_default_geo_info(gdf_geo)
-    
-    list_facilities.append(Facility(
-            facility_id = "DOM",
-            facility_name = "" ,
-            model_region = default_can_code,
-            coordinates =default_coords, 
-            resources_capacity = m_hl["DOM"],
-            max_transferable_in = {l: 0 if l != "finance" else 1 for l in list_resources },
-            max_transferable_out = {l: 0 if l != "finance" else 1 for l in list_resources },
-            linked_facilities = list_finess,
-            available_pathways= list_pathways))
-    return list_facilities
 
 def getFacilityType(nofinesset, df_mco, df_ssr):
     if nofinesset in df_mco["FI_ET"].unique() and nofinesset in df_ssr["FI_ET"].unique():
