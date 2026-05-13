@@ -1,22 +1,7 @@
 ## Create Dataclasses
 from typing import Optional, List
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, ForeignKeyConstraint
 
-
-class GroupPathways(SQLModel, table=True):
-    group_id: str = Field(foreign_key="patientsgroup.id",primary_key=True)
-    pathway_id: str = Field(foreign_key="pathway.id",primary_key=True)
-    
-    
-
-class GroupBenefit(SQLModel, table=True):
-    pathway_id: str = Field(foreign_key="pathway.id",primary_key=True)
-    group_id: str = Field(foreign_key="patientsgroup.id",primary_key=True)
-    benefit: float
-
-class PathwayActivities(SQLModel, table=True):
-    pathway_id: str = Field(foreign_key="pathway.id",primary_key=True)
-    activity_id: str = Field(foreign_key="activity.id", primary_key=True)
 
 class FacilityAffinity(SQLModel, table=True):
     facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)
@@ -34,7 +19,7 @@ class FacilityResources(SQLModel, table=True):
 class FacilityPathways(SQLModel, table=True):
     facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)  
     pathway_id: str = Field(default = None, foreign_key="pathway.id", primary_key=True)
-
+    group_id: str = Field(foreign_key="patientsgroup.id", primary_key=True) 
 
 class LinkedFacilities(SQLModel, table=True):
     facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)  
@@ -42,7 +27,9 @@ class LinkedFacilities(SQLModel, table=True):
     
 
 class ActivityResources(SQLModel, table=True):
-    activity_id: str  = Field(default = None, foreign_key="activity.id", primary_key=True)  
+    activity_id: str  = Field(default = None, foreign_key="activity.id", primary_key=True)
+    pathway_id: str = Field(foreign_key="pathway.id", primary_key=True)
+    group_id: str = Field(foreign_key="patientsgroup.id", primary_key=True)
     resource_id: str = Field(default = None, foreign_key="resource.id", primary_key=True)  
     required_capacity: int
 
@@ -131,31 +118,49 @@ class Facility(SQLModel, table=True):
 class PatientsGroup(SQLModel, table=True):
     id: str = Field(default=None, primary_key=True)   
     lbl:str | None
-    pathways: List["Pathway"] = Relationship(back_populates="groups",
-                                             link_model=GroupPathways)
+    pathways: List["Pathway"] =  Relationship(back_populates="group")
 
 
 class Pathway(SQLModel, table=True):
     id : str = Field(default=None, primary_key=True)
-    quality_level: str 
-    activities: List["Activity"] = Relationship(back_populates="pathways", link_model=PathwayActivities)
-    groups : List["PatientsGroup"] = Relationship(back_populates="pathways", link_model=GroupPathways)
-    group_benefits : list["GroupBenefit"] = Relationship()
-
+    group_id: str = Field(foreign_key="patientsgroup.id", primary_key=True)
+    quality_level: str
+    group : "PatientsGroup" = Relationship(back_populates="pathways")
+    group_benefit : float
+    activities: List["Activity"] = Relationship(back_populates="pathway",
+                                                sa_relationship_kwargs={
+                                                    "foreign_keys": "[Activity.pathway_id, Activity.group_id]",
+                                                    "primaryjoin": ("and_(Pathway.id == Activity.pathway_id, Pathway.group_id == Activity.group_id)")})
+    
     @property
-    def group_benefit(self) -> dict:
-        return {gb.group_id: gb.benefit for gb in self.group_benefits}
+    def available_activities(self) -> list:
+        return [a.id for a in self.activities]
+
+
 
 class Activity(SQLModel, table=True):
     id: str = Field(default=None, primary_key=True)
+    pathway_id: str = Field(foreign_key="pathway.id", primary_key=True)
+    group_id: str = Field(foreign_key="patientsgroup.id", primary_key=True)
     transferable: bool
     transfer_to: str | None = Field(default=None, foreign_key="activity.id")
-    pathways: List["Pathway"] = Relationship(back_populates="activities", link_model=PathwayActivities)
+    pathway: "Pathway" = Relationship(back_populates="activities", 
+                                      sa_relationship_kwargs={
+                                          "foreign_keys": "[Activity.pathway_id, Activity.group_id]",
+                                          "primaryjoin": ("and_(Pathway.id == Activity.pathway_id, Pathway.group_id == Activity.group_id)")})
     activity_resources: List["ActivityResources"] = Relationship()
+        
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["pathway_id", "group_id"],
+            ["pathway.id", "pathway.group_id"]
+        ),
+    )
+
 
     @property
-    def associated_pathways(self) ->  list:
-        return [pathways.id for pathways in self.pathways]
+    def associated_pathway(self) ->  str:
+        return self.pathway.id
 
     @property
     def required_resources(self) -> dict:

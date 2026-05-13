@@ -89,29 +89,29 @@ def get_PatientGroups(list_group_ids: list) -> list[PatientsGroup]:
     return list_patientsGroups
 
 
-def get_Activities(list_pathways_ids: list, A_idx: dict) -> list[Activity]:
+def get_Activities(A_idx: dict) -> list[Activity]:
     """ get activities """
     list_activities = []
-    list_added_ids = []
     tranferable_activities = get_transferable(A_idx)
     transfer_to_activities = get_transfer_to(A_idx)
-    for k in list_pathways_ids:
-        g = "_".join(k.split("_")[:-1])
-        for a in A_idx[g][k]:
-            if a not in list_added_ids:
+    for g in A_idx.keys():
+        for k in A_idx[g].keys():
+            for a in A_idx[g][k]:
                 if a in transfer_to_activities[g][k]: 
                     transfer_to = transfer_to_activities[g][k][a]
                 else: transfer_to = ""
                 list_activities.append(
-                    Activity(id= a, transferable=a in tranferable_activities[g][k],
+                    Activity(id= a, pathway_id=k, group_id=g, transferable=a in tranferable_activities[g][k],
                         transfer_to= transfer_to))
-                list_added_ids.append(a)
     return list_activities
 
 
-def get_PatientPathways(list_pathways_ids: list, quality_levels:dict) -> list[Pathway]:
+def get_PatientPathways(list_pathways_ids: list, list_groups: list, pathway_benefit:dict, quality_levels:dict) -> list[Pathway]:
     """ get patients pathways"""
-    list_pathways = [Pathway(id=p_id, quality_level = quality_levels[p_id.split("_")[-1]]) for p_id in list_pathways_ids]
+    list_pathways = [] 
+    for g in list_groups:                      
+        list_pathways.extend([Pathway(id=p_id, group_id = g, quality_level = quality_levels[p_id],
+                            group_benefit = pathway_benefit[p_id]) for p_id in list_pathways_ids])
     return list_pathways
 
 def get_data(dep_code: str):
@@ -148,8 +148,7 @@ def serialize_ptgpth_core(
     """Serialize PTG PTH Data and write to file"""
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.mappers.datasets_mappers.ptgpth_utils import get_ActivityResources, get_FacilityAffinity,\
-    get_FacilityResources, get_FacilityPathways, get_LinkedFacilities, get_CaseMixRatios, get_TreatmentBounds, get_QualityBounds,\
-    get_GroupBenefit, get_PathwayActivities, get_GroupPathways
+    get_FacilityResources, get_FacilityPathways, get_LinkedFacilities, get_CaseMixRatios, get_TreatmentBounds, get_QualityBounds
     import json
     from sqlmodel import Session, SQLModel, create_engine
  
@@ -158,31 +157,28 @@ def serialize_ptgpth_core(
 
     df_types_parcours, df_mco, df_ssr, gdf_summary, df_finess = get_data(dep_code)
     list_patientGroups_ids = list(set(df_types_parcours['sej_type'] +  "_" + df_types_parcours['type_parcours'].str.replace(" + ", "_", regex=False)))
-    list_post_op_trajectories =  list(df_types_parcours["SSR_TYPE"].unique())
-    list_pathways_ids = [p + "_" +trj for p in list_patientGroups_ids for trj in list_post_op_trajectories ]
-    A_idx = get_activities_per_group_pathway(list_pathways_ids)
+    list_pathways_ids =  list(df_types_parcours["SSR_TYPE"].unique())
+    A_idx = get_activities_per_group_pathway(list_pathways_ids, list_patientGroups_ids)
     t_gkal = get_required_resources(A_idx, list_resources_ids)
 
     list_Regions = get_Regions(gdf_summary)
     list_Resources = get_Resources(list_resources_ids)
     list_PatientsGroups = get_PatientGroups(list_patientGroups_ids)
-    list_Activities = get_Activities(list_pathways_ids, A_idx)
+    list_Activities = get_Activities(A_idx)
     list_Facilities = get_Facilities(df_mco, df_ssr, df_finess, dep_code)
-    list_Pathways = get_PatientPathways(list_pathways_ids, quality_levels)
+    list_Pathways = get_PatientPathways(list_pathways_ids, list_patientGroups_ids, pathway_benefit, quality_levels)
     instance = get_Instance(resources_mult, p_transf)
 
     list_facility_affinities = get_FacilityAffinity(df_finess, gdf_summary)
     list_facility_resources = get_FacilityResources(t_gkal, list_resources_ids, df_mco, df_ssr, df_finess, df_types_parcours,
                                                     p_orth, resources_mult)
-    list_facility_pathways = get_FacilityPathways(list_pathways_ids, list_Facilities)
+    list_facility_pathways = get_FacilityPathways(list_pathways_ids, list_patientGroups_ids, list_Facilities)
     list_linked_facilities = get_LinkedFacilities(list_Facilities)
     list_activity_resources = get_ActivityResources(t_gkal,  A_idx)
     list_case_mix_ratios = get_CaseMixRatios(gdf_summary, df_types_parcours)
     list_treatment_bounds = get_TreatmentBounds(list_PatientsGroups)
     list_quality_bounds = get_QualityBounds(quality_levels, list_patientGroups_ids)
-    list_group_benefits = get_GroupBenefit(list_pathways_ids, list_patientGroups_ids, pathway_benefit)
-    list_pathway_activities = get_PathwayActivities(A_idx)
-    list_group_pathways = get_GroupPathways(list_pathways_ids)
+
 
     DATABASE_URL = "sqlite://"
     engine = create_engine(DATABASE_URL)
@@ -190,7 +186,7 @@ def serialize_ptgpth_core(
     with Session(engine) as session:
         session.add_all([instance] + list_Regions + list_Facilities + list_Resources + list_PatientsGroups + list_Pathways + list_Activities +
                          list_facility_affinities + list_facility_resources + list_facility_pathways + list_linked_facilities + list_activity_resources +
-                         list_case_mix_ratios + list_treatment_bounds + list_quality_bounds + list_group_benefits + list_pathway_activities + list_group_pathways)
+                         list_case_mix_ratios + list_treatment_bounds + list_quality_bounds)
 
         session.flush()
         params_system = convert_dm_to_json(session)

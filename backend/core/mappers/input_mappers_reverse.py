@@ -65,7 +65,8 @@ def create_Activities_from_json(params_system: dict) -> list:
                 is_transferable = (a in params_system["N_gka_1"][g][k])
                 transfer_to = None
                 if is_transferable: transfer_to = params_system["N_gka_2"][g][k][a]
-                list_activities.append(Activity(id=a, 
+                list_activities.append(Activity(id=a,
+                                                group_id=g,
                                                 pathway_id=k, 
                                                 transferable=is_transferable, 
                                                 transfer_to=transfer_to))
@@ -87,7 +88,7 @@ def create_FacilityPathways(params_system: dict) -> list:
         for k in params_system["K_idx"][g]:
                 for h in params_system["H"]:
                     if h in params_system["O_gk"][g][k]:
-                        facility_pathways.append(FacilityPathways(facility_id=h, pathway_id=k))
+                        facility_pathways.append(FacilityPathways(facility_id=h, group_id=g, pathway_id=k))
     return facility_pathways
 
 
@@ -130,7 +131,7 @@ def create_ActivityResources(params_system: dict) -> list:
             for a in params_system["A_idx"][g][k]:
                 for l in params_system["L"]:
                     if l in params_system["t_gkal"][g][k][a]:
-                        activity_resources.append(ActivityResources(activity_id=a, resource_id=l, required_capacity=params_system["t_gkal"][g][k][a][l]))      
+                        activity_resources.append(ActivityResources(activity_id=a, pathway_id=k, group_id=g, resource_id=l, required_capacity=params_system["t_gkal"][g][k][a][l]))      
     return activity_resources
 
 def create_TreatmentBounds(params_system: dict) -> list:
@@ -172,5 +173,5 @@ def convert_dm_from_json(params_system: dict, session: Session):
     session.add_all([instance] + list_regions + list_facilities + list_resources + list_patients + list_pathways + list_activities+
                     list_facility_affinities + list_facility_resources + list_facility_pathways + list_linked_facilities +
                     list_activity_resources + list_case_mix_ratios + list_treatment_bounds + list_quality_bounds)
-    session.commit()
+    
     return session

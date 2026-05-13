@@ -1,9 +1,8 @@
 import pandas as pd
 import geopandas as gpd
-from backend.core.data_models.input_models import Facility
 from typing import Tuple
 from backend.core.data_models.input_models import FacilityAffinity, FacilityResources, FacilityPathways, LinkedFacilities, ActivityResources,\
-    CaseMixRatios, TreatmentBounds, QualityBounds, GroupPathways, GroupBenefit, PathwayActivities
+    CaseMixRatios, TreatmentBounds, QualityBounds
 
 
 nb_kine_preop = {"PTG":10, "PTH":15}
@@ -27,11 +26,11 @@ df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU",
 
 
 def get_FacilityAffinity(df_finess: pd.DataFrame, gdf_summary: pd.DataFrame):
-    list_finess = list(df_finess["nofinesset"].unique()) + ["DOM" + "ORTH"]
+    list_finess = list(df_finess["nofinesset"].unique()) + ["DOM", "ORTH"]
     affinities = get_region_affinities(gdf_summary, df_finess)
     return [
         FacilityAffinity(facility_id= nofinesset,region_id= can_code, affinity_score = affinities[can_code][nofinesset]) 
-            for nofinesset, can_code in zip(list_finess,gdf_summary["can_code"])]
+            for nofinesset in list_finess for can_code in gdf_summary["can_code"]]
 
 
 def get_FacilityResources(t_gkal: dict, list_resources_ids: list,df_mco : pd.DataFrame, df_ssr : pd.DataFrame,
@@ -50,23 +49,8 @@ def get_FacilityResources(t_gkal: dict, list_resources_ids: list,df_mco : pd.Dat
                                                      max_transferable_in=max_transferable_in[l], max_transferable_out=max_transferable_out[l]) for l in orth_resource_capacities)
     return list_facility_resources
 
-
-def get_PathwayActivities(A_idx):
-    return [PathwayActivities(pathway_id=p, activity_id=a)
-            for group_dict in A_idx.values()
-            for p, activities in group_dict.items()
-            for a in activities]
-
-def get_GroupBenefit(list_pathways_ids: list, list_patientsGroups_ids: list, pathway_benefit:dict) -> list:
-    return [GroupBenefit(pathway_id=k, group_id=g, benefit=pathway_benefit[k.split("_")[-1]]) 
-            for k in list_pathways_ids for g in list_patientsGroups_ids ]
-
-
-def get_GroupPathways(list_pathways_ids):
-    return [GroupPathways(group_id="_".join(k.split("_")[:-1]), pathway_id=k) for k in list_pathways_ids]
-
-def get_FacilityPathways(list_pathways_ids, list_facilities):
-    return [FacilityPathways(facility_id=h.id, pathway_id=k) for h in list_facilities for k in list_pathways_ids]
+def get_FacilityPathways(list_pathways_ids, list_group_ids, list_facilities):
+    return [FacilityPathways(facility_id=h.id, pathway_id=k, group_id=g) for h in list_facilities for k in list_pathways_ids for g in list_group_ids]
 
 
 def get_LinkedFacilities(list_facilities):
@@ -81,7 +65,7 @@ def get_ActivityResources(t_gkal: dict, A_idx) -> list:
                 for l, cap in t_gkal[g][k][a].items():
                     if (a, l) not in unique:
                         unique[(a, l)] = cap
-    return [ActivityResources(activity_id=a, resource_id=l, required_capacity=cap) 
+    return [ActivityResources(activity_id=a, pathway_id=k, group_id=g,resource_id=l, required_capacity=cap) 
             for (a, l), cap in unique.items()]
 
 def get_CaseMixRatios(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame):
@@ -210,7 +194,7 @@ def _get_finance_capacity(m_hl, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
 
     for _, row in df_visits.iterrows():
         g = row["group"]
-        k = g + "_" + row["SSR_TYPE"]
+        k = row["SSR_TYPE"]
         
         for a in standard_pathway:
             mco_finance += t_gkal[g][k][a]["finance"] * row["nb"]
@@ -435,7 +419,7 @@ def get_orth_wrh(can_code, r, list_adjacent):
         return 1
     else: return 0.5
 
-def get_activities_per_group_pathway(list_pathways_ids: list) -> dict:
+def get_activities_per_group_pathway(list_pathways_ids: list, list_groups_ids: list) -> dict:
     """Returns a dictionary with the activities for each group/pathway"""
     #STEP 1: CHIR/ORTHO (pre-op)
     #STEP 2: ANES (pre-op)
@@ -445,24 +429,21 @@ def get_activities_per_group_pathway(list_pathways_ids: list) -> dict:
     #STEP 6: Post-op KINE allocation (varies by scenario)
     #STEP 7: CHIR/ORTHO (final post-op)
     A_idx = {}
-
-    for k in list_pathways_ids:
-        g = "_".join(k.split("_")[:-1])
-        if g not in A_idx:
-            A_idx[g] = {}
-        A_idx[g][k] = []
-        A_idx[g][k].extend(["CHIR/ORTHO_pre", "ANES"])
-        specialists_activities = g.split("_")[1:]
-        if not "standard" in specialists_activities:
-            A_idx[g][k].extend(specialists_activities)
-        A_idx[g][k].extend(["KINE_MCO"])
-        A_idx[g][k].extend(["CHIR/ORTHO+ANES"])
-        scenario = k.split("_")[-1]
-        for activity, scenarios in post_op_scenarios.items():
-            for s in scenarios:
-                if str(g.split("_")[0] + "_" + scenario) == s and post_op_scenarios[activity][s] != 0:
-                    A_idx[g][k].extend([activity])
-        A_idx[g][k].extend(["CHIR/ORTHO_post"])
+    for g in list_groups_ids:
+        A_idx[g] = {}
+        for k in list_pathways_ids:
+            A_idx[g][k] = []
+            A_idx[g][k].extend(["CHIR/ORTHO_pre", "ANES"])
+            specialists_activities = g.split("_")[1:]
+            if not "standard" in specialists_activities:
+                A_idx[g][k].extend(specialists_activities)
+            A_idx[g][k].extend(["KINE_MCO"])
+            A_idx[g][k].extend(["CHIR/ORTHO+ANES"])
+            for activity, scenarios in post_op_scenarios.items():
+                for s in scenarios:
+                    if str(g.split("_")[0] + "_" + k) == s and post_op_scenarios[activity][s] != 0:
+                        A_idx[g][k].extend([activity])
+            A_idx[g][k].extend(["CHIR/ORTHO_post"])
     return A_idx
     
 def get_transferable(A_idx: dict) -> dict:
@@ -510,8 +491,8 @@ def get_required_resources(A_idx, list_resources_ids):
                     dict_required_resources[g][k][a][l] = default_activities_consumption[a]
                     dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
                 elif a in post_op_scenarios:
-                    dict_required_resources[g][k][a][l] = post_op_scenarios[a][ main_group + "_" + k.split("_")[-1]]
-                    dict_required_resources[g][k][a]["finance"] = post_op_scenarios[a][ main_group + "_" + k.split("_")[-1]] * finance_costs[main_group][a]
+                    dict_required_resources[g][k][a][l] = post_op_scenarios[a][ main_group + "_" + k]
+                    dict_required_resources[g][k][a]["finance"] = post_op_scenarios[a][ main_group + "_" + k] * finance_costs[main_group][a]
                 elif a == "KINE_MCO":
                     dict_required_resources[g][k][a][l] = nb_kine_preop[main_group]
                     dict_required_resources[g][k][a]["finance"] = nb_kine_preop[main_group] * finance_costs[main_group][a]
