@@ -65,11 +65,12 @@ def add_dom_facility(list_facilities: list[Facility],
 
 
 
-def get_Instance(mult:float, p_transf: float) -> Instance:
+def get_Instance(total_demand: float, mult:float, p_transf: float) -> Instance:
     """Returns object to store optimization instance parameters."""
     
     return Instance(
             id="default",
+            total_demand=total_demand,
             perc_demand=1,
             perc_capacity=mult,
             perc_transfers = p_transf,
@@ -167,7 +168,7 @@ def serialize_ptgpth_core(
     list_Activities = get_Activities(A_idx)
     list_Facilities = get_Facilities(df_mco, df_ssr, df_finess, dep_code)
     list_Pathways = get_PatientPathways(list_pathways_ids, list_patientGroups_ids, pathway_benefit, quality_levels)
-    instance = get_Instance(resources_mult, p_transf)
+    instance = get_Instance(int(df_types_parcours["nb"].sum()), resources_mult, p_transf)
 
     list_facility_affinities = get_FacilityAffinity(df_finess, gdf_summary)
     list_facility_resources = get_FacilityResources(t_gkal, list_resources_ids, df_mco, df_ssr, df_finess, df_types_parcours,

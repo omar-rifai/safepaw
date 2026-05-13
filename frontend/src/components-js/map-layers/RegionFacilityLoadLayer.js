@@ -5,7 +5,7 @@ export function RegionFacilityLoadLayer({ loads, regions, selectedItem }) {
     if (!selectedItem.properties) { return null }
 
     const tolerance = 0.0001;
-    const maxLoad = loads.reduce((max, d) => Math.max(max, d.properties.load), 0);
+    const maxLoad = loads?.reduce((max, d) => Math.max(max, d.properties.load), 0);
 
     const facilityLoads = (loads || [])
         .filter(d => d.properties.region_id != null &&

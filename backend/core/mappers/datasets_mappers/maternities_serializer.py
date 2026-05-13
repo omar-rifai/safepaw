@@ -67,12 +67,13 @@ def get_Facilities(df_instance: pd.DataFrame) -> list[Facility]:
 
 
 
-def get_Instance() -> Instance:
+def get_Instance(df_instance) -> Instance:
     """Returns object to store optimization instance parameters"""
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")    
     return Instance(
             id= "maternity",
+            total_demand =int(df_instance["deliveries_per_facility"].sum()),
             perc_demand = 1,
             perc_capacity = 1,
             perc_transfers = config["allowed_transfer_fraction"],
@@ -134,7 +135,7 @@ def serialize_maternity_core(df_instance, save_params: bool = False) -> Union[di
         list_patients = get_PatientsGroups(FACILITY_TYPES)
         list_pathways = get_PatientPathways(FACILITY_TYPES)
         list_activities = get_Activities(FACILITY_TYPES)
-        instance = get_Instance()
+        instance = get_Instance(df_instance)
         list_qualities = list(set([k.quality_level for k in list_pathways]))
         
         list_facility_affinities = get_FacilityAffinity(df_instance, DF_GEO_COMMS_METERS)

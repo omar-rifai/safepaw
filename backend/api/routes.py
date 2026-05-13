@@ -40,28 +40,29 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
 
 
 
+
 @api.put("/facilities/{id}")
-
-async def update_facility(id: int, payload: dict = Body(...)) -> JSONResponse:
+async def read_facility(id: str, payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     import traceback
-    from backend.api.services import unify_updated_facility
-    try:
-        facilities = payload["facilities"]
-        updated = payload["updated"]
-        for h in facilities:
-            if str(h["facility_id"]) == str(id):
-                unified = unify_updated_facility(payload["mode"], updated)
-                print("before:", h)
-                print("unified:", unified)
-                h.update(unified)
-                print("after:", h)
-        return JSONResponse(status_code=200, content = {"facilities": facilities})
-        
-    except ExecutableNotFound as e:
-        raise HTTPException(status_code=500, detail=str(e))
+ 
+    from backend.api.services import get_facilities_capacities, get_DataGridEntries
 
-    except Exception as e:
-        print("Error in optimize route:", e)
+    try:
+        facility_id = None if id == "all" else id
+        facilities_capacities = get_facilities_capacities(session, facility_id)
+        data_grid_entries = get_DataGridEntries(session, facility_id)
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "facilities_capacities":[f.model_dump() for f in facilities_capacities],
+                "entries": data_grid_entries,
+                "bbox": payload["bbox"]
+            },
+        )
+
+    except Exception:
+        print("Error in api.read_file route:")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -75,7 +76,7 @@ async def read_maternites(params: dict = Body(...), session:Session = Depends(ge
 
     try:
         clear_all_tables(session)
-        session = convert_dm_from_json(params, session)
+        convert_dm_from_json(params, session)
         session.commit()
         facilities_capacities = get_facilities_capacities(session)
         data_grid_entries = get_DataGridEntries(session)

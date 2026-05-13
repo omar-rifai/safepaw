@@ -74,7 +74,7 @@ def create_Activities_from_json(params_system: dict) -> list:
 
 def create_Instance_from_json(params_system: dict) -> list:
     """Returns Instance Object from model params"""
-    instance = Instance(id=params_system["mode"], perc_demand=1, perc_capacity=1, perc_transfers=params_system["p_transf"],alpha=params_system["alpha"])
+    instance = Instance(id=params_system["mode"], total_demand=params_system["D"], perc_demand=1, perc_capacity=1, perc_transfers=params_system["p_transf"],alpha=params_system["alpha"])
                         
     return instance
 

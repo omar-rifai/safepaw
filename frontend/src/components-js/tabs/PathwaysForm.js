@@ -15,7 +15,7 @@ export default function PathwaysForm() {
     const rows = pathways
 
     function getRowId(row) {
-        return (row.pathway_id + row.associated_group_id);
+        return (row.pathway_id + row.group_id);
     }
 
     return (

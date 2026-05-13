@@ -1,8 +1,8 @@
 
 import './forms.css'
-import { useState, useContext, } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import { Stack, Tabs, Tab } from "@mui/material";
-import { DataContext } from '../App';
+import { UIContext, DataContext } from '../App';
 import FacilitiesForm from './tabs/FacilitiesForm';
 import PathwaysForm from './tabs/PathwaysForm';
 import ResourcesForm from './tabs/ResourcesForm';
@@ -15,17 +15,33 @@ import VaccinesIcon from '@mui/icons-material/Vaccines';
 import TuneIcon from '@mui/icons-material/Tune';
 
 
-
-
-
 export default function ManualInputForm() {
     const [activeTab, setActiveTab] = useState("tab-facilities")
-    const { setOutputData } = useContext(DataContext);
+    const { deckGLData } = useContext(UIContext);
+    const { inputData, setInputData } = useContext(DataContext);
     const handleChange = (_, val) => {
         setActiveTab(val);
-        setOutputData(null)
     };
 
+    useEffect(() => {
+        async function loadFacility() {
+            try {
+                const url = `/api/facilities/${deckGLData?.facility_id ?? "all"}`;
+                const response = await fetch(url, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        "bbox": inputData.bbox,
+                    })
+                });
+                const data = await response.json();
+                setInputData(data)
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        loadFacility()
+    }, [deckGLData]);
 
     return (
 
@@ -34,9 +50,9 @@ export default function ManualInputForm() {
                 scrollButtons="auto">
                 <Tab label="Facilities" value="tab-facilities" sx={{ fontSize: 10 }} icon={<LocalHospitalIcon sx={{ fontSize: 20 }} />} />
                 <Tab label="Pathways" value="tab-pathways" sx={{ fontSize: 10 }} icon={<RouteIcon sx={{ fontSize: 20 }} />} />
-                <Tab label="Patient Groups" value="tab-patients" sx={{ fontSize: 10 }} icon={<PersonalInjuryIcon sx={{ fontSize: 20 }} />}  />
+                <Tab label="Patient Groups" value="tab-patients" sx={{ fontSize: 10 }} icon={<PersonalInjuryIcon sx={{ fontSize: 20 }} />} />
                 <Tab label="Resources" value="tab-resources" sx={{ fontSize: 10 }} icon={<VaccinesIcon sx={{ fontSize: 20 }} />} />
-                <Tab label="Model Configuration" value="tab-instance" sx={{ fontSize: 10, maxWidth:100 }} icon={<TuneIcon sx={{ fontSize: 20 }} />}   wrapped />
+                <Tab label="Model Configuration" value="tab-instance" sx={{ fontSize: 10, maxWidth: 100 }} icon={<TuneIcon sx={{ fontSize: 20 }} />} wrapped />
             </Tabs>
             {activeTab == "tab-facilities" && <FacilitiesForm />}
             {activeTab == "tab-pathways" && <PathwaysForm />}

@@ -170,6 +170,7 @@ class Activity(SQLModel, table=True):
 class Instance(SQLModel, table=True):
     id: str = Field(default="default",primary_key=True) # the optimization ``mode'' we want to run
     perc_demand: float
+    total_demand: float
     perc_capacity: float
     perc_transfers: float
     alpha: float

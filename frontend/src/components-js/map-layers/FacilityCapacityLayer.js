@@ -1,5 +1,9 @@
 import { ScatterplotLayer } from "@deck.gl/layers";
 import chroma from "chroma-js"
+import {  useContext } from 'react'
+import { UIContext } from '../../App';
+
+
 
 function getMaxCapacities(facilities) {
   return facilities.reduce((acc, facility) => {
@@ -30,7 +34,7 @@ function getNormalizedCapacityAvg(facility, max_capacities) {
 
 const color_scale = chroma.scale(chroma.brewer.Set2)
 function getColor(type) {
-   if (!type) return [0, 0, 255, 100]
+  if (!type) return [0, 0, 255, 100]
   const hash = [...type].reduce((a, c) => a + c.charCodeAt(0), 0);
   const [r, g, b, a] = color_scale(hash % 10 / 10).rgba();
   return [Math.round(r), Math.round(g), Math.round(b), Math.round(a * 255)];
@@ -48,7 +52,7 @@ export function FacilityCapacityLayer({ facilities }) {
   if (facilities.length === 0) {
     return null;
   }
- 
+  const { setDeckGLData } = useContext(UIContext);
   const max_capacities = getMaxCapacities(facilities)
   const facilities_w_avg = facilities.map(f => getNormalizedCapacityAvg(f, max_capacities))
 
@@ -61,6 +65,12 @@ export function FacilityCapacityLayer({ facilities }) {
       getFillColor: d => getColor(d["facility_type"]),
       getLineColor: [255, 255, 255, 180],
       lineWidthMinPixels: 2,
+      onClick: info => {
+        console.log("info on click", info.object)
+        if (info.object) {
+          setDeckGLData(info.object);
+        }
+      },
       radiusUnits: 'pixels',
       pickable: true,
       updateTriggers: {

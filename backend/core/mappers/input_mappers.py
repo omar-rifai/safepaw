@@ -247,7 +247,7 @@ def create_json_from_instance(instance: Instance,  params_system: dict) -> dict:
     """ Adds json parameters ("D", mode, "p_transf" and "alpha")
     associated with an Instance object to params_system
     """
-    params_system["D"] = 0#instance.d_total
+    params_system["D"] = instance.total_demand
     params_system["alpha"] = instance.alpha
     params_system["mode"] = instance.id
     params_system["p_transf"] = instance.perc_transfers
