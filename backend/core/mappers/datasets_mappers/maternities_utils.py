@@ -34,17 +34,17 @@ def get_FacilityResources(df_instance: pd.DataFrame, max_transferable_in : int =
 
 def get_FacilityPathways(list_facilities):
     pathways_dict = {"1": ["p1"], "2a": ["p1", "p2a"], "2b" :["p1", "p2a", "p2b"], "3": ["p1", "p2a", "p2b", "p3"]}
-    return [FacilityPathways(facility_id=f.id, pathway_id=p) for f in list_facilities for p in pathways_dict[f.facility_type]]
+    return [FacilityPathways(facility_id=f.id, group_id=f.facility_type, pathway_id=p) for f in list_facilities for p in pathways_dict[f.facility_type]]
 
 
 def get_LinkedFacilities(list_facilities):
-    return [LinkedFacilities(facility_id=f.id, linked_facility_id=lf.id) for f in list_facilities for lf in list_facilities]
+    return [LinkedFacilities(facility_id=f.id, linked_facility_id=lf.id) for f in list_facilities for lf in list_facilities if f.id != lf.id]
 
 def get_ActivityResources():
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")
     required_resources={"cap":config["avg_length_of_stay"]}
-    return [ActivityResources(activity_id="a"+g, resource_id=r, required_capacity=cap) for g in ["1", "2a", "2b", "3"]
+    return [ActivityResources(activity_id="a"+g, pathway_id= "p"+g, group_id=g, resource_id=r, required_capacity=cap) for g in ["1", "2a", "2b", "3"]
             for r, cap in required_resources.items()]
 
 
