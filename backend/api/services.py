@@ -72,21 +72,24 @@ def get_DataGridEntries(session: Session) -> dict:
 
 
 
-def unify_updated_facility(mode, updated: dict) -> dict:
-    from backend.core.mappers.datasets_mappers.maternite_serializer import _get_available_pathways
-    if mode == "maternity":
-        new_dict = {**updated, "resources_capacity":updated["resources_capacity"],
-                     "available_pathways":_get_available_pathways(updated["facility_type"])}
-    else:
-        new_dict = updated
-    return new_dict
+def clear_all_tables(session):
+    from sqlmodel import text, SQLModel
+    session.exec(text("PRAGMA foreign_keys=OFF"))  # SQLite only
 
-def run_optimization(params: dict, mode:str="default") -> Tuple[str, str, list, dict]:
+    for table in reversed(SQLModel.metadata.sorted_tables):
+        session.exec(text(f"DELETE FROM {table.name}"))
+
+    session.commit()
+
+
+
+
+def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     """Returns status, objective function as str and a dict of result variables"""
     from backend.core.main import run_driver
     check_executable()
     print("Starting optimization driver...")
-    status, objective, results = run_driver(params, mode)
+    status, objective, results = run_driver(params)
     print("Optimization driver finished with status:", status)
     objective_str = f"{objective:.2f}" if objective is not None else None
     return status, objective_str, results

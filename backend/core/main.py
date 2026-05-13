@@ -18,7 +18,7 @@ class OptVars(BaseModel):
     z_hl_moins: Any
     s_hl: Any
 
-def run_driver(params_system, mode="default"):
+def run_driver(params_system):
 
     LP = pulp.LpProblem('regional_case_mix', pulp.LpMaximize)
 
@@ -67,9 +67,9 @@ def run_driver(params_system, mode="default"):
 
     vars_system = OptVars(P=P,P_gkr=P_gkr,P_gk=P_gk,Q=Q,Delta_plus=Delta_plus, Delta_moins=Delta_moins, z_hl_plus=z_hl_plus, z_hl_moins=z_hl_moins, s_hl=s_hl)
 
-    set_obj_fn(LP, P_gk, P, Delta_plus, Delta_moins, s_hl, params_system, mode)
+    set_obj_fn(LP, P_gk, P, Delta_plus, Delta_moins, s_hl, params_system)
     print("Declaring Constraints...")
-    declare_constraints(LP, vars_system, params_system, mode)
+    declare_constraints(LP, vars_system, params_system)
     print("Starting solver...")
     if "GRB_LICENSE_FILE" in os.environ:
         LP.solve(pulp.GUROBI(msg=1))

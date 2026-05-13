@@ -11,9 +11,9 @@ from pulp import *
 
 # Define the objective function for LP
     
-def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system, mode):
+def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system):
     
-    match mode:
+    match params_system["mode"]:
         case "default":
             LP += (1 - params_system["alpha"]) * lpSum([params_system["c_gk"][g][k] * params_system["D"] * P_gk[g][k] 
                                                         for g in params_system["G"]
@@ -41,7 +41,7 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system, mode):
                                                                    for h in params_system["H"]
                                                                    for l in params_system["L"]])
         case _:
-            raise ValueError(f"Objective function definition in mode {mode} is undefined.")
+            raise ValueError(f"Objective function definition in mode {params_system["mode"]} is undefined.")
 
 
 
@@ -436,7 +436,7 @@ def def_const_demand(LP, vars_system, params_system):
 
 
 
-def declare_constraints(LP, vars_system, params_system, mode):
+def declare_constraints(LP, vars_system, params_system):
 
     CONSTRAINTS_DEFAULT=[def_const_P_gkr, def_const_P_gk, def_const_d_gr, def_const_q_g, def_const_Overq_g, def_const_q_gk, def_const_Overq_gk,
                            def_const_O_gk, def_const_J_h, def_const_Q_gkrah, def_const_f, def_const_Q, def_const_m_hl, def_const_delta_zero,
@@ -450,7 +450,7 @@ def declare_constraints(LP, vars_system, params_system, mode):
                            def_const_O_gk, def_const_J_h, def_const_m_hl, def_const_delta_zero, def_const_delta_plus_delta, def_const_delta_moins_delta,
                            def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
 
-    match mode:
+    match params_system["mode"]:
         case "default":
             print("Defining default set of constraints.")
             for fn in CONSTRAINTS_DEFAULT:
@@ -464,4 +464,4 @@ def declare_constraints(LP, vars_system, params_system, mode):
             for fn in CONSTRAINTS_MATERNITY:
                 fn(LP, vars_system, params_system)
         case _:
-            raise ValueError(f"Constraints definition in {mode} is undefined.")
+            raise ValueError(f"Constraints definition in {params_system["mode"]} is undefined.")

@@ -7,7 +7,7 @@ import { DataContext } from '../../App';
 export default function PathwaysForm() {
     const { inputData } = useContext(DataContext);
     const pathways = inputData.entries?.pathways || inputData.instance?.pathways || [];
-    const columns = [{ field: 'pathway_id', headerName: 'Pathway ID', width: 130 }, { field: 'group_id', headerName: 'Patients Group' },
+    const columns = [{ field: 'pathway_id', headerName: 'Pathway ID', width: 100 }, { field: 'group_id', headerName: 'Patients Group', width: 160 },
     { field: "activities", headerName: "Activities List", width: 400 }
     ];
 

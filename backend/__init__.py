@@ -2,12 +2,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .api.routes import api  # import APIRouter from routes.py
+from sqlmodel import SQLModel 
+from backend.db import engine
 
 def create_app() -> FastAPI:
     """
     Factory function to create FastAPI app with CORS and routes.
     """
-    app = FastAPI(title="Optimization API")
+
+    async def lifespan(app:FastAPI):
+        SQLModel.metadata.create_all(engine)
+        yield
+
+    app = FastAPI(title="Optimization API", lifespan=lifespan)
 
     # Add CORS middleware
     app.add_middleware(

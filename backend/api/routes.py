@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Depends
 from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
+from backend.db import get_session
+from sqlmodel import Session
+
 
 api = APIRouter()
 
@@ -9,32 +12,15 @@ def health():
     return {"status": "ok"}
 
 @api.post("/optimize")
-async def optimize(payload: dict = Body(...)) -> JSONResponse:
+async def optimize(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
     from backend.api.services import run_optimization
     from backend.core.mappers.input_mappers import convert_dm_to_json
-    from backend.core.mappers.output_mappers import create_facilityLoad
-    from backend.core.data_models.input_models import SystemData
     import traceback
     try: 
-        if payload["steps"]["preprocess"]:
-            data = SystemData.model_validate(payload["data"])
-            params = convert_dm_to_json(data)
-        else:
-            params = payload["data"]
-        
-        if payload["steps"]["optimize"]:
-            status, objective_str, dict_results = run_optimization(params, params["mode"])  
-
-            if payload["steps"]["postprocess"] and payload["steps"]["optimize"]:
-                list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityLoad(dict_results, params)]
-    
-                return JSONResponse(status_code=200, content = {"status": status, "results": {"list_facility_load": list_facility_load,
-                                                                                               "regions": list(params["regions_metadata"].keys())}})
-            
-            return JSONResponse(status_code=200, content = {"status": status, "obj_val": objective_str,"results": dict_results})
-        
-        return JSONResponse(status_code=200, content = {"status": None, "obj_val": None,"results": params})
-
+       params_system = convert_dm_to_json(session)
+       status, objective_str, dict_results = run_optimization(params_system)  
+       return JSONResponse(status_code=200, content = {"status": status, "obj_val": objective_str,"results": dict_results})
+       
     except ExecutableNotFound as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -73,20 +59,18 @@ async def update_facility(id: int, payload: dict = Body(...)) -> JSONResponse:
 
 
 @api.post("/read_file")
-async def read_maternites(params: dict = Body(...)) -> JSONResponse:
+async def read_maternites(params: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     import traceback
-    from backend.api.services import get_bounding_box
+    from backend.api.services import get_bounding_box, clear_all_tables
     from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
     from backend.api.services import get_facilities_capacities, get_DataGridEntries
-    from sqlmodel import create_engine, SQLModel, Session
 
     try:
-        request_engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
-        SQLModel.metadata.create_all(request_engine)
-        with Session(request_engine) as session:
-            convert_dm_from_json(params, session)
-            facilities_capacities = get_facilities_capacities(session)
-            data_grid_entries = get_DataGridEntries(session)
+        clear_all_tables(session)
+        session = convert_dm_from_json(params, session)
+        session.commit()
+        facilities_capacities = get_facilities_capacities(session)
+        data_grid_entries = get_DataGridEntries(session)
 
         return JSONResponse(
             status_code=200,
