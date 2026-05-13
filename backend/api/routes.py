@@ -15,11 +15,19 @@ def health():
 async def optimize(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
     from backend.api.services import run_optimization
     from backend.core.mappers.input_mappers import convert_dm_to_json
+    from backend.core.mappers.output_mappers import create_facilityLoad
+
     import traceback
     try: 
-       params_system = convert_dm_to_json(session)
-       status, objective_str, dict_results = run_optimization(params_system)  
-       return JSONResponse(status_code=200, content = {"status": status, "obj_val": objective_str,"results": dict_results})
+       params = convert_dm_to_json(session)
+       import json
+       with open("experiments/test.json", "w") as fp:
+           json.dump(params, fp)
+       status, objective_str, dict_results = run_optimization(params)  
+       list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityLoad(dict_results, params)]
+       return JSONResponse(status_code=200, content = {"status": status, "results": {"list_facility_load": list_facility_load,
+                                                                                               "regions": list(params["regions_metadata"].keys())}})
+     
        
     except ExecutableNotFound as e:
         raise HTTPException(status_code=500, detail=str(e))
