@@ -28,9 +28,9 @@ def create_app() -> FastAPI:
     # Include API routes
     app.include_router(api, prefix="/api")
 
-    try:
-        app.mount("/", StaticFiles(directory="frontend/build", html=True), name="react")
-    except FileNotFoundError:
-        print("frontend/build not found, skipping static files mount")
+    #try:
+    #    app.mount("/", StaticFiles(directory="frontend/build", html=True), name="react")
+    #except FileNotFoundError:
+    #    print("frontend/build not found, skipping static files mount")
 
     return app

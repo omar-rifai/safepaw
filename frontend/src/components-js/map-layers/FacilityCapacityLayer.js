@@ -1,7 +1,5 @@
 import { ScatterplotLayer } from "@deck.gl/layers";
 import chroma from "chroma-js"
-import {  useContext } from 'react'
-import { UIContext } from '../../App';
 
 
 
@@ -47,12 +45,12 @@ function jitter([lng, lat], amount = 0.00045) {
   ];
 }
 
-export function FacilityCapacityLayer({ facilities }) {
+export function FacilityCapacityLayer({ facilities, setDeckGLData }) {
 
   if (facilities.length === 0) {
     return null;
   }
-  const { setDeckGLData } = useContext(UIContext);
+
   const max_capacities = getMaxCapacities(facilities)
   const facilities_w_avg = facilities.map(f => getNormalizedCapacityAvg(f, max_capacities))
 
@@ -66,7 +64,6 @@ export function FacilityCapacityLayer({ facilities }) {
       getLineColor: [255, 255, 255, 180],
       lineWidthMinPixels: 2,
       onClick: info => {
-        console.log("info on click", info.object)
         if (info.object) {
           setDeckGLData(info.object);
         }

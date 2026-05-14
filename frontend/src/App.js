@@ -54,7 +54,7 @@ function App() {
     console.log("Calling optimize_instance..")
     const response_convert = await fetch("/api/optimize", {
       method: "POST",
-      body: JSON.stringify({"test":true}),
+      body: JSON.stringify({ "test": true }),
       headers: { "Content-Type": "application/json" }
     })
 
@@ -101,7 +101,7 @@ function App() {
 
         <Stack sx={{ mt: 15 }} spacing={2}>
           <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "center" }}>
-            <Grid size={8} sx={{ width:650, minWidth: 500 }}>
+            <Grid size={8} sx={{ width: 650, minWidth: 500 }}>
               <InputForm />
               <Grid
                 container

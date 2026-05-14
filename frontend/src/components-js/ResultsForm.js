@@ -6,14 +6,12 @@ import { useContext } from 'react';
 import HospitalResourcesChart from './DiagramForm'
 
 export default function ResultsForm() {
-  const { outputData} = useContext(DataContext);
+  const { outputData } = useContext(DataContext);
 
   if (!outputData || !outputData.status) return <Typography>No results to display.</Typography>;
 
-  const  status  = outputData.status;
+  const status = outputData.status;
   const avg_distance = outputData.results?.avg_distance;
-
-  console.log("outputData in ResultForm: ", outputData)
 
   return (
     <Box sx={{ minWidth: 275, height: '100%' }}>
@@ -21,8 +19,8 @@ export default function ResultsForm() {
         <Typography><strong>Status:</strong> {status}</Typography>
         {avg_distance && <Typography><strong>Mean access distance:</strong> {avg_distance}  km</Typography>}
       </Card>
-      <Box  sx={{height: '100%'}}  >
-        <HospitalResourcesChart/>
+      <Box sx={{ height: '100%' }}  >
+        <HospitalResourcesChart />
       </Box>
     </Box>
   );

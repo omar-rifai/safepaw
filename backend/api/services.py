@@ -20,14 +20,11 @@ def check_executable():
     return True
 
 
-def get_bounding_box(params: dict):
+def get_bounding_box(session):
     from shapely.geometry import box, mapping
-    coords = []
-    for h in params["facilities_metadata"]:
-        coords.append(params["facilities_metadata"][h]["coords"])
 
-    xs = [c[0] for c in coords]
-    ys = [c[1] for c in coords]
+    xs = session.exec(select(Facility.lat)).all()
+    ys = session.exec(select(Facility.lon)).all()
 
     bbox = box(min(xs), min(ys), max(xs), max(ys))
     return {
@@ -76,19 +73,26 @@ def get_DataGridEntries(session: Session, facility_id: str | None = None) -> dic
 
     query_resources = select(Resource)
     if facility_id is not None:
+        query_resources = select(Resource, FacilityResources)
         query_resources = query_resources.join(FacilityResources).where(FacilityResources.facility_id == facility_id)
     resources = session.exec(query_resources).all()
-
-    query_groups = select(PatientsGroup).options(selectinload(PatientsGroup.pathways))
-    if facility_id is not None:
-        query_groups = query_groups.join(Pathway, Pathway.group_id == PatientsGroup.id).join(FacilityPathways,
-        FacilityPathways.pathway_id == Pathway.id).distinct()
-    patients_groups =  session.exec(query_groups).all()
     
+    if facility_id is not None: 
+        resources_entries = [ResourceRow(resource_id=r.id, transfer_unit=r.transfer_unit, capacity=fr.capacity) for r, fr in resources]
+    else: 
+        resources_entries = [ResourceRow(resource_id=r.id, transfer_unit=r.transfer_unit) for r in resources]
+
+    query_groups = select(PatientsGroup)
+    if facility_id is not None:
+        query_groups = query_groups\
+            .join(Pathway, Pathway.group_id == PatientsGroup.id)\
+            .join(FacilityPathways).where(FacilityPathways.facility_id == facility_id).distinct()
+    patients_groups =  session.exec(query_groups).all()
+
     entry = DataGridEntries(
         facilities=[FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type) for f in facilities],
         pathways=[PathwayRow(pathway_id=p.id, group_id=p.group_id, quality_level=p.quality_level, group_benefit=p.group_benefit, activities=[a.id for a in p.activities]) for p in pathways],
-        resources=[ResourceRow(resource_id=r.id, transfer_unit=r.transfer_unit) for r in resources],
+        resources=resources_entries,
         patients_groups=[PatientsGroupRow(group_id=pg.id, lbl=pg.lbl, pathways=[p.id for p in pg.pathways]) for pg in patients_groups]
     )
 

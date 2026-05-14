@@ -17,18 +17,17 @@ export default function HospitalResourcesChart() {
   const { outputData } = useContext(DataContext);
   const { deckGLData } = useContext(UIContext);
 
-  console.log("in Diagram, object selected:", deckGLData)
-  if (outputData.status=="Infeasible" || !outputData.results) {return null}
+  if (outputData.status == "Infeasible" || !outputData.results) { return null }
   const filtered_output = deckGLData.properties?.facility_id ?
     outputData.results.list_facility_load?.filter(item => item.geometry.coordinates == deckGLData.geometry?.coordinates)
     : outputData.results.list_facility_load;
 
   const facilities_data = (filtered_output ?? []).flatMap(f => ({
-  resource: f.properties.facility_id,
-  capacity: f.properties?.capacities?.["cap"] - f.properties?.transfers_out?.["cap"],
-  load: Math.round(f.properties?.load * 4.6),
-  imported: f.properties?.transfers_in?.["cap"],
-  exported: f.properties?.transfers_out?.["cap"]
+    resource: f.properties.facility_id,
+    capacity: f.properties?.capacities?.["cap"] - f.properties?.transfers_out?.["cap"],
+    load: Math.round(f.properties?.load * 4.6),
+    imported: f.properties?.transfers_in?.["cap"],
+    exported: f.properties?.transfers_out?.["cap"]
   }));
 
 

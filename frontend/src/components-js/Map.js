@@ -19,7 +19,7 @@ export default function customMap() {
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
-  
+
   const regionGeoJSON = inputData?.bbox;
   const [viewState, setViewState] = useState({
     longitude: 2.5,
@@ -95,6 +95,7 @@ export default function customMap() {
     if (inputData?.facilities_capacities) {
       const layer_facilityLoads = FacilityCapacityLayer({
         facilities: inputData.facilities_capacities || [],
+        setDeckGLData: setDeckGLData
       });
       list_layers.push(layer_facilityLoads)
     }
@@ -164,31 +165,31 @@ export default function customMap() {
       }
       <Box sx={{ height: "100%", position: "relative" }} >
         <div
-            style={{
-              width: '100%',
-              height: '100%',
-              outline: '2px solid #b8b8b9ff',
-              boxSizing: 'border-box',
-            }}
+          style={{
+            width: '100%',
+            height: '100%',
+            outline: '2px solid #b8b8b9ff',
+            boxSizing: 'border-box',
+          }}
         >
-        <DeckGL
-          viewState={viewState}
-          onViewStateChange={({ viewState }) => setViewState(viewState)}
-          controller={true}
-          layers={renderedLayers}
-          getTooltip={getTooltip}
-          onClick={({ object }) => { if (!object) { setDeckGLData({}) } }}
-        >
-          
+          <DeckGL
+            viewState={viewState}
+            onViewStateChange={({ viewState }) => setViewState(viewState)}
+            controller={true}
+            layers={renderedLayers}
+            getTooltip={getTooltip}
+            onClick={({ object }) => { if (!object) { setDeckGLData({}) } }}
+          >
+
             <Map
               reuseMaps
               mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
               style={{ width: '100%', height: '100%' }}
               attributionControl={false}
             />
-          
-          <Legend inputData={inputData} outputData={outputData} />
-        </DeckGL>
+
+            <Legend inputData={inputData} outputData={outputData} />
+          </DeckGL>
         </div>
       </Box>
     </Box >

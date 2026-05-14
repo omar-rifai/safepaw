@@ -3,7 +3,9 @@ from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session
-
+from backend.core.data_models.input_models import Facility
+from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box
+import traceback
 
 api = APIRouter()
 
@@ -38,31 +40,63 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-
-
-
-@api.put("/facilities/{id}")
-async def read_facility(id: str, payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
-    import traceback
- 
-    from backend.api.services import get_facilities_capacities, get_DataGridEntries
+@api.put("/update_facility/{facility_id}")
+async def update_facility_type(facility_id: str, payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
+    
 
     try:
-        facility_id = None if id == "all" else id
-        facilities_capacities = get_facilities_capacities(session, facility_id)
-        data_grid_entries = get_DataGridEntries(session, facility_id)
+ 
+        facility = session.get(Facility, facility_id)
+        for key, value in payload.items():
+            if hasattr(facility, key):
+                setattr(facility, key, value)
+
+        session.add(facility)
+        session.commit()
+        session.refresh(facility)
+
+        facilities_capacities = get_facilities_capacities(session)
+        data_grid_entries = get_DataGridEntries(session)
 
         return JSONResponse(
             status_code=200,
             content={
                 "facilities_capacities":[f.model_dump() for f in facilities_capacities],
                 "entries": data_grid_entries,
-                "bbox": payload["bbox"]
+                "bbox": get_bounding_box(session)
+            },
+        )
+
+    except HTTPException:
+        raise  
+    except Exception:
+        session.rollback() 
+        print("Error in update_facility route:")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+
+@api.put("/facilities/{id}")
+async def read_facility(id: str, payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
+   
+    try:
+        facility_id = None if id == "all" else id
+        facilities_capacities = get_facilities_capacities(session, facility_id)
+        data_grid_entries = get_DataGridEntries(session, facility_id)
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "facilities_capacities":[f.model_dump() for f in facilities_capacities],
+                "entries": data_grid_entries,
+                "bbox": get_bounding_box(session)
             },
         )
 
     except Exception:
         print("Error in api.read_file route:")
+        session.rollback() 
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -70,9 +104,8 @@ async def read_facility(id: str, payload: dict = Body(...), session:Session = De
 @api.post("/read_file")
 async def read_maternites(params: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     import traceback
-    from backend.api.services import get_bounding_box, clear_all_tables
+    from backend.api.services import  clear_all_tables
     from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
-    from backend.api.services import get_facilities_capacities, get_DataGridEntries
 
     try:
         clear_all_tables(session)
@@ -86,11 +119,12 @@ async def read_maternites(params: dict = Body(...), session:Session = Depends(ge
             content={
                 "facilities_capacities":[f.model_dump() for f in facilities_capacities],
                 "entries": data_grid_entries,
-                "bbox": get_bounding_box(params)
+                "bbox": get_bounding_box(session)
             },
         )
 
     except Exception:
         print("Error in api.read_file route:")
+        session.rollback() 
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")

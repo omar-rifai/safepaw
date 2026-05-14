@@ -25,6 +25,7 @@ class PathwayRow(BaseModel):
 class ResourceRow(BaseModel):
     resource_id: str
     transfer_unit: float
+    capacity: Optional[float] = None
 
 class PatientsGroupRow(BaseModel):
     group_id: str
