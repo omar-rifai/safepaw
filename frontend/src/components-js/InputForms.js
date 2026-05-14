@@ -56,7 +56,7 @@ export default function ManualInputForm() {
             </Tabs>
             {activeTab == "tab-facilities" && <FacilitiesForm />}
             {activeTab == "tab-pathways" && <PathwaysForm />}
-            {activeTab == "tab-resources" && <ResourcesForm />}
+            {activeTab == "tab-resources" && <ResourcesForm deckGLData={deckGLData} setInputData={setInputData} />}
             {activeTab == "tab-patients" && <PatientsGroupForm />}
         </Stack >
     );

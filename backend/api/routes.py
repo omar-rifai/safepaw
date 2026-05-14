@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Body, Depends
 from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
-from sqlmodel import Session
-from backend.core.data_models.input_models import Facility
+from sqlmodel import Session, select
+from backend.core.data_models.input_models import FacilityResources
 from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box
 import traceback
 
@@ -40,30 +40,28 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@api.put("/update_facility/{facility_id}")
-async def update_facility_type(facility_id: str, payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
+@api.put("/update_FacilityResources")
+async def update_facility_type(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     
 
     try:
- 
-        facility = session.get(Facility, facility_id)
-        for key, value in payload.items():
-            if hasattr(facility, key):
-                setattr(facility, key, value)
+        
+        facilityResource = session.exec(select(FacilityResources)\
+             .where(FacilityResources.facility_id == payload["facility_id"])\
+             .where(FacilityResources.resource_id == payload["resource_id"])).first()
+        
+        setattr(facilityResource, "capacity", payload["capacity"])
 
-        session.add(facility)
+        session.add(facilityResource)
         session.commit()
-        session.refresh(facility)
+        session.refresh(facilityResource)
 
-        facilities_capacities = get_facilities_capacities(session)
-        data_grid_entries = get_DataGridEntries(session)
+        data_grid_entries = get_DataGridEntries(session, payload["facility_id"])
 
         return JSONResponse(
             status_code=200,
             content={
-                "facilities_capacities":[f.model_dump() for f in facilities_capacities],
                 "entries": data_grid_entries,
-                "bbox": get_bounding_box(session)
             },
         )
 
