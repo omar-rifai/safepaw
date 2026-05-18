@@ -1,19 +1,15 @@
 import { ArcLayer } from "@deck.gl/layers";
 
-export function RegionFacilityLoadLayer({ loads, regions, selectedItem }) {
+export function RegionFacilityLoadLayer({ loads, regions, selectedFacilityID }) {
 
-    if (!selectedItem.properties) { return null }
+    if (!selectedFacilityID) { return null }
 
-    const tolerance = 0.0001;
     const maxLoad = loads?.reduce((max, d) => Math.max(max, d.properties.load), 0);
 
     const facilityLoads = (loads || [])
         .filter(d => d.properties.region_id != null &&
             Math.round(d.properties.load) > 0 &&
-            d.properties.facility_id == selectedItem.properties.facility_id &&
-            Math.abs(d.geometry.coordinates[0] - selectedItem.geometry.coordinates[0]) < tolerance &&
-            Math.abs(d.geometry.coordinates[1] - selectedItem.geometry.coordinates[1]) < tolerance 
-        )
+            d.properties.facility_id == selectedFacilityID)
     if (facilityLoads.length === 0) {
         return null;
     }

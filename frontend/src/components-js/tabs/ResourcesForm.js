@@ -11,7 +11,7 @@ function hasValues(resources, col) {
 }
 
 
-export default function ResourcesForm({ deckGLData, setInputData }) {
+export default function ResourcesForm({ selectedFacilityID, setInputData }) {
     const { inputData } = useContext(DataContext);
     const resources = inputData.entries?.resources || inputData.instance?.resources || [];
 
@@ -19,7 +19,7 @@ export default function ResourcesForm({ deckGLData, setInputData }) {
         const response = await fetch(`/api/update_FacilityResources`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ "resource_id": newRow.resource_id, "facility_id": deckGLData.facility_id, "capacity": newRow.capacity })
+            body: JSON.stringify({ "resource_id": newRow.resource_id, "facility_id": selectedFacilityID, "capacity": newRow.capacity })
         }).catch(console.error);
 
         const result = await response.json();
@@ -36,6 +36,7 @@ export default function ResourcesForm({ deckGLData, setInputData }) {
 
 
     const columns = [{ field: 'resource_id', headerName: 'Resource ID', width: 160 },
+    { field: 'transfer_unit', headerName: 'Transfer Unit', width: 100 },
     ...(hasValues(resources, "capacity") ? [{
         field: 'capacity',
         headerName: 'Capacity',
@@ -43,7 +44,7 @@ export default function ResourcesForm({ deckGLData, setInputData }) {
         editable: true,
         type: 'number',
     }] : []),
-    { field: 'transfer_unit', headerName: 'Transfer Unit', width: 100 },
+
     ];
 
     const rows = resources

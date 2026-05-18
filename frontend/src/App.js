@@ -26,8 +26,8 @@ const VisuallyHiddenInput = styled('input')({
 function App() {
 
   const [inputData, setInputData] = useState({});
+  const [selectedFacilityID, setSelectedFacilityID] = useState(null);
   const [outputData, setOutputData] = useState({});
-  const [deckGLData, setDeckGLData] = useState({});
 
   const handleUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -64,7 +64,7 @@ function App() {
 
   return (
     <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData }}>
-      <UIContext.Provider value={{ deckGLData, setDeckGLData }}>
+      <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID }}>
         <AppBar sx={{ backgroundColor: "#ffffffff" }}>
           <Toolbar sx={{
             display: "flex", justifyContent: "center", gap: 4
@@ -100,7 +100,7 @@ function App() {
         <Divider />
 
         <Stack sx={{ mt: 15 }} spacing={2}>
-          <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "center" }}>
+          <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "flex-start" }}>
             <Grid size={8} sx={{ width: 650, minWidth: 500 }}>
               <InputForm />
               <Grid

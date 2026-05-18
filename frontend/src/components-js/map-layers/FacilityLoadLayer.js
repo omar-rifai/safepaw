@@ -5,7 +5,7 @@ var max_capacities;
 function getMaxCapacities(loads) {
 
   return loads.reduce((acc, facility) => {
-    const capacities = facility.properties.capacities;
+    const capacities = facility?.resources_capacity;
     for (const [resource, value] of Object.entries(capacities)) {
       if (!(resource in acc) || value > acc[resource]) {
         acc[resource] = value;
@@ -26,10 +26,10 @@ function jitter([lng, lat], amount = 0.00045) {
 
 function getNormalizedCapacityAvg(facilityLoad, max_capacities) {
 
-  const normalized = Object.entries(facilityLoad.properties.capacities).map(
+  const normalized = Object.entries(facilityLoad.resources_capacity).map(
     ([r, v]) => {
-      const delta_plus = Math.round(facilityLoad.properties.transfers_in[r])
-      const delta_minus = Math.round(facilityLoad.properties.transfers_out[r])
+      const delta_plus = Math.round(facilityLoad.transfers_in[r])
+      const delta_minus = Math.round(facilityLoad.transfers_out[r])
       const curr_max = max_capacities[r];
       if (!curr_max) return 0;
       return (v + delta_plus - delta_minus) / curr_max
@@ -43,38 +43,47 @@ function getNormalizedCapacityAvg(facilityLoad, max_capacities) {
 
 function getAvgUsage(facilityLoad) {
 
-  const use_ratios = Object.values(facilityLoad.properties.usage)
+  const use_ratios = Object.values(facilityLoad.usage)
 
   const sum = use_ratios.reduce((a, b) => a + b, 0);
   const avg = sum / use_ratios.length
   return avg
 }
 
-export function FacilityLoadLayer({ loads, setDeckGLData }) {
+
+function getFillColor(obj) {
+  const usage = getAvgUsage(obj) ? getAvgUsage(obj) : 0
+  return [
+    Math.round(255 * usage),
+    0,
+    Math.round(255 * (1 - usage)),
+    Math.max(40, Math.round(usage * 150))
+  ]
+}
+
+export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacilityID }) {
 
   if (!loads || loads.length === 0) {
     return null;
   }
-
+  console.log("facility ID", selectedFacilityID)
   max_capacities = getMaxCapacities(loads)
-
+  console.log(loads)
   return new ScatterplotLayer
     ({
       id: 'facilities-volume',
       data: loads,
-      getPosition: d => jitter(d.geometry.coordinates),
+      getPosition: d => jitter(d.coordinates),
       getRadius: d => {
         const capacity = getNormalizedCapacityAvg(d, max_capacities)
-        return [4 + 6 * capacity]
+        return 4 + 6 * capacity
       },
       getFillColor: d => {
-        const usage = getAvgUsage(d) ? getAvgUsage(d) : 0
-        return [
-          Math.round(255 * usage),
-          0,
-          Math.round(255 * (1 - usage)),
-          Math.max(40, Math.round(usage * 150))
-        ]
+        const base = getFillColor(d);
+        if (selectedFacilityID !== null && d.facility_id !== selectedFacilityID) {
+          return [base[0], base[1], base[2], 0]
+        }
+        else return base
       },
       getLineColor: [255, 255, 255, 180],
       lineWidthMinPixels: 2,
@@ -82,54 +91,25 @@ export function FacilityLoadLayer({ loads, setDeckGLData }) {
       pickable: true,
       onClick: info => {
         if (info.object) {
-          console.log("info on click just before setting deckGLDATA", info.object)
-          setDeckGLData(info.object);
+          setSelectedFacilityID(info.object?.facility_id)
         }
-      }
+      },
+      updateTriggers: {
+        getFillColor: [selectedFacilityID]
+      },
     })
 }
 
 export function getFacilityToolTip(info) {
   if (!info) return null;
 
-  const usage = info.object.properties["usage"];
-  const facilityId = info.object.properties["facility_id"];
 
-  const entries = Object.entries(usage).filter(
-    ([, v]) => typeof v === "number" && isFinite(v)
-  );
-  if (!entries.length) return null;
-
-  const colors = [
-    "#534AB7", "#1D9E75", "#D85A30", "#D4537E",
-    "#378ADD", "#639922", "#BA7517", "#E24B4A"
-  ];
-
-  const miniPie = (pct, color) => {
-    const filled = Math.min(Math.max(pct, 0), 1) * 360;
-    return `<div style="width:40px;height:40px;border-radius:50%;background:conic-gradient(${color} 0deg ${filled.toFixed(2)}deg,#e0e0e0 ${filled.toFixed(2)}deg 360deg);flex-shrink:0;"></div>`;
-  };
-
-  const rows = entries.map(([key, val], i) => {
-    const color = colors[i % colors.length];
-    const pct = Math.min(Math.max(val, 0), 1);
-    return `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        ${miniPie(pct, color)}
-        <div>
-          <div style="font-size:11px;font-weight:bold;word-break:break-all;">${key}</div>
-          <div style="font-size:11px;">${(pct * 100).toFixed(1)}%</div>
-        </div>
-      </div>`;
-  }).join("");
+  const facilityId = info.object["facility_id"];
 
   return {
     html: `
-      <div style="font-family:sans-serif;font-size:12px;">
-        <div style="font-weight:bold;margin-bottom:4px;">Facility: ${facilityId}</div>
-        <div style="font-weight:bold;margin-bottom:8px;">Resource use:</div>
-        ${rows}
-      </div>`,
+
+        <div style="font-weight:bold;margin-bottom:4px;">Facility: ${facilityId}</div>`,
     style: {
       backgroundColor: "rgba(254,254,254,0.95)",
       color: "#000",

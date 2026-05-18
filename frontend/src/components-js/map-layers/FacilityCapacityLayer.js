@@ -45,7 +45,7 @@ function jitter([lng, lat], amount = 0.00045) {
   ];
 }
 
-export function FacilityCapacityLayer({ facilities, setDeckGLData }) {
+export function FacilityCapacityLayer({ facilities, setSelectedFacilityID }) {
 
   if (facilities.length === 0) {
     return null;
@@ -64,9 +64,9 @@ export function FacilityCapacityLayer({ facilities, setDeckGLData }) {
       getLineColor: [255, 255, 255, 180],
       lineWidthMinPixels: 2,
       onClick: info => {
-        if (info.object) {
-          setDeckGLData(info.object);
-        }
+          console.log(info)
+          setSelectedFacilityID (info.object?.facility_id);
+
       },
       radiusUnits: 'pixels',
       pickable: true,
@@ -81,7 +81,7 @@ export function getFacilityCapacityToolTip(info) {
 
     html: `
         <h3>Facility:</h3> 
-        <div>${info.object["facility_name"]}</div>
+        <div>${info.object.facility_id}</div>
         <h3>Resources:</h3>
          <div style="word-break: break-all; max-width: 20em">${Object.entries(info.object["resources_capacity"])?.map(([k, v]) => `"${k}": ${v}\n`)}</div>
         `,

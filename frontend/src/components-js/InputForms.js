@@ -17,7 +17,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 
 export default function ManualInputForm() {
     const [activeTab, setActiveTab] = useState("tab-facilities")
-    const { deckGLData } = useContext(UIContext);
+    const { selectedFacilityID} = useContext(UIContext);
     const { inputData, setInputData } = useContext(DataContext);
     const handleChange = (_, val) => {
         setActiveTab(val);
@@ -26,7 +26,7 @@ export default function ManualInputForm() {
     useEffect(() => {
         async function loadFacility() {
             try {
-                const url = `/api/facilities/${deckGLData?.facility_id ?? "all"}`;
+                const url = `/api/facilities/${selectedFacilityID ?? "all"}`;
                 const response = await fetch(url, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -41,7 +41,7 @@ export default function ManualInputForm() {
             }
         }
         loadFacility()
-    }, [deckGLData]);
+    }, [selectedFacilityID]);
 
     return (
 
@@ -56,7 +56,7 @@ export default function ManualInputForm() {
             </Tabs>
             {activeTab == "tab-facilities" && <FacilitiesForm />}
             {activeTab == "tab-pathways" && <PathwaysForm />}
-            {activeTab == "tab-resources" && <ResourcesForm deckGLData={deckGLData} setInputData={setInputData} />}
+            {activeTab == "tab-resources" && <ResourcesForm selectedFacilityID={selectedFacilityID} setInputData={setInputData} />}
             {activeTab == "tab-patients" && <PatientsGroupForm />}
         </Stack >
     );

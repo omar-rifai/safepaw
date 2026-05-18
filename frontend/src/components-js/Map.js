@@ -4,7 +4,7 @@ import { Map } from 'react-map-gl/maplibre';
 import { useMemo, useRef, useState, useEffect, useContext } from 'react';
 import { getInitializeViewFromGeoJSON, useRegionGeoJSON } from '../utils/mapInitializer';
 import { DataContext, UIContext } from "../App";
-import { Box, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
+import { Box, Checkbox, FormGroup, FormControlLabel, Typography } from '@mui/material';
 import PatientsTransfersLayer from './map-layers/PatientsTransfersLayer';
 import Legend from './map-layers/Legend';
 import { RegionFacilityLoadLayer, getRegionFacilityToolTip } from './map-layers/RegionFacilityLoadLayer';
@@ -15,7 +15,7 @@ import { FacilityCapacityLayer, getFacilityCapacityToolTip } from './map-layers/
 export default function customMap() {
 
   const { inputData, outputData } = useContext(DataContext);
-  const { deckGLData, setDeckGLData } = useContext(UIContext)
+  const { selectedFacilityID, setSelectedFacilityID } =  useContext(UIContext);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
@@ -59,10 +59,11 @@ export default function customMap() {
 
     const list_layers = []
 
-    if (outputData?.results?.list_facility_load) {
+    if (outputData?.facilities_loads) {
       const layer_facilityLoads = FacilityLoadLayer({
-        loads: outputData.results.list_facility_load,
-        setDeckGLData: setDeckGLData,
+        loads: outputData.facilities_loads,
+        selectedFacilityID: selectedFacilityID,
+        setSelectedFacilityID: setSelectedFacilityID
       });
       list_layers.push(layer_facilityLoads)
     }
@@ -71,7 +72,7 @@ export default function customMap() {
       const layer_regionFacilityLoads = RegionFacilityLoadLayer({
         loads: outputData.results.list_facility_load_regions,
         regions: outputData.results.regions,
-        selectedItem: deckGLData
+        selectedItem: selectedFacilityID
       });
       list_layers.push(layer_regionFacilityLoads)
     }
@@ -85,7 +86,7 @@ export default function customMap() {
     }
 
     return list_layers;
-  }, [outputData, deckGLData]);
+  }, [outputData, selectedFacilityID]);
 
 
   const input_layers = useMemo(() => {
@@ -95,7 +96,7 @@ export default function customMap() {
     if (inputData?.facilities_capacities) {
       const layer_facilityLoads = FacilityCapacityLayer({
         facilities: inputData.facilities_capacities || [],
-        setDeckGLData: setDeckGLData
+        setSelectedFacilityID: setSelectedFacilityID
       });
       list_layers.push(layer_facilityLoads)
     }
@@ -178,7 +179,9 @@ export default function customMap() {
             controller={true}
             layers={renderedLayers}
             getTooltip={getTooltip}
-            onClick={({ object }) => { if (!object) { setDeckGLData({}) } }}
+            onClick={({ object }) => { if (!object) {
+               setSelectedFacilityID(null) ;
+              } }}
           >
 
             <Map
@@ -191,6 +194,7 @@ export default function customMap() {
             <Legend inputData={inputData} outputData={outputData} />
           </DeckGL>
         </div>
+        {selectedFacilityID&& <Typography>Data filtered for facilitiy {selectedFacilityID}. Click anywhere on the map to unfilter.</Typography>}
       </Box>
     </Box >
   );

@@ -37,14 +37,13 @@ def create_facilityLoad(results: dict, params_system: dict, by_region: bool = Fa
         
         facility_instance = FacilityLoad(
             facility_id=h,
-            facility_type=None,
             coordinates=params_system["facilities_metadata"][h]["coords"],
             patient_group=g,
             patient_pathway=k,
             region_id=str(r),
             load=row.load,
             usage=hl_usage[h],
-            capacities=capacity_cache[h],
+            resources_capacity=capacity_cache[h],
             transfers_in=transfers_in_cache[h],
             transfers_out=transfers_out_cache[h]
         )

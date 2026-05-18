@@ -25,10 +25,9 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
        import json
        with open("experiments/test.json", "w") as fp:
            json.dump(params, fp)
-       status, objective_str, dict_results = run_optimization(params)  
-       list_facility_load = [pt.as_geojson_feature() for pt in  create_facilityLoad(dict_results, params)]
-       return JSONResponse(status_code=200, content = {"status": status, "results": {"list_facility_load": list_facility_load,
-                                                                                               "regions": list(params["regions_metadata"].keys())}})
+       status, _, dict_results = run_optimization(params)  
+       list_facility_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params)]
+       return JSONResponse(status_code=200, content = {"status": status, "facilities_loads": list_facility_load})
      
        
     except ExecutableNotFound as e:

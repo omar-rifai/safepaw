@@ -1,6 +1,5 @@
 import {
   ComposedChart,
-  Line,
   Bar,
   XAxis,
   YAxis,
@@ -8,47 +7,70 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { Card, Grid, Pagination } from '@mui/material';
 import { DataContext, UIContext } from '../App';
-import { useContext } from "react";
+import { useContext, useState, useMemo } from "react";
+
+
+
 
 
 export default function HospitalResourcesChart() {
 
-  const { outputData } = useContext(DataContext);
-  const { deckGLData } = useContext(UIContext);
+  const [pageCapacity, setPageCapacity] = useState(1)
+  const { outputData, inputData } = useContext(DataContext);
+  const { selectedFacilityID } = useContext(UIContext);
+  const handlePaginateCapacities = (event, value) => {
+    setPageCapacity(value)
+  };
 
-  if (outputData.status == "Infeasible" || !outputData.results) { return null }
-  const filtered_output = deckGLData.properties?.facility_id ?
-    outputData.results.list_facility_load?.filter(item => item.geometry.coordinates == deckGLData.geometry?.coordinates)
-    : outputData.results.list_facility_load;
 
-  const facilities_data = (filtered_output ?? []).flatMap(f => ({
-    resource: f.properties.facility_id,
-    capacity: f.properties?.capacities?.["cap"] - f.properties?.transfers_out?.["cap"],
-    load: Math.round(f.properties?.load * 4.6),
-    imported: f.properties?.transfers_in?.["cap"],
-    exported: f.properties?.transfers_out?.["cap"]
-  }));
+  const facilities = inputData?.facilities_capacities ?
+    outputData?.facilities_loads ? outputData.facilities_loads : inputData.facilities_capacities :
+    null
 
+  const ITEMS_PER_PAGE = 3
+  const resources = facilities?.[0] ? Object.keys(facilities[0].resources_capacity).sort() : [];
+  const paginatedResources = useMemo(() => {
+
+    const start = (pageCapacity - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE
+
+    return resources.slice(start, end);
+  }, [resources, pageCapacity]);
 
   return (
-    <ComposedChart
-      width={600}
-      height={300}
-      data={facilities_data}
-      margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-    >
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="resource" tick={false} />
-      <YAxis width="auto" />
-      <Tooltip />
-      <Legend />
-      <Bar dataKey="capacity" stackId="a" fill="#88adc8ff" />
-      <Bar dataKey="imported" stackId="a" fill="#baecb4ff" />
-      <Bar dataKey="exported" stackId="a" fill="rgba(248, 98, 98, 0.7)" />
+    <div><Pagination count={Math.ceil(resources.length / ITEMS_PER_PAGE)} page={pageCapacity} onChange={handlePaginateCapacities} />
+      <Grid container spacing={1} sx={{ justifyContent: "space-evenly", }}>
 
-      <Line type="monotone" dataKey="load" fill="#052e34ff" />
+        {paginatedResources.map(resource => {
+          const chartData = facilities.map(f => ({
+            facility: f.facility_id,
+            capacity: Number(f.resources_capacity?.[resource] ?? 0),
+            imported: Number(f.transfers_in?.[resource] ?? 0),
+            exported: Number(f.transfers_out?.[resource] ?? 0)
+          }));
 
-    </ComposedChart>
+          return (
+            <Card key={resource}>
+              <h3>{resource}</h3>
+
+              <ComposedChart width={400} height={300} data={chartData} barCategoryGap="0%"
+                barGap={0} interval={0} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="facility" />
+                <YAxis width="auto" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="capacity" fill="#88adc8ff" />
+                <Bar dataKey="imported" fill="#baecb4ff" />
+                <Bar dataKey="exported" fill="rgba(248, 98, 98, 0.7)" />
+              </ComposedChart>
+            </Card>
+          );
+        })}
+
+      </Grid>
+    </div>
   );
 }

@@ -18,12 +18,18 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system):
             LP += (1 - params_system["alpha"]) * lpSum([params_system["c_gk"][g][k] * params_system["D"] * P_gk[g][k] 
                                                         for g in params_system["G"]
                                                         for k in params_system["K_idx"][g]]) \
-                 + params_system["alpha"] * lpSum([params_system["D"] * P[g][k][r][a][h] * params_system["w_rh"][r][h]
+                + params_system["alpha"] * lpSum([params_system["D"] * P[g][k][r][a][h] * params_system["w_rh"][r][h]
                                                    for g in params_system["G"]
                                                    for k in params_system["K_idx"][g]
                                                    for r in params_system["R"]
                                                    for a in params_system["A_idx"][g][k]
-                                                   for h in params_system["H"]])
+                                                   for h in params_system["H"]])\
+                -  1e-6*lpSum([Delta_plus[h][l]
+                               for h in params_system["H"]
+                               for l in params_system["L"]])\
+                -  1e-6*lpSum([Delta_minus[h][l]
+                               for h in params_system["H"]
+                               for l in params_system["L"]])
         case "slack":
             LP += lpSum(-s_hl[h][l] for h in params_system["H"] for l in params_system["L"])
         case "maternity":

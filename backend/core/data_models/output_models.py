@@ -40,14 +40,12 @@ class DataGridEntries(BaseModel):
 
 class FacilityLoad(BaseModel):
     facility_id: str
-    facility_type: Optional[str] = None
     coordinates: list
     patient_group: Optional[str] = None
     patient_pathway: Optional[str] = None
-    region_id : Optional[str] = None
     load: Optional[float] = None
     usage: Optional[dict] = Field(default_factory=dict)
-    capacities: Optional[dict] = Field(default_factory=dict)
+    resources_capacity: Optional[dict] = Field(default_factory=dict)
     transfers_in: Optional[dict] = Field(default_factory=dict)
     transfers_out: Optional[dict] = Field(default_factory=dict)
 

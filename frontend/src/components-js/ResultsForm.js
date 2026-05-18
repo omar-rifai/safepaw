@@ -1,6 +1,5 @@
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Typography from '@mui/material/Typography';
 import { DataContext } from '../App';
 import { useContext } from 'react';
 import HospitalResourcesChart from './DiagramForm'
@@ -8,16 +7,11 @@ import HospitalResourcesChart from './DiagramForm'
 export default function ResultsForm() {
   const { outputData } = useContext(DataContext);
 
-  if (!outputData || !outputData.status) return <Typography>No results to display.</Typography>;
-
-  const status = outputData.status;
-  const avg_distance = outputData.results?.avg_distance;
+  const status = outputData?.status || "";
 
   return (
     <Box sx={{ minWidth: 275, height: '100%' }}>
       <Card variant="outlined" sx={{ textAlign: 'left', p: 2, mb: 2 }}>
-        <Typography><strong>Status:</strong> {status}</Typography>
-        {avg_distance && <Typography><strong>Mean access distance:</strong> {avg_distance}  km</Typography>}
       </Card>
       <Box sx={{ height: '100%' }}  >
         <HospitalResourcesChart />
