@@ -39,11 +39,11 @@ def get_bounding_box(session):
     }
 
 
-def get_facilities_capacities(session: Session, facility_id: str | None = None) -> list[FacilityCapacity]:
+def get_facilities_capacities(session: Session, facility_ids: list | None = None) -> list[FacilityCapacity]:
 
     query = select(Facility).options(selectinload(Facility.facility_resources))
-    if facility_id is not None:
-        query = query.where(Facility.id == facility_id)
+    if facility_ids:
+        query = query.where(Facility.id.in_(facility_ids))
     facilities = session.exec(query).all()
 
     return [
@@ -57,43 +57,43 @@ def get_facilities_capacities(session: Session, facility_id: str | None = None) 
 
 
 
-def get_DataGridEntries(session: Session, facility_id: str | None = None) -> dict:
-    from backend.core.data_models.output_models import FacilityRow,PathwayRow, PatientsGroupRow, ResourceRow, DataGridEntries
-    from backend.core.data_models.input_models import Facility, Pathway, Resource, PatientsGroup, FacilityPathways, FacilityResources
+def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
+    from backend.core.data_models.output_models import FacilityRow, FacilityPathwaysRow, FacilityGroupsRow, FacilityResourceRow, DataGridEntries
+    from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources
     
     query_facilities = select(Facility)
-    if facility_id is not None:
-        query_facilities = query_facilities.where(Facility.id == facility_id)
+    if facility_ids:
+        query_facilities = query_facilities.where(Facility.id.in_(facility_ids))
     facilities = session.exec(query_facilities).all()
 
-    query_pathways = select(Pathway).options(selectinload(Pathway.activities))
-    if facility_id is not None:
-        query_pathways = query_pathways.join(FacilityPathways).where(FacilityPathways.facility_id == facility_id).distinct()
-    pathways = session.exec(query_pathways).all()
+    query_pathways = select(Pathway, FacilityPathways.facility_id)\
+        .join(FacilityPathways, FacilityPathways.pathway_id == Pathway.id)\
+            .options(selectinload(Pathway.activities))
+    if facility_ids:
+        query_pathways = query_pathways.where(FacilityPathways.facility_id.in_(facility_ids)).distinct()
+    pathways = session.exec(query_pathways).unique().all()
+    pathways_entries = [FacilityPathwaysRow(facility_id= facility_id, pathway_id=p.id, group_id=p.group_id, quality_level=p.quality_level,
+                                    group_benefit=p.group_benefit, activities=[a.id for a in p.activities]) for p, facility_id in pathways]
 
-    query_resources = select(Resource)
-    if facility_id is not None:
-        query_resources = select(Resource, FacilityResources)
-        query_resources = query_resources.join(FacilityResources).where(FacilityResources.facility_id == facility_id)
+    query_resources = select(FacilityResources)
+    if facility_ids:
+        query_resources = query_resources.where(FacilityResources.facility_id.in_(facility_ids))
     resources = session.exec(query_resources).all()
-    
-    if facility_id is not None: 
-        resources_entries = [ResourceRow(resource_id=r.id, transfer_unit=r.transfer_unit, capacity=fr.capacity) for r, fr in resources]
-    else: 
-        resources_entries = [ResourceRow(resource_id=r.id, transfer_unit=r.transfer_unit) for r in resources]
-
-    query_groups = select(PatientsGroup)
-    if facility_id is not None:
-        query_groups = query_groups\
-            .join(Pathway, Pathway.group_id == PatientsGroup.id)\
-            .join(FacilityPathways).where(FacilityPathways.facility_id == facility_id).distinct()
-    patients_groups =  session.exec(query_groups).all()
+    resources_entries = [FacilityResourceRow(facility_id = fr.facility_id, resource_id=fr.resource_id, capacity=fr.capacity) for fr in resources]
+  
+    query_groups = select(PatientsGroup, FacilityPathways.facility_id)\
+        .join(Pathway, Pathway.group_id == PatientsGroup.id)\
+            .join(FacilityPathways, FacilityPathways.pathway_id == Pathway.id)
+    if facility_ids:
+        query_groups = query_groups.where(FacilityPathways.facility_id.in_(facility_ids)).distinct()
+    patients_groups =  session.exec(query_groups).unique().all()
+    groups_entries = [FacilityGroupsRow(facility_id= facility_id, group_id=pg.id, lbl=pg.lbl, pathways=[p.id for p in pg.pathways]) for pg, facility_id in patients_groups]
 
     entry = DataGridEntries(
-        facilities=[FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type) for f in facilities],
-        pathways=[PathwayRow(pathway_id=p.id, group_id=p.group_id, quality_level=p.quality_level, group_benefit=p.group_benefit, activities=[a.id for a in p.activities]) for p in pathways],
-        resources=resources_entries,
-        patients_groups=[PatientsGroupRow(group_id=pg.id, lbl=pg.lbl, pathways=[p.id for p in pg.pathways]) for pg in patients_groups]
+        facilities= [FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type) for f in facilities],
+        pathways= pathways_entries,
+        resources= resources_entries,
+        patients_groups= groups_entries
     )
 
 

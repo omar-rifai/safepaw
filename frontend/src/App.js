@@ -2,7 +2,7 @@ import { useState, createContext } from "react";
 import { Divider, Box, Button, Grid, Stack, AppBar, Toolbar, Typography } from '@mui/material';
 
 import InputForm from "./components-js/InputForms";
-import ResultsForm from "./components-js/ResultsForm";
+import ResourcesChart from "./components-js/DiagramForm";
 import UploadIcon from '@mui/icons-material/Upload';
 import AddIcon from '@mui/icons-material/Add';
 import CustomMap from './components-js/Map';
@@ -27,6 +27,7 @@ function App() {
 
   const [inputData, setInputData] = useState({});
   const [selectedFacilityID, setSelectedFacilityID] = useState(null);
+  const [highlightedFacility, setHighlightedFacility] = useState(null);
   const [outputData, setOutputData] = useState({});
 
   const handleUpload = async (event) => {
@@ -64,7 +65,7 @@ function App() {
 
   return (
     <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData }}>
-      <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID }}>
+      <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility }}>
         <AppBar sx={{ backgroundColor: "#ffffffff" }}>
           <Toolbar sx={{
             display: "flex", justifyContent: "center", gap: 4
@@ -101,7 +102,7 @@ function App() {
 
         <Stack sx={{ mt: 15 }} spacing={2}>
           <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "flex-start" }}>
-            <Grid size={8} sx={{ width: 650, minWidth: 500 }}>
+            <Grid size={5} sx={{ width: 650, minWidth: 500 }}>
               <InputForm />
               <Grid
                 container
@@ -113,11 +114,10 @@ function App() {
               <CustomMap />
             </Grid>
           </Grid>
+          <Grid  container spacing={5}>
 
-          <Box sx={{ width: '100%', height: '100%' }}>
-            <Divider sx={{ mt: 8 }} />
-            <ResultsForm />
-          </Box>
+              <ResourcesChart />
+          </Grid>
         </Stack>
       </UIContext.Provider>
     </DataContext.Provider >

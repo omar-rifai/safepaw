@@ -24,6 +24,8 @@
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "@mui/x-data-grid": "^9.2.0",
+    "@nivo/bar": "^0.99.0",
+    "@nivo/core": "^0.99.0",
     "@turf/bbox": "^7.3.0",
     "chroma-js": "^3.2.0",
     "maplibre-gl": "^5.23.0",

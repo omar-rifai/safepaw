@@ -45,12 +45,11 @@ function jitter([lng, lat], amount = 0.00045) {
   ];
 }
 
-export function FacilityCapacityLayer({ facilities, setSelectedFacilityID }) {
+export function FacilityCapacityLayer({ facilities, selectedFacilityID, setSelectedFacilityID }) {
 
   if (facilities.length === 0) {
     return null;
   }
-
   const max_capacities = getMaxCapacities(facilities)
   const facilities_w_avg = facilities.map(f => getNormalizedCapacityAvg(f, max_capacities))
 
@@ -60,18 +59,24 @@ export function FacilityCapacityLayer({ facilities, setSelectedFacilityID }) {
       data: facilities_w_avg,
       getPosition: d => jitter(d["coordinates"]),
       getRadius: d => 4 + 6 * d.normalized_avg,
-      getFillColor: d => getColor(d["facility_type"]),
+      getFillColor: d => {
+        const base = getColor(d["facility_type"]);
+        if (selectedFacilityID != null && d.facility_id !== selectedFacilityID) {
+          return [base[0], base[1], base[2], 0]
+        }
+        else return base
+      },
       getLineColor: [255, 255, 255, 180],
       lineWidthMinPixels: 2,
       onClick: info => {
-          console.log(info)
-          setSelectedFacilityID (info.object?.facility_id);
+        setSelectedFacilityID(info.object?.facility_id);
 
       },
       radiusUnits: 'pixels',
       pickable: true,
       updateTriggers: {
         getRadius: facilities_w_avg,
+        getFillColor: selectedFacilityID
       }
     })
 }

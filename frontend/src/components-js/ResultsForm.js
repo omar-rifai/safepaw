@@ -1,8 +1,8 @@
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
+import { Stack, Card } from '@mui/material';
 import { DataContext } from '../App';
 import { useContext } from 'react';
-import HospitalResourcesChart from './DiagramForm'
+import ResourcesChart from './DiagramForm'
+import { Typography } from '@mui/material';
 
 export default function ResultsForm() {
   const { outputData } = useContext(DataContext);
@@ -10,12 +10,12 @@ export default function ResultsForm() {
   const status = outputData?.status || "";
 
   return (
-    <Box sx={{ minWidth: 275, height: '100%' }}>
-      <Card variant="outlined" sx={{ textAlign: 'left', p: 2, mb: 2 }}>
+    <Stack sx={{ width: '40%'  }}>
+      {status && <Card variant="outlined" sx={{ textAlign: 'left', p: 2, mb: 2 }}> <Typography>Status : {status}</Typography> </Card>}
+      <Card style={{ flex: 1, minWidth: 0, height: "100%" }}>
+        <ResourcesChart />
       </Card>
-      <Box sx={{ height: '100%' }}  >
-        <HospitalResourcesChart />
-      </Box>
-    </Box>
+    </Stack>
   );
+  
 }

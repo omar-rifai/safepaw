@@ -61,12 +61,12 @@ function getFillColor(obj) {
   ]
 }
 
-export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacilityID }) {
+export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacilityID}) {
 
   if (!loads || loads.length === 0) {
     return null;
   }
-  console.log("facility ID", selectedFacilityID)
+
   max_capacities = getMaxCapacities(loads)
   console.log(loads)
   return new ScatterplotLayer

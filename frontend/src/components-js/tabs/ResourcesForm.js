@@ -3,7 +3,7 @@
 import { Card } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid';
 import { useContext } from 'react';
-import { DataContext } from '../../App';
+import { DataContext, UIContext } from '../../App';
 
 
 function hasValues(resources, col) {
@@ -11,8 +11,13 @@ function hasValues(resources, col) {
 }
 
 
-export default function ResourcesForm({ selectedFacilityID, setInputData }) {
+export default function ResourcesForm({ setInputData }) {
+
+
     const { inputData } = useContext(DataContext);
+    const { selectedFacilityID } = useContext(UIContext);
+
+
     const resources = inputData.entries?.resources || inputData.instance?.resources || [];
 
     const handRowUpdate = async (newRow) => {
@@ -27,7 +32,8 @@ export default function ResourcesForm({ selectedFacilityID, setInputData }) {
         setTimeout(() => {
             setInputData(prev => ({
                 ...prev,
-                entries: { ...prev.entries, resources: result.entries?.resources }
+                entries:  result.entries,
+                facilities_capacities: result.facilities_capacities
             }));
         }, 0);
 
@@ -35,22 +41,18 @@ export default function ResourcesForm({ selectedFacilityID, setInputData }) {
     };
 
 
-    const columns = [{ field: 'resource_id', headerName: 'Resource ID', width: 160 },
-    { field: 'transfer_unit', headerName: 'Transfer Unit', width: 100 },
-    ...(hasValues(resources, "capacity") ? [{
-        field: 'capacity',
-        headerName: 'Capacity',
-        width: 100,
-        editable: true,
-        type: 'number',
-    }] : []),
-
+    const columns = [
+        { field: 'facility_id', headerName: 'Facility ID', width: 160 },
+        { field: 'resource_id', headerName: 'Resource ID', width: 160 },
+        ...(hasValues(resources, "capacity") ? [{ field: 'capacity', headerName: 'Capacity', width: 100, editable: true, type: 'number', }] : []),
     ];
 
-    const rows = resources
+    const rows = selectedFacilityID ?
+        resources.filter(r => { return r.facility_id === selectedFacilityID }) :
+        resources
 
     function getRowId(row) {
-        return (row.resource_id);
+        return (row.facility_id + row.resource_id);
     }
 
     return (

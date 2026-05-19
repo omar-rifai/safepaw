@@ -15,28 +15,30 @@ class FacilityRow(BaseModel):
     facility_type: str
     
 
-class PathwayRow(BaseModel):
+class FacilityPathwaysRow(BaseModel):
+    facility_id: str
     pathway_id: str
     group_id: str
     quality_level: str
     group_benefit: float
     activities: list
 
-class ResourceRow(BaseModel):
+class FacilityResourceRow(BaseModel):
+    facility_id: str
     resource_id: str
-    transfer_unit: float
     capacity: Optional[float] = None
 
-class PatientsGroupRow(BaseModel):
+class FacilityGroupsRow(BaseModel):
+    facility_id: str
     group_id: str
     lbl: Optional[str] = None
     pathways: list
 
 class DataGridEntries(BaseModel):
     facilities: list[FacilityRow] = Field(default_factory=list)
-    pathways: list[PathwayRow] = Field(default_factory=list)
-    resources: list[ResourceRow] = Field(default_factory=list)
-    patients_groups: list[PatientsGroupRow] = Field(default_factory=list)
+    pathways: list[FacilityPathwaysRow] = Field(default_factory=list)
+    resources: list[FacilityResourceRow] = Field(default_factory=list)
+    patients_groups: list[FacilityGroupsRow] = Field(default_factory=list)
 
 class FacilityLoad(BaseModel):
     facility_id: str

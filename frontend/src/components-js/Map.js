@@ -15,7 +15,7 @@ import { FacilityCapacityLayer, getFacilityCapacityToolTip } from './map-layers/
 export default function customMap() {
 
   const { inputData, outputData } = useContext(DataContext);
-  const { selectedFacilityID, setSelectedFacilityID } =  useContext(UIContext);
+  const { selectedFacilityID, setSelectedFacilityID} =  useContext(UIContext);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
@@ -63,7 +63,7 @@ export default function customMap() {
       const layer_facilityLoads = FacilityLoadLayer({
         loads: outputData.facilities_loads,
         selectedFacilityID: selectedFacilityID,
-        setSelectedFacilityID: setSelectedFacilityID
+        setSelectedFacilityID: setSelectedFacilityID,
       });
       list_layers.push(layer_facilityLoads)
     }
@@ -96,13 +96,14 @@ export default function customMap() {
     if (inputData?.facilities_capacities) {
       const layer_facilityLoads = FacilityCapacityLayer({
         facilities: inputData.facilities_capacities || [],
+        selectedFacilityID: selectedFacilityID,
         setSelectedFacilityID: setSelectedFacilityID
       });
       list_layers.push(layer_facilityLoads)
     }
     return list_layers;
 
-  }, [inputData]);
+  }, [inputData, inputData.facilities_capacities, selectedFacilityID]);
 
   useEffect(() => {
     console.log("input data:", inputData);

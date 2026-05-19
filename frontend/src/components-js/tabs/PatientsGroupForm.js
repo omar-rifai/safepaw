@@ -3,7 +3,7 @@
 import { Card } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid';
 import { useContext } from 'react';
-import { DataContext } from '../../App';
+import { DataContext, UIContext } from '../../App';
 
 
 
@@ -14,17 +14,23 @@ export default function PatientsGroupForm() {
     }
 
     const { inputData } = useContext(DataContext);
+    const { selectedFacilityID } = useContext(UIContext);
+
     const groups = inputData.entries?.patients_groups || inputData.instance?.patients_groups || [];
-    const columns = [{ field: 'group_id', headerName: 'Group ID', width: 130 },
-    ...hasValues(groups, "lbl") ? [{ field: 'lbl', headerName: 'Label', width: 200, editable: false }] : [],
-    { field: 'pathways', headerName: 'Pathways', width: 300, }
+    const columns = [
+        { field: 'facility_id', headerName: 'Facility ID', width: 160 },
+        { field: 'group_id', headerName: 'Group ID', width: 130 },
+        ...hasValues(groups, "lbl") ? [{ field: 'lbl', headerName: 'Label', width: 200, editable: false }] : [],
+        { field: 'pathways', headerName: 'Pathways', width: 300, }
     ];
 
 
-    const rows = groups
+    const rows = selectedFacilityID ?
+        groups.filter(g => { return g.facility_id === selectedFacilityID }) :
+        groups
 
     function getRowId(row) {
-        return (row.group_id);
+        return (row.facility_id + row.group_id);
     }
 
     return (
