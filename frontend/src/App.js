@@ -2,7 +2,7 @@ import { useState, createContext } from "react";
 import { Divider, Box, Button, Grid, Stack, AppBar, Toolbar, Typography } from '@mui/material';
 
 import InputForm from "./components-js/InputForms";
-import ResourcesChart from "./components-js/DiagramForm";
+import ResultsForm from "./components-js/ResultsForm";
 import UploadIcon from '@mui/icons-material/Upload';
 import AddIcon from '@mui/icons-material/Add';
 import CustomMap from './components-js/Map';
@@ -29,6 +29,7 @@ function App() {
   const [selectedFacilityID, setSelectedFacilityID] = useState(null);
   const [highlightedFacility, setHighlightedFacility] = useState(null);
   const [outputData, setOutputData] = useState({});
+  const [activeTab, setActiveTab] = useState("tab-facilities")
 
   const handleUpload = async (event) => {
     const file = event.target.files?.[0];
@@ -64,7 +65,7 @@ function App() {
   };
 
   return (
-    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData }}>
+    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab }}>
       <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility }}>
         <AppBar sx={{ backgroundColor: "#ffffffff" }}>
           <Toolbar sx={{
@@ -102,7 +103,7 @@ function App() {
 
         <Stack sx={{ mt: 15 }} spacing={2}>
           <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "flex-start" }}>
-            <Grid size={5} sx={{ width: 650, minWidth: 500 }}>
+            <Grid size={7} sx={{ width: 650, minWidth: 500 }}>
               <InputForm />
               <Grid
                 container
@@ -110,13 +111,12 @@ function App() {
                 <Button variant="outlined" onClick={optimizeInstance}>Optimize</Button>
               </Grid>
             </Grid>
-            <Grid size={7} sx={{ minWidth: 500, height: 500 }}>
+            <Grid size={5} sx={{ minWidth: 500, height: 500 }}>
               <CustomMap />
             </Grid>
           </Grid>
-          <Grid  container spacing={5}>
-
-              <ResourcesChart />
+          <Grid container>
+            <ResultsForm />
           </Grid>
         </Stack>
       </UIContext.Provider>

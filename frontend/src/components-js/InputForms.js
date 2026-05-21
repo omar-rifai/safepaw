@@ -16,9 +16,9 @@ import TuneIcon from '@mui/icons-material/Tune';
 
 
 export default function ManualInputForm() {
-    const [activeTab, setActiveTab] = useState("tab-facilities")
+
     const { selectedFacilityID} = useContext(UIContext);
-    const {setInputData } = useContext(DataContext);
+    const {setInputData, activeTab, setActiveTab } = useContext(DataContext);
     const handleChange = (_, val) => {
         setActiveTab(val);
     };
@@ -36,7 +36,7 @@ export default function ManualInputForm() {
             </Tabs>
             {activeTab == "tab-facilities" && <FacilitiesForm />}
             {activeTab == "tab-pathways" && <PathwaysForm />}
-            {activeTab == "tab-resources" && <ResourcesForm setInputData={setInputData} />}
+            {activeTab == "tab-resources" && <ResourcesForm/>}
             {activeTab == "tab-patients" && <PatientsGroupForm />}
         </Stack >
     );

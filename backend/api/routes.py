@@ -4,7 +4,7 @@ from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
 from backend.core.data_models.input_models import FacilityResources
-from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box
+from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box, get_DashboardStats
 import traceback
 
 api = APIRouter()
@@ -87,12 +87,14 @@ async def read_maternites(params: dict = Body(...), session:Session = Depends(ge
         session.commit()
         facilities_capacities = get_facilities_capacities(session)
         data_grid_entries = get_DataGridEntries(session)
+        dashboard_stats = get_DashboardStats(session)
 
         return JSONResponse(
             status_code=200,
             content={
                 "facilities_capacities":[f.model_dump() for f in facilities_capacities],
                 "entries": data_grid_entries,
+                "dashboard_stats": dashboard_stats,
                 "bbox": get_bounding_box(session)
             },
         )

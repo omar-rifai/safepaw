@@ -8,6 +8,12 @@ class FacilityCapacity(BaseModel):
     resources_capacity: dict = Field(default_factory=dict)
     coordinates: list
 
+class DashboardStats(BaseModel):
+    nbr_facilities: int
+    nbr_pathways: int
+    nbr_patients_groups: int
+    total_demand: int
+    case_mix: list
 
 class FacilityRow(BaseModel):
     facility_id: str

@@ -4,9 +4,9 @@ import logging
 
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
-from backend.core.data_models.input_models import Facility
-from backend.core.data_models.output_models import FacilityCapacity
-
+from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance
+from backend.core.data_models.output_models import FacilityCapacity, DashboardStats
+from sqlalchemy import func
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -37,6 +37,20 @@ def get_bounding_box(session):
             }
         ]
     }
+
+def get_DashboardStats(session: Session) -> DashboardStats:
+    from collections import defaultdict
+
+    nbr_facilities = session.exec(select(func.count()).select_from(Facility)).one()
+    nbr_pathways = session.exec(select(func.count()).select_from(Pathway)).one()
+    nbr_groups = session.exec(select(func.count()).select_from(PatientsGroup)).one()
+    case_mix = session.exec(select(CaseMixRatios)).all()
+    instance = session.exec(select(Instance)).one()
+    case_mix = [c.model_dump() for c in case_mix]
+    stats = DashboardStats(nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=instance.total_demand, case_mix=case_mix)
+    return stats.model_dump() 
+
+
 
 
 def get_facilities_capacities(session: Session, facility_ids: list | None = None) -> list[FacilityCapacity]:

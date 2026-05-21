@@ -11,20 +11,21 @@ function hasValues(resources, col) {
 }
 
 
-export default function ResourcesForm({ setInputData }) {
+export default function ResourcesForm() {
 
 
-    const { inputData } = useContext(DataContext);
+    const { inputData, setInputData } = useContext(DataContext);
     const { selectedFacilityID } = useContext(UIContext);
 
 
     const resources = inputData.entries?.resources || inputData.instance?.resources || [];
 
     const handRowUpdate = async (newRow) => {
+        console.log("in resources form", selectedFacilityID)
         const response = await fetch(`/api/update_FacilityResources`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ "resource_id": newRow.resource_id, "facility_id": selectedFacilityID, "capacity": newRow.capacity })
+            body: JSON.stringify({ "resource_id": newRow.resource_id, "facility_id": newRow.facility_id, "capacity": newRow.capacity })
         }).catch(console.error);
 
         const result = await response.json();

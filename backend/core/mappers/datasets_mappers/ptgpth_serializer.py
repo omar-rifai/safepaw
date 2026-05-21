@@ -16,7 +16,7 @@ def get_Regions(gdf_summary: pd.DataFrame) -> list[Region]:
 
 def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.DataFrame, dep_code: int) -> list[Facility]:
     """Creates Facility objects corresponding to unique nofinesset ids """
-    
+    from backend.core.mappers.datasets_mappers.ptgpth_utils import get_facility_visits
     list_facilities = []
     gdf_cantons = get_geo_polygon()
     gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
@@ -28,7 +28,8 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.D
             name = row.rs,
             region_id = row.can_code,
             lat = row.lat,
-            lon = row.lon))
+            lon = row.lon,
+            nbr_visits= get_facility_visits(row.nofinesset, df_mco, df_ssr)))
     list_facilities = add_dom_facility(list_facilities,  gdf_geo)
     list_facilities = add_orth_facility(list_facilities,  gdf_geo)
     return list_facilities

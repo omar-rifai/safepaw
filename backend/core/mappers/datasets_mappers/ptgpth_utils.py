@@ -504,7 +504,15 @@ def get_required_resources(A_idx, list_resources_ids):
     return dict_required_resources
 
 
-
+def get_facility_visits(nofinesset, df_mco, df_ssr):
+    nbr_visits = 0
+    if nofinesset in df_mco["FI_ET"].unique():
+        row_mco = df_mco[df_mco["FI_ET"] == nofinesset].iloc[0]
+        nbr_visits += row_mco["SEJHC_MCO"] + row_mco["SEJ0_MCO"] + row_mco["SEJHP_MCO"]
+    if nofinesset in df_ssr["FI_ET"].unique():
+        row_ssr = df_ssr[df_ssr["FI_ET"] == nofinesset].iloc[0]
+        nbr_visits += row_ssr["SEJHC"]
+    return int(nbr_visits)
 
 def get_default_geo_info(gdf_geo):
     """return the default region code and coordinates for DOM and ORTH facilities"""

@@ -14,7 +14,7 @@ function getColor(type) {
 export default function Legend({ inputData, outputData }) {
 
 
-    const facilities = inputData?.instance?.facilities || [];
+    const facilities = inputData?.facilities_capacities || [];
 
     const unique_types = useMemo(() => {
         return [...new Set(facilities.map(f => f.facility_type).filter(Boolean))];
