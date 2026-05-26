@@ -29,7 +29,7 @@ export default function ResourcesForm() {
         }).catch(console.error);
 
         const result = await response.json();
-        console.log(result.entries?.resources)
+
         setTimeout(() => {
             setInputData(prev => ({
                 ...prev,

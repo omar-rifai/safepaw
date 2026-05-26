@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from backend.core.data_models.input_models import Instance
 from typing import Optional
 
 
@@ -45,6 +46,7 @@ class DataGridEntries(BaseModel):
     pathways: list[FacilityPathwaysRow] = Field(default_factory=list)
     resources: list[FacilityResourceRow] = Field(default_factory=list)
     patients_groups: list[FacilityGroupsRow] = Field(default_factory=list)
+    instance: Instance
 
 class FacilityLoad(BaseModel):
     facility_id: str

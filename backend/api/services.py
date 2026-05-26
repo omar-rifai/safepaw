@@ -51,7 +51,13 @@ def get_DashboardStats(session: Session) -> DashboardStats:
     return stats.model_dump() 
 
 
-
+def update_instance(session: Session, new_instance):
+    instance = session.exec(select(Instance)).one()
+    print("new_instance",new_instance)
+    for key, val in instance:
+        setattr(instance, key, new_instance[key])
+    session.commit()
+    session.refresh(instance)
 
 def get_facilities_capacities(session: Session, facility_ids: list | None = None) -> list[FacilityCapacity]:
 
@@ -74,7 +80,8 @@ def get_facilities_capacities(session: Session, facility_ids: list | None = None
 def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
     from backend.core.data_models.output_models import FacilityRow, FacilityPathwaysRow, FacilityGroupsRow, FacilityResourceRow, DataGridEntries
     from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources
-    
+    """Returns the data for the Datagrid components in frontend"""
+
     query_facilities = select(Facility)
     if facility_ids:
         query_facilities = query_facilities.where(Facility.id.in_(facility_ids))
@@ -103,11 +110,14 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     patients_groups =  session.exec(query_groups).unique().all()
     groups_entries = [FacilityGroupsRow(facility_id= facility_id, group_id=pg.id, lbl=pg.lbl, pathways=[p.id for p in pg.pathways]) for pg, facility_id in patients_groups]
 
+    instance_entry = session.exec(select(Instance)).one()
+
     entry = DataGridEntries(
         facilities= [FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type) for f in facilities],
         pathways= pathways_entries,
         resources= resources_entries,
-        patients_groups= groups_entries
+        patients_groups= groups_entries,
+        instance = instance_entry
     )
 
 

@@ -7,6 +7,7 @@ import FacilitiesForm from './tabs/FacilitiesForm';
 import PathwaysForm from './tabs/PathwaysForm';
 import ResourcesForm from './tabs/ResourcesForm';
 import PatientsGroupForm from './tabs/PatientsGroupForm'
+import ConfigForm from './tabs/ConfigForm';
 
 import PersonalInjuryIcon from '@mui/icons-material/PersonalInjury';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -16,9 +17,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 
 
 export default function ManualInputForm() {
-
-    const { selectedFacilityID} = useContext(UIContext);
-    const {setInputData, activeTab, setActiveTab } = useContext(DataContext);
+    const { activeTab, setActiveTab } = useContext(DataContext);
     const handleChange = (_, val) => {
         setActiveTab(val);
     };
@@ -38,6 +37,7 @@ export default function ManualInputForm() {
             {activeTab == "tab-pathways" && <PathwaysForm />}
             {activeTab == "tab-resources" && <ResourcesForm/>}
             {activeTab == "tab-patients" && <PatientsGroupForm />}
+            {activeTab == "tab-instance" && <ConfigForm />}
         </Stack >
     );
 }

@@ -68,7 +68,6 @@ export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacili
   }
 
   max_capacities = getMaxCapacities(loads)
-  console.log(loads)
   return new ScatterplotLayer
     ({
       id: 'facilities-volume',

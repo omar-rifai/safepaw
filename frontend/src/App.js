@@ -56,7 +56,7 @@ function App() {
     console.log("Calling optimize_instance..")
     const response_convert = await fetch("/api/optimize", {
       method: "POST",
-      body: JSON.stringify({ "test": true }),
+      body: JSON.stringify({ "instance": inputData?.entries?.instance }),
       headers: { "Content-Type": "application/json" }
     })
 
@@ -105,9 +105,7 @@ function App() {
           <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "flex-start" }}>
             <Grid size={7} sx={{ width: 650, minWidth: 500 }}>
               <InputForm />
-              <Grid
-                container
-                sx={{ mt: 2, display: "flex", justifyContent: "end" }} >
+              <Grid container sx={{ mt: 2, display: "flex", justifyContent: "end" }} >
                 <Button variant="outlined" onClick={optimizeInstance}>Optimize</Button>
               </Grid>
             </Grid>

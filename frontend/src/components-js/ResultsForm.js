@@ -5,6 +5,7 @@ import Dashboard from './diagrams/FacilitiesDiagrams'
 import ResourcesChart from './diagrams/ResourcesDiagrams'
 import PathwaysChart from './diagrams/PathwaysDiagram'
 import PatientsChart from './diagrams/PatientsDiagrams';
+import ConfigChart from './diagrams/ConfigsDiagrams';
 import { Typography } from '@mui/material';
 
 export default function ResultsForm() {
@@ -17,10 +18,11 @@ export default function ResultsForm() {
       {status && <Card variant="outlined" sx={{ textAlign: 'left', p: 2, mb: 2 }}> <Typography>Status : {status}</Typography> </Card>}
       {Object.keys(inputData).length != 0 &&
         <Grid sx={{width:"100%"}} >
-          {activeTab == "tab-facilities" && <Dashboard />}
+        {activeTab == "tab-facilities" && <Dashboard />}
           {activeTab == "tab-pathways" && <PathwaysChart />}
           {activeTab == "tab-resources" && <ResourcesChart />}
-           {activeTab == "tab-patients" && <PatientsChart />}
+          {activeTab == "tab-patients" && <PatientsChart />}
+          {activeTab == "tab-instance" && <ConfigChart />}
         </Grid>}
     </Grid>
   );

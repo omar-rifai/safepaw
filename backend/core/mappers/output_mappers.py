@@ -74,16 +74,15 @@ def _get_hl_usage(results:dict, params_system:dict) -> dict:
     Delta_moins = results["Delta_moins"].groupby(["facility", "resource"])["value"].sum().to_dict()
     usage = {h: {l: 0 for l in params_system["L"]} for h in params_system["H"]}
     for l in params_system["L"]:
-        nominator = 0
-        denominator = 0
         for h in params_system["H"]:
+            nominator = 0
             for g in params_system["G"]:
                 for k in params_system["K_idx"][g]:
                     for r in params_system["R"]:
                         for a in params_system["A_idx"][g][k]:
                                 nominator += params_system["t_gkal"][g][k][a][l] * P[(g, k, r, a, h)] * params_system["D"]
        
-            denominator += params_system["m_hl"][h][l] + Delta_plus[(h,l)] - Delta_moins[(h,l)]
+            denominator = params_system["m_hl"][h][l] + Delta_plus[(h,l)] - Delta_moins[(h,l)]
             usage[h][l] = nominator / denominator if denominator != 0 else 0
     return usage
 

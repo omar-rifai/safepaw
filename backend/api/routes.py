@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
-from backend.core.data_models.input_models import FacilityResources
+from backend.core.data_models.input_models import FacilityResources, Instance
 from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box, get_DashboardStats
 import traceback
 
@@ -15,14 +15,17 @@ def health():
 
 @api.post("/optimize")
 async def optimize(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
-    from backend.api.services import run_optimization
+    from backend.api.services import run_optimization, update_instance
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.mappers.output_mappers import create_facilityLoad
-
+    import json
     import traceback
+    
     try: 
+       print("instance in optimization:", payload["instance"])
+       update_instance(session, payload["instance"])
        params = convert_dm_to_json(session)
-       import json
+       
        with open("experiments/test.json", "w") as fp:
            json.dump(params, fp)
        status, _, dict_results = run_optimization(params)  
@@ -42,7 +45,6 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
 @api.put("/update_FacilityResources")
 async def update_facility_type(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     
-
     try:
         
         facilityResource = session.exec(select(FacilityResources)\

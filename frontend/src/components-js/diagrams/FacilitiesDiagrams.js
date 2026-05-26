@@ -90,26 +90,28 @@ export default function Dashboard() {
     <Grid container spacing={5}>
       <Grid>
         <Card sx={{ m: 5, width: "100%" }} >
-           <Typography align="left" sx={{ m: 1, fontSize: 12 }}  > Instance Dashboard</Typography>
+          <Typography align="left" sx={{ m: 1, fontSize: 12 }}  > Instance Dashboard</Typography>
+
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{fontWeight: "bold"}}> Property</TableCell>
-                <TableCell sx ={{fontWeight: "bold"}}> Value</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}> Property</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}> Value</TableCell>
               </TableRow>
             </TableHead>
-            {Object.entries(inputData.dashboard_stats)
-              .filter(([_, value]) => typeof value == "number")
-              .map(([key, value]) => (
-                <TableRow key={key}>
-                  <TableCell>
-                    {key.replace(/_/g, " ")}
-                  </TableCell>
-                  <TableCell>
-                    {value}
-                  </TableCell>
-                </TableRow>))}
-
+            <TableBody>
+              {Object.entries(inputData.dashboard_stats)
+                .filter(([_, value]) => typeof value == "number")
+                .map(([key, value]) => (
+                  <TableRow key={key}>
+                    <TableCell>
+                      {key.replace(/_/g, " ")}
+                    </TableCell>
+                    <TableCell>
+                      {value}
+                    </TableCell>
+                  </TableRow>))}
+            </TableBody>
           </Table>
         </Card>
       </Grid>

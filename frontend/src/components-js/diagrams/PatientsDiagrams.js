@@ -21,7 +21,6 @@ export default function PatientsChart() {
         }, {})
     );
 
-    console.log("groups", chartData)
     const selectedGroups = groups
         .filter((e) => e.facility_id === selectedFacilityID)
         .map((e) => e.group_id);
