@@ -14,10 +14,10 @@ export default function ResultsForm() {
   const status = outputData?.status || "";
 
   return (
-    <Grid sx={{width:"100%",mt:3, ml:10}} >
-      {status && <Card variant="outlined" sx={{ textAlign: 'left', p: 2, mb: 2 }}> <Typography>Status : {status}</Typography> </Card>}
+    <Grid sx={{width:"100%",mt:3, ml:2}} >
+      {status && <Card sx={{ textAlign: 'left', mb: 2, backgroundColor:"#F9FAFB" }}> <Typography>Status : {status}</Typography> </Card>}
       {Object.keys(inputData).length != 0 &&
-        <Grid sx={{width:"100%"}} >
+        <Grid >
         {activeTab == "tab-facilities" && <Dashboard />}
           {activeTab == "tab-pathways" && <PathwaysChart />}
           {activeTab == "tab-resources" && <ResourcesChart />}

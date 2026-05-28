@@ -35,7 +35,7 @@ export default function ConfigChart() {
     const activeIndexTransfers = Math.round(transfersFrac * (steps - 1));
 
     return (
-        <Grid container spacing={5} sx={{ justifyContent: "space-evenly", alignItems: "flex-start", mt: 15 }}>
+        <Grid container spacing={0} sx={{ justifyContent: "space-evenly", alignItems: "flex-start" }}>
             <Grid >
                 <GaugeChart activeIndex={activeIndexCapacity} steps={steps} stops={positive_gradients} label={`Global Capacity: ${capacity_label}`} />
             </Grid>

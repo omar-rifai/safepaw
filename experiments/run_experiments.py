@@ -14,7 +14,6 @@ def experiment_exists(file_path: str, opt_params: dict)-> bool:
     if not set(opt_params).issubset(df.columns):
         return False
     mask = pd.concat([pd.Series(np.isclose(pd.to_numeric(df[k], errors="coerce"), float(v)),index=df.index) for k, v in opt_params.items()],axis=1).all(axis=1)
-    print(opt_params, mask.any())
     return mask.any()
 
 

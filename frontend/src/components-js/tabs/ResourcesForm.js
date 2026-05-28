@@ -43,8 +43,8 @@ export default function ResourcesForm() {
 
 
     const columns = [
-        { field: 'facility_id', headerName: 'Facility ID', width: 160 },
-        { field: 'resource_id', headerName: 'Resource ID', width: 160 },
+        { field: 'facility_id', headerName: 'Facility ID', width: 130 },
+        { field: 'resource_id', headerName: 'Resource ID', width: 130 },
         ...(hasValues(resources, "capacity") ? [{ field: 'capacity', headerName: 'Capacity', width: 100, editable: true, type: 'number', }] : []),
     ];
 

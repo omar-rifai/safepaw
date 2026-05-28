@@ -7,35 +7,34 @@ import { DataContext } from "../../App";
 export default function ConfigForm() {
 
     const { inputData } = useContext(DataContext)
-    console.log("in config form:", inputData?.entries?.instance?.alpha)
 
     return (
         <Grid >
-            <Card sx={{ width: 650, height: "auto" }}>
+            <Card sx={{ width: 550, height: "auto", }}>
                 <Stack container spacing={2} sx={{ mt: 3, ml: 3, mr: 10, mb: 5 }} >
-                    <Stack container direction="row" alignItems="center" gap={1}>
+                    <Stack container direction="row" alignItems="center" >
                         <Typography sx={{ pl: "5%", mt: 4, fontSize: 15 }}>Settings</Typography>
                     </Stack>
                     <Divider />
-                    <Stack container direction="row" alignItems="center" gap={1}>
+                    <Stack container direction="row" alignItems="center" >
                         <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Global capacity (%)</Typography>
                         <DynamicSlider
                             value={inputData?.entries?.instance?.perc_capacity ?? 0}  param_key="perc_capacity">
                         </DynamicSlider>
                     </Stack>
-                    <Stack container direction="row" alignItems="center" gap={1}>
+                    <Stack container direction="row" alignItems="center" >
                         <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Demand (%)</Typography>
                         <DynamicSlider
                             value={inputData?.entries?.instance?.perc_demand ?? 0} param_key="perc_demand">
                         </DynamicSlider>
                     </Stack>
-                    <Stack container direction="row" alignItems="center" gap={1}>
+                    <Stack container direction="row" alignItems="center" >
                         <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Alpha </Typography>
                         <DynamicSlider
                             value={inputData?.entries?.instance?.alpha ?? 0} frac={true} param_key="alpha">
                         </DynamicSlider>
                     </Stack>
-                    <Stack container direction="row" alignItems="center" gap={1}>
+                    <Stack container direction="row" alignItems="center" >
                         <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Allowed tranfers (%)</Typography>
                         <DynamicSlider
                             value={inputData?.entries?.instance?.perc_transfers ?? 0} frac={true}  param_key="perc_transfers">
@@ -43,8 +42,6 @@ export default function ConfigForm() {
                     </Stack>
 
                 </Stack>
-
-
             </Card>
         </Grid >
     );
@@ -83,8 +80,8 @@ function DynamicSlider({ value, frac = false, param_key }) {
             value={frac ? value : ((value ?? 1) - 1) * 100}
             valueLabelDisplay="auto"
             valueLabelFormat={(v) => frac ? v : `${v > 0 ? "+" : ""}${Number(v.toFixed(2))} %`}
-            onChange={handleChange}
-        ></Slider>
+            onChange={handleChange}>
+        </Slider>
 
     )
 }

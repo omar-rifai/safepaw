@@ -70,7 +70,7 @@ def run_driver(params_system):
     set_obj_fn(LP, P_gk, P, Delta_plus, Delta_moins, s_hl, params_system)
     print("Declaring Constraints...")
     declare_constraints(LP, vars_system, params_system)
-    print("Starting solver...")
+    print("Running solver...")
     if "GRB_LICENSE_FILE" in os.environ:
         LP.solve(pulp.GUROBI(msg=1))
     else:

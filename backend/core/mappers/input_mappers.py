@@ -184,7 +184,6 @@ def reconstruct_m_hl(list_facilities: list, capacity_mult, params_system: dict) 
     m = {}
     
     for h in list_facilities:
-        print("h resources capacity ffs:", h.resources_capacity)
         m[h.id] = {l: v * capacity_mult for l, v in h.resources_capacity.items()}
     params_system["m_hl"] = m
     return params_system

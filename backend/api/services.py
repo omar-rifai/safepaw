@@ -53,7 +53,6 @@ def get_DashboardStats(session: Session) -> DashboardStats:
 
 def update_instance(session: Session, new_instance):
     instance = session.exec(select(Instance)).one()
-    print("new_instance",new_instance)
     for key, val in instance:
         setattr(instance, key, new_instance[key])
     session.commit()
@@ -140,6 +139,7 @@ def clear_all_tables(session):
 def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     """Returns status, objective function as str and a dict of result variables"""
     from backend.core.main import run_driver
+
     check_executable()
     print("Starting optimization driver...")
     status, objective, results = run_driver(params)

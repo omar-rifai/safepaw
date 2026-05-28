@@ -1,5 +1,5 @@
 import { PieChart, Pie, ResponsiveContainer, Tooltip } from 'recharts';
-import { Card, Typography, Grid, Table, TableHead, TableBody, TableRow, TableContainer, TableCell } from '@mui/material';
+import { Card, Typography, Grid, Table, TableHead, TableBody, TableRow, Stack, TableCell } from '@mui/material';
 import { DataContext } from '../../App';
 import { useContext, useMemo } from "react";
 
@@ -87,12 +87,11 @@ export default function Dashboard() {
   }, [casemix, groupColorMap]);
 
   return (
-    <Grid container spacing={5}>
-      <Grid>
-        <Card sx={{ m: 5, width: "100%" }} >
-          <Typography align="left" sx={{ m: 1, fontSize: 12 }}  > Instance Dashboard</Typography>
+    <Stack container spacing={1}>
+      <Grid sx={{ width: "auto"}}>
+        <Card sx={{width:"92%"}}  >
 
-          <Table size="small">
+          <Table   >
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: "bold" }}> Property</TableCell>
@@ -115,8 +114,8 @@ export default function Dashboard() {
           </Table>
         </Card>
       </Grid>
-      <Grid sx={{ width: 400 }}>
-        <Card sx={{ m: 5, width: "100%" }} >
+      <Grid sx={{ width: "auto" }}>
+   
           <Typography align="left" sx={{ m: 1, fontSize: 12 }}  >Case Mix Distribution</Typography>
           <ResponsiveContainer width="100%" height={400}>
             <PieChart>
@@ -142,8 +141,7 @@ export default function Dashboard() {
               />
             </PieChart>
           </ResponsiveContainer>
-        </Card>
       </Grid>
-    </Grid >
+    </Stack >
   );
 }

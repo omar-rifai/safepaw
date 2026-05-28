@@ -18,7 +18,6 @@ export default function PatientsGroupForm() {
 
     const groups = inputData.entries?.patients_groups || inputData.instance?.patients_groups || [];
     const columns = [
-        { field: 'facility_id', headerName: 'Facility ID', width: 160 },
         { field: 'group_id', headerName: 'Group ID', width: 130 },
         ...hasValues(groups, "lbl") ? [{ field: 'lbl', headerName: 'Label', width: 200, editable: false }] : [],
         { field: 'pathways', headerName: 'Pathways', width: 300, }
@@ -29,6 +28,12 @@ export default function PatientsGroupForm() {
         groups.filter(g => { return g.facility_id === selectedFacilityID }) :
         groups
 
+
+     const unique_rows = rows.filter((row, i, self) => i === self.findIndex(
+        r => r.group_id === row.group_id && JSON.stringify(r.pathways) === JSON.stringify(row.pathways) )
+    )
+    
+    
     function getRowId(row) {
         return (row.facility_id + row.group_id);
     }
@@ -37,7 +42,7 @@ export default function PatientsGroupForm() {
         < Card>
 
             <DataGrid
-                rows={rows}
+                rows={unique_rows}
                 columns={columns}
                 initialState={{
                     pagination: {

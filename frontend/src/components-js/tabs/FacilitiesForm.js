@@ -1,5 +1,7 @@
 import { DataGrid } from '@mui/x-data-grid';
-import { Card } from '@mui/material'
+import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
+
+import { Box } from '@mui/material'
 import { useContext } from 'react';
 import { DataContext, UIContext } from '../../App';
 
@@ -27,7 +29,14 @@ export default function FacilitiesForm() {
     }
 
     return (
-        <Card>
+        <Box
+            sx={{
+                flexGrow: 1,
+                minWidth: 0,
+                width: "100%",
+                ml:2
+            }}
+        >
             <DataGrid
                 rows={rows}
                 columns={columns}
@@ -37,6 +46,7 @@ export default function FacilitiesForm() {
                 checkboxSelection
                 disableRowSelectionOnClick
             />
-        </Card>
+        </Box>
     );
 }
+

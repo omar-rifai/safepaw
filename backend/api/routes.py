@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Body, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
-from backend.core.data_models.input_models import FacilityResources, Instance
+from backend.core.data_models.input_models import FacilityResources
 from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box, get_DashboardStats
-import traceback
+import traceback, sys, janus, threading, json, os, asyncio
 
 api = APIRouter()
 
@@ -13,16 +13,65 @@ api = APIRouter()
 def health():
     return {"status": "ok"}
 
+
+@api.get("/stream")
+
+async def stream(instance: str, session: Session = Depends(get_session)) ->StreamingResponse:
+    from backend.api.services import run_optimization
+    from backend.api.services import run_optimization, update_instance
+    from backend.core.mappers.output_mappers import create_facilityLoad
+    from backend.core.mappers.input_mappers import convert_dm_to_json
+    queue = janus.Queue()
+    instance = json.loads(instance)
+    
+    class StdOutWriter:
+        def __init__(self, sync_q):
+            self.sync_q = sync_q
+        def write(self, text):
+            for line in text.splitlines():
+                if line.strip():
+                    self.sync_q.put(line)
+        def flush(self): pass
+
+    def run():
+        sys.stdout = sys.stderr = StdOutWriter(queue.sync_q)
+        try:
+            update_instance(session, instance)
+            params = convert_dm_to_json(session)
+            status, _, dict_results = run_optimization(params)
+            results = [f.model_dump() for f in create_facilityLoad(dict_results, params)] 
+            queue.sync_q.put({"type": "result", "status": status, "facilities_loads": results})
+        except Exception as e:
+            print(f"ERROR: {e}", flush=True)
+            traceback.print_exc()
+        finally:
+            sys.stdout = sys.__stdout__
+            queue.sync_q.put(None)
+    
+    os.environ["PYTHONUNBUFFERED"] = "1"
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, run)
+
+    async def read_from_queue():
+        while True:
+            item = await queue.async_q.get()
+            if item is None: break
+            if isinstance(item, dict):
+                yield f"data: {json.dumps(item)}\n\n"
+            else:
+                yield f'data: {json.dumps({"type":"log","message":item})}\n\n'
+
+    return StreamingResponse(read_from_queue(), media_type="text/event-stream")
+
+
 @api.post("/optimize")
 async def optimize(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
     from backend.api.services import run_optimization, update_instance
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.mappers.output_mappers import create_facilityLoad
-    import json
     import traceback
     
     try: 
-       print("instance in optimization:", payload["instance"])
        update_instance(session, payload["instance"])
        params = convert_dm_to_json(session)
        

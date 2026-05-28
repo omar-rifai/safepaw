@@ -15,7 +15,7 @@ import { FacilityCapacityLayer, getFacilityCapacityToolTip } from './map-layers/
 export default function customMap() {
 
   const { inputData, outputData } = useContext(DataContext);
-  const { selectedFacilityID, setSelectedFacilityID} =  useContext(UIContext);
+  const { selectedFacilityID, setSelectedFacilityID } = useContext(UIContext);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
@@ -169,9 +169,7 @@ export default function customMap() {
         <div
           style={{
             width: '100%',
-            height: '100%',
-            outline: '2px solid #b8b8b9ff',
-            boxSizing: 'border-box',
+            height: '100%'
           }}
         >
           <DeckGL
@@ -180,14 +178,16 @@ export default function customMap() {
             controller={true}
             layers={renderedLayers}
             getTooltip={getTooltip}
-            onClick={({ object }) => { if (!object) {
-               setSelectedFacilityID(null) ;
-              } }}
+            onClick={({ object }) => {
+              if (!object) {
+                setSelectedFacilityID(null);
+              }
+            }}
           >
 
             <Map
               reuseMaps
-              mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+              mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
               style={{ width: '100%', height: '100%' }}
               attributionControl={false}
             />
@@ -195,7 +195,7 @@ export default function customMap() {
             <Legend inputData={inputData} outputData={outputData} />
           </DeckGL>
         </div>
-        {selectedFacilityID&& <Typography>Data filtered for facilitiy {selectedFacilityID}. Click anywhere on the map to unfilter.</Typography>}
+        {selectedFacilityID && <Typography>Data filtered for facilitiy {selectedFacilityID}. Click anywhere on the map to unfilter.</Typography>}
       </Box>
     </Box >
   );

@@ -24,6 +24,7 @@
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "@mui/x-data-grid": "^9.2.0",
+    "@mui/x-tree-view": "^9.1.0",
     "@nivo/bar": "^0.99.0",
     "@nivo/core": "^0.99.0",
     "@turf/bbox": "^7.3.0",
@@ -32,6 +33,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-map-gl": "^8.1",
+    "react-resizable-panels": "^4.11.2",
     "react-scripts": "^5.0.1",
     "recharts": "^3.7.0",
     "yaml": "^2.8.3"
