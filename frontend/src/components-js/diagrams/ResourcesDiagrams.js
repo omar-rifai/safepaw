@@ -66,11 +66,10 @@ function ResourcesInputChart({ resources, currentResource, chartData, selectedFa
   const { outputData } = useContext(DataContext);
   return (
 
-    <Card sx={{ width: 650, height: "auto" }}>
-      <Typography sx={{ pl: "10%", fontFamily: "Roboto" }}> Resource Capacity per Facility</Typography>
-      <Box sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
-        <Tabs value={currentResource} onChange={(_, v) => setActiveResource(v)} orientation="vertical" variant="scrollable" scrollButtons="auto"
-          sx={{ height: 400, overflowY: "auto" }}>
+    <Card sx={{ width: "90%", height: "auto" }}>
+      <Box sx={{ width: "100%", height: "100%" }}>
+        <Tabs value={currentResource} onChange={(_, v) => setActiveResource(v)} orientation="horizontal" variant="scrollable" scrollButtons="auto"
+          sx={{ overflowX: "auto" }}>
           {resources.map(r => <Tab key={r} value={r} label={r}></Tab>)}
         </Tabs>
         <ResponsiveContainer width="100%" height={400} style={{ flex: 1, minWidth: 0 }}>
@@ -78,15 +77,15 @@ function ResourcesInputChart({ resources, currentResource, chartData, selectedFa
             margin={{ top: 30, right: 30, bottom: 20, left: 20 }}>
             <Tooltip />
 
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.5} />
             <XAxis dataKey="facility" padding={{ left: 30, right: 30 }} />
             <YAxis width="auto" />
             <Legend />
-            <ReferenceArea x1={selectedFacilityID} x2={selectedFacilityID} fill="#88adc8ff" fillOpacity={0.3} />
-            <Bar stackId="a" dataKey="capacity" fill="#88adc8ff" />
+            <ReferenceArea x1={selectedFacilityID} x2={selectedFacilityID} fill="#7eb0eaff" radius={outputData ? [0,0,0,0] : [6,6,0,0]} />
+            <Bar barSize={30} stackId="a" dataKey="capacity" fill="#759bc9ff" />
             {outputData && (<>
-              <Bar stackId="a" dataKey="imported" fill="#baecb4ff" />
-              <Bar stackId="a" dataKey="exported" fill="rgba(248, 98, 98, 0.7)" />)
+              <Bar  stackId="a" dataKey="imported" fill="#baecb4ff" radius={[6, 6, 0, 0]} />
+              <Bar stackId="a" dataKey="exported" fill="rgba(248, 98, 98, 0.7)" radius={[6, 6, 0, 0]} />)
             </>)}
           </ComposedChart>
         </ResponsiveContainer>
@@ -102,9 +101,8 @@ function ResourcesOutputChart({ resources, currentResource, chartData, selectedF
 
     <Card sx={{ width: 650, height: "auto" }}>
       <Typography sx={{ pl: "10%", fontFamily: "Roboto" }}> Resource Usage per Facility</Typography>
-      <Box sx={{ display: "flex", flexDirection: "row", width: "100%" }}>
-        <Tabs value={currentResource} onChange={(_, v) => setActiveResource(v)} orientation="vertical" variant="scrollable" scrollButtons="auto"
-          sx={{ height: 400, overflowY: "auto" }}>
+      <Box sx={{ display: "flex", width: "100%" }}>
+        <Tabs value={currentResource} onChange={(_, v) => setActiveResource(v)} orientation="horizontal" variant="scrollable" scrollButtons="auto">
           {resources.map(r => <Tab key={r} value={r} label={r}></Tab>)}
         </Tabs>
         <ResponsiveContainer width="100%" height={400} style={{ flex: 1, minWidth: 0 }}>

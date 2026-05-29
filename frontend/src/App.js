@@ -3,7 +3,6 @@ import { Divider, Box, Button, AppBar, Tabs, Tab, Toolbar, Typography } from '@m
 
 import InputForm from "./components-js/InputForms";
 import ResultsForm from "./components-js/ResultsForm";
-import UploadIcon from '@mui/icons-material/Upload';
 import { Group, Panel, Separator } from "react-resizable-panels";
 import CustomMap from './components-js/Map';
 import { styled } from '@mui/material/styles';
@@ -64,7 +63,7 @@ function App() {
     }));
     setOutputData(null)
   };
-
+  const enabled_optimize = inputData?.entries ? false : true
 
   const optimizeInstance = async () => {
     console.log("Calling optimize_instance..")
@@ -87,16 +86,16 @@ function App() {
               <Tabs value={activeTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile>
                 <Tab label="Facilities" value="tab-facilities" sx={{ fontSize: 10 }} icon={<LocalHospitalIcon sx={{ fontSize: 20 }} />} />
                 <Tab label="Pathways" value="tab-pathways" sx={{ fontSize: 10 }} icon={<RouteIcon sx={{ fontSize: 20 }} />} />
-                <Tab label="Patient Groups" value="tab-patients" sx={{ fontSize: 10 }} icon={<PersonalInjuryIcon sx={{ fontSize: 20 }} />} />
                 <Tab label="Resources" value="tab-resources" sx={{ fontSize: 10 }} icon={<VaccinesIcon sx={{ fontSize: 20 }} />} />
                 <Tab label="Model Configuration" value="tab-instance" sx={{ fontSize: 10, maxWidth: 80 }} icon={<TuneIcon sx={{ fontSize: 20 }} />} wrapped />
               </Tabs>
             </Box>
             <Box sx={{ flexGrow: 1 }} />
-            <Button variant="outlined" onClick={optimizeInstance} sx={{ flexShrink: 0 }}>Optimize</Button>
-            <Button component="label" startIcon={<UploadIcon />} sx={{ flexShrink: 0 }}>  Upload
+
+            <Button component="label" variant="outlined" sx={{ flexShrink: 0 }}>  Upload
               <VisuallyHiddenInput type="file" onChange={handleUpload} multiple />
             </Button>
+            <Button  onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Optimize</Button>
             <Typography variant="h4" sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, letterSpacing: "0.05em", color: "#333333" }}> SAFEPAW </Typography>
             <Box />
             <Box component="img" src="logo_safepaw.jpg" sx={{ height: 50, width: "auto" }}></Box>
@@ -107,19 +106,19 @@ function App() {
           </Toolbar>
         </AppBar>
         <Divider />
-        <Group style={{  height: 900, backgroundColor:"#F9FAFB"}}>
-          <Panel  minSize={150} maxSize={550}>
-            <Group  orientation="vertical">
-              <Panel defaultSize={450} minSize={200} maxSize={700}>
+        <Group style={{ height: 900, }}>
+          <Panel defaultSize={550} minSize={10} maxSize={550}>
+            <Group orientation="vertical" >
+              <Panel  minSize={200} maxSize={700}>
                 <InputForm activeTab={activeTab} />
               </Panel>
-              <Separator />
+              <Separator style={{height: "2px", minHeight: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize",flexShrink: 0}} />
               <Panel>
                 <ResultsForm />
               </Panel>
             </Group>
           </Panel>
-          <Separator />
+          <Separator style={{width: "2px",  backgroundColor: "#c8cdd6ff", cursor: "row-resize",flexShrink: 0}} />
           <Panel>
             <CustomMap />
           </Panel>

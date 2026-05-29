@@ -6,7 +6,7 @@ import { UIContext, DataContext } from '../App';
 import FacilitiesForm from './tabs/FacilitiesForm';
 import PathwaysForm from './tabs/PathwaysForm';
 import ResourcesForm from './tabs/ResourcesForm';
-import PatientsGroupForm from './tabs/PatientsGroupForm'
+
 import ConfigForm from './tabs/ConfigForm';
 
 
@@ -18,7 +18,6 @@ export default function ManualInputForm({activeTab}) {
             {activeTab == "tab-facilities" && <FacilitiesForm />}
             {activeTab == "tab-pathways" && <PathwaysForm />}
             {activeTab == "tab-resources" && <ResourcesForm/>}
-            {activeTab == "tab-patients" && <PatientsGroupForm />}
             {activeTab == "tab-instance" && <ConfigForm />}
         </Grid >
     );

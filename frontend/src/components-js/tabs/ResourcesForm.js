@@ -1,6 +1,6 @@
 
 
-import { Card } from '@mui/material'
+import { Box } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid';
 import { useContext } from 'react';
 import { DataContext, UIContext } from '../../App';
@@ -33,7 +33,7 @@ export default function ResourcesForm() {
         setTimeout(() => {
             setInputData(prev => ({
                 ...prev,
-                entries:  result.entries,
+                entries: result.entries,
                 facilities_capacities: result.facilities_capacities
             }));
         }, 0);
@@ -45,7 +45,7 @@ export default function ResourcesForm() {
     const columns = [
         { field: 'facility_id', headerName: 'Facility ID', width: 130 },
         { field: 'resource_id', headerName: 'Resource ID', width: 130 },
-        ...(hasValues(resources, "capacity") ? [{ field: 'capacity', headerName: 'Capacity', width: 100, editable: true, type: 'number', }] : []),
+        ...(hasValues(resources, "capacity") ? [{ field: 'capacity', headerName: 'Capacity', width: 130, editable: true, type: 'number', }] : []),
     ];
 
     const rows = selectedFacilityID ?
@@ -57,8 +57,14 @@ export default function ResourcesForm() {
     }
 
     return (
-        < Card>
-
+        <Box
+            sx={{
+                flexGrow: 1,
+                minWidth: 0,
+                width: "100%",
+                ml: 2
+            }}
+        >
             <DataGrid
                 rows={rows}
                 columns={columns}
@@ -78,6 +84,6 @@ export default function ResourcesForm() {
                 disableRowSelectionOnClick
             />
 
-        </Card >
+        </Box >
     );
 }

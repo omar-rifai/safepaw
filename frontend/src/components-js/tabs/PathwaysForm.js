@@ -1,6 +1,6 @@
 
 import { DataGrid } from '@mui/x-data-grid';
-import { Card } from '@mui/material'
+import { Box } from '@mui/material'
 import { useContext } from 'react';
 import { DataContext, UIContext } from '../../App';
 
@@ -11,9 +11,9 @@ export default function PathwaysForm() {
     const { selectedFacilityID } = useContext(UIContext);
     const pathways = inputData.entries?.pathways || inputData.instance?.pathways || [];
     const columns = [
-        { field: 'pathway_id', headerName: 'Pathway ID', width: 100 },
-        { field: 'group_id', headerName: 'Patients Group', width: 130 },
-        { field: "activities", headerName: "Activities List", width: 400 }
+        { field: 'pathway_id', headerName: 'Pathway ID', width: 140},
+        { field: 'group_id', headerName: 'Patients Group', width: 140},
+        { field: "activities", headerName: "Activities List", width: 280 }
     ];
 
     const rows = selectedFacilityID ?
@@ -30,7 +30,7 @@ export default function PathwaysForm() {
     }
 
     return (
-        < Card>
+        <Box sx={{flexGrow: 1, minWidth: 0, width: "100%", ml: 2}}>
 
             <DataGrid
                 rows={unique_rows}
@@ -48,6 +48,6 @@ export default function PathwaysForm() {
                 disableRowSelectionOnClick
             />
 
-        </Card >
+        </Box >
     );
 }

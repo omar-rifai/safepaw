@@ -4,7 +4,6 @@ import { useContext } from 'react';
 import Dashboard from './diagrams/FacilitiesDiagrams'
 import ResourcesChart from './diagrams/ResourcesDiagrams'
 import PathwaysChart from './diagrams/PathwaysDiagram'
-import PatientsChart from './diagrams/PatientsDiagrams';
 import ConfigChart from './diagrams/ConfigsDiagrams';
 import { Typography } from '@mui/material';
 
@@ -21,7 +20,6 @@ export default function ResultsForm() {
         {activeTab == "tab-facilities" && <Dashboard />}
           {activeTab == "tab-pathways" && <PathwaysChart />}
           {activeTab == "tab-resources" && <ResourcesChart />}
-          {activeTab == "tab-patients" && <PatientsChart />}
           {activeTab == "tab-instance" && <ConfigChart />}
         </Grid>}
     </Grid>

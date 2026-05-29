@@ -1,5 +1,5 @@
 
-import { Card, Grid, Stack, Typography, Slider, Divider } from "@mui/material";
+import { Box, Stack, Typography, Slider, Divider } from "@mui/material";
 import { useContext } from "react";
 import { DataContext } from "../../App";
 
@@ -9,11 +9,11 @@ export default function ConfigForm() {
     const { inputData } = useContext(DataContext)
 
     return (
-        <Grid >
-            <Card sx={{ width: 550, height: "auto", }}>
-                <Stack container spacing={2} sx={{ mt: 3, ml: 3, mr: 10, mb: 5 }} >
+         <Box sx={{ flexGrow: 1,  minWidth: 0, width: "100%", ml:2}}>
+            
+                <Stack container spacing={2} sx={{ mt: 3, mr: 10, mb: 5 }} >
                     <Stack container direction="row" alignItems="center" >
-                        <Typography sx={{ pl: "5%", mt: 4, fontSize: 15 }}>Settings</Typography>
+                        <Typography sx={{ pl: "5%", mt: 4, fontSize: 24 }}>Settings</Typography>
                     </Stack>
                     <Divider />
                     <Stack container direction="row" alignItems="center" >
@@ -42,8 +42,8 @@ export default function ConfigForm() {
                     </Stack>
 
                 </Stack>
-            </Card>
-        </Grid >
+      
+        </Box >
     );
 }
 
