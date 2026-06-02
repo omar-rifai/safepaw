@@ -102,7 +102,7 @@ def get_Activities(groups_ids: list) -> list[Activity]:
     """Creates Activity objects
     Required resources is the average length of stay for a labour in France in bed/days"""
     from backend.core.data_models.input_models import Activity    
-    list_activities = [Activity(id="a"+g, pathway_id="p"+g, group_id=g, transferable=False, transfer_to=None)for g in groups_ids]
+    list_activities = [Activity(id="accouchement_"+g, pathway_id="p"+g, group_id=g, transferable=False, transfer_to=None)for g in groups_ids]
     return list_activities
 
 

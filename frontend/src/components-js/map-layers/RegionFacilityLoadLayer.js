@@ -1,34 +1,29 @@
 import { ArcLayer } from "@deck.gl/layers";
 
-export function RegionFacilityLoadLayer({ loads, regions, selectedFacilityID }) {
-
-    if (!selectedFacilityID) { return null }
-
-    const maxLoad = loads?.reduce((max, d) => Math.max(max, d.properties.load), 0);
-
+export function RegionFacilityLoadLayer({ loads, selectedFacilityID }) {
+    const maxLoad = loads?.reduce((max, d) => Math.max(max, d["load"]), 0);
     const facilityLoads = (loads || [])
-        .filter(d => d.properties.region_id != null &&
-            Math.round(d.properties.load) > 0 &&
-            d.properties.facility_id == selectedFacilityID)
+        .filter(d => Math.round(d["load"]) > 0)
     if (facilityLoads.length === 0) {
         return null;
     }
+
     return new ArcLayer
         ({
             id: 'region-to-facility',
             data: facilityLoads,
-            getSourcePosition: d => regions[d.properties.region_id].coordinates,
-            getTargetPosition: d => d.geometry.coordinates,
+            getSourcePosition: d => d.region_coordinates,
+            getTargetPosition: d => d.coordinates,
             getSourceColor: d => {
-                const t = d.properties.load / maxLoad;
+                const t = d["load"] / maxLoad;
                 return [0, 0, Math.round(t * 255), 20 + t * 255];
             },
             getTargetColor: d => {
-                const t = d.properties.load / maxLoad;
+                const t = d["load"] / maxLoad;
                 return [0, 0, Math.round(t * 255), 20 + t * 255];
             },
             getWidth: d => {
-                const t = d.properties.load / maxLoad;
+                const t = d["load"] / maxLoad;
                 return Math.min(t * 100, 5)
             },
             getHeight: 0.4,
@@ -45,8 +40,8 @@ export function RegionFacilityLoadLayer({ loads, regions, selectedFacilityID }) 
 
 
 export function getRegionFacilityToolTip(info, regions) {
-    const region_lbl = regions ? regions[Number(info.object.properties.region_id)].name : ""
+    const region_lbl = Number(info.object.region_id) ?? ""
     return {
-        text: `${region_lbl} Flow: ${Math.round(info.object.properties.load)}`
+        text: `${region_lbl} Flow: ${Math.round(info.object.load)}`
     };
 }

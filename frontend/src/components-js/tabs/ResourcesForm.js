@@ -16,8 +16,6 @@ export default function ResourcesForm() {
 
     const { inputData, setInputData } = useContext(DataContext);
     const { selectedFacilityID } = useContext(UIContext);
-
-
     const resources = inputData.entries?.resources || inputData.instance?.resources || [];
 
     const handRowUpdate = async (newRow) => {
@@ -62,7 +60,7 @@ export default function ResourcesForm() {
                 flexGrow: 1,
                 minWidth: 0,
                 width: "100%",
-                ml: 2
+                ml: 5
             }}
         >
             <DataGrid
@@ -79,7 +77,6 @@ export default function ResourcesForm() {
                 processRowUpdate={handRowUpdate}
                 getRowId={getRowId}
                 pageSizeOptions={[5]}
-                checkboxSelection
                 onProcessRowUpdateError={console.error}
                 disableRowSelectionOnClick
             />

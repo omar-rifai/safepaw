@@ -59,13 +59,7 @@ export function FacilityCapacityLayer({ facilities, selectedFacilityID, setSelec
       data: facilities_w_avg,
       getPosition: d => jitter(d["coordinates"]),
       getRadius: d => 4 + 6 * d.normalized_avg,
-      getFillColor: d => {
-        const base = getColor(d["facility_type"]);
-        if (selectedFacilityID != null && d.facility_id !== selectedFacilityID) {
-          return [base[0], base[1], base[2], 0]
-        }
-        else return base
-      },
+      getFillColor: d =>  getColor(d["facility_type"]),
       getLineColor: [255, 255, 255, 180],
       lineWidthMinPixels: 2,
       onClick: info => {

@@ -1,7 +1,7 @@
-import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, ReferenceLine } from "recharts";
-import { Card, Box, Tabs, Tab, Stack, Typography } from '@mui/material';
+import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea } from "recharts";
+import { Card, Box, Tabs, Tab, Stack } from '@mui/material';
 import { DataContext, UIContext } from '../../App';
-import { useContext, useState, useMemo, useRef } from "react";
+import { useContext, useState, useMemo } from "react";
 
 
 export default function ResourcesChart() {
@@ -22,7 +22,7 @@ export default function ResourcesChart() {
   }, [facilities_capacities, facilities_loads]);
 
   const currentResource = useMemo(() =>
-    activeResource ?? resources[0], [activeResource]
+    activeResource ?? resources[0], [activeResource, inputData]
   );
 
   const chartInputData = useMemo(() => {
@@ -33,28 +33,20 @@ export default function ResourcesChart() {
         facility: f.facility_id,
         capacity: Number(f.resources_capacity?.[currentResource] ?? 0),
         imported: Number(out?.transfers_in?.[currentResource] ?? 0),
-        exported: Number(out?.transfers_out?.[currentResource] ?? 0)
+        exported: Number(out?.transfers_out?.[currentResource] ?? 0),
+        usage: Number(out?.usage?.[currentResource] * Number(f.resources_capacity?.[currentResource]- Number(out?.transfers_out?.[currentResource] ?? 0)+  Number(out?.transfers_in?.[currentResource] ?? 0))).toFixed(0)
+          ?? 0,
       }
     })
-  }, [facilities_capacities, currentResource])
+  }, [facilities_capacities, facilities_loads, currentResource])
 
-
-  const chartOutputData = useMemo(() =>
-    facilities_loads?.map(f => ({
-      facility: f.facility_id,
-      usage: Number(f.usage?.[currentResource] ?? 0).toFixed(2),
-    })) ?? [],
-    [facilities_loads, currentResource]);
 
 
   return (
-    <Stack direction="row" alignItems="center" gap={3} >
+    <Stack alignItems="center" gap={3} >
 
       {inputData && <ResourcesInputChart resources={resources} currentResource={currentResource}
         chartData={chartInputData} selectedFacilityID={selectedFacilityID} setActiveResource={setActiveResource} />}
-      {outputData && <ResourcesOutputChart resources={resources} currentResource={currentResource}
-        chartData={chartOutputData} selectedFacilityID={selectedFacilityID} setActiveResource={setActiveResource} />}
-
     </Stack >
 
   );
@@ -81,11 +73,12 @@ function ResourcesInputChart({ resources, currentResource, chartData, selectedFa
             <XAxis dataKey="facility" padding={{ left: 30, right: 30 }} />
             <YAxis width="auto" />
             <Legend />
-            <ReferenceArea x1={selectedFacilityID} x2={selectedFacilityID} fill="#7eb0eaff" radius={outputData ? [0,0,0,0] : [6,6,0,0]} />
+            <ReferenceArea x1={selectedFacilityID} x2={selectedFacilityID} fill="#7eb6eb9f" radius={outputData ? [0, 0, 0, 0] : [6, 6, 0, 0]} />
             <Bar barSize={30} stackId="a" dataKey="capacity" fill="#759bc9ff" />
             {outputData && (<>
-              <Bar  stackId="a" dataKey="imported" fill="#baecb4ff" radius={[6, 6, 0, 0]} />
-              <Bar stackId="a" dataKey="exported" fill="rgba(248, 98, 98, 0.7)" radius={[6, 6, 0, 0]} />)
+              <Bar stackId="a" dataKey="imported" fill="#baecb4ff" radius={[6, 6, 0, 0]} />
+              <Bar stackId="a" dataKey="exported" fill="rgba(248, 98, 98, 0.7)" radius={[6, 6, 0, 0]} />
+              <Bar barSize={30} dataKey="usage" fill="#ab9dbdff" radius={[6, 6, 0, 0]} />
             </>)}
           </ComposedChart>
         </ResponsiveContainer>
@@ -94,31 +87,3 @@ function ResourcesInputChart({ resources, currentResource, chartData, selectedFa
   )
 }
 
-
-
-function ResourcesOutputChart({ resources, currentResource, chartData, selectedFacilityID, setActiveResource }) {
-  return (
-
-    <Card sx={{ width: 650, height: "auto" }}>
-      <Typography sx={{ pl: "10%", fontFamily: "Roboto" }}> Resource Usage per Facility</Typography>
-      <Box sx={{ display: "flex", width: "100%" }}>
-        <Tabs value={currentResource} onChange={(_, v) => setActiveResource(v)} orientation="horizontal" variant="scrollable" scrollButtons="auto">
-          {resources.map(r => <Tab key={r} value={r} label={r}></Tab>)}
-        </Tabs>
-        <ResponsiveContainer width="100%" height={400} style={{ flex: 1, minWidth: 0 }}>
-          <ComposedChart data={chartData}
-            margin={{ top: 30, right: 30, bottom: 20, left: 20 }}>
-            <Tooltip />
-
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="facility" padding={{ left: 30, right: 30 }} />
-            <YAxis width="auto" />
-            <Legend />
-            <ReferenceArea x1={selectedFacilityID} x2={selectedFacilityID} fill="#88adc8ff" fillOpacity={0.3} />
-            <Bar stackId="a" dataKey="usage" fill="#ab9dbdff" />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </Box>
-    </Card>
-  )
-}

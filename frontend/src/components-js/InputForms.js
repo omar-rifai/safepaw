@@ -1,8 +1,6 @@
 
 import './forms.css'
-import { useState, useContext, useEffect } from 'react'
 import { Grid } from "@mui/material";
-import { UIContext, DataContext } from '../App';
 import FacilitiesForm from './tabs/FacilitiesForm';
 import PathwaysForm from './tabs/PathwaysForm';
 import ResourcesForm from './tabs/ResourcesForm';
@@ -11,8 +9,7 @@ import ConfigForm from './tabs/ConfigForm';
 
 
 
-export default function ManualInputForm({activeTab}) {
-    console.log("active tab",activeTab)
+export default function DataGridForm({activeTab}) {
     return (
         <Grid container sx={{height:"50%", flexGrow: 1, alignItems:"right", minWidth: 0, width: "95%",mt:10}}>
             {activeTab == "tab-facilities" && <FacilitiesForm />}

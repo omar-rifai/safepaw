@@ -196,7 +196,7 @@ def create_metadata(params_system: dict, list_facilities: list[Facility], list_r
                                                             "id": h.id, "nbr_visits": h.nbr_visits, "region_id": h.region_id,
                                                             "type": h.facility_type}
                                                             for h in list_facilities} 
-    params_system["regions_metadata"] = {r.id : {"dep_code": r.dep_code, "comm_code": r.comm_code, "can_code": r.can_code}
+    params_system["regions_metadata"] = {r.id : {"dep_code": r.dep_code, "comm_code": r.comm_code, "can_code": r.can_code, "lat": r.lat, "lon": r.lon}
                                         for r in list_regions}
 
     return params_system

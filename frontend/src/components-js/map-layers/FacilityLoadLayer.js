@@ -77,13 +77,7 @@ export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacili
         const capacity = getNormalizedCapacityAvg(d, max_capacities)
         return 4 + 6 * capacity
       },
-      getFillColor: d => {
-        const base = getFillColor(d);
-        if (selectedFacilityID !== null && d.facility_id !== selectedFacilityID) {
-          return [base[0], base[1], base[2], 0]
-        }
-        else return base
-      },
+      getFillColor: d => getFillColor(d),
       getLineColor: [255, 255, 255, 180],
       lineWidthMinPixels: 2,
       radiusUnits: 'pixels',

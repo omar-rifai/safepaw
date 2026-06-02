@@ -1,12 +1,11 @@
-import { useState, createContext } from "react";
+import { useState, useEffect, createContext } from "react";
 import { Divider, Box, Button, AppBar, Tabs, Tab, Toolbar, Typography } from '@mui/material';
 
-import InputForm from "./components-js/InputForms";
+import DataGridForm from "./components-js/InputForms";
 import ResultsForm from "./components-js/ResultsForm";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import CustomMap from './components-js/Map';
 import { styled } from '@mui/material/styles';
-import PersonalInjuryIcon from '@mui/icons-material/PersonalInjury';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import RouteIcon from '@mui/icons-material/Route';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
@@ -17,15 +16,8 @@ import "./App.css"
 export const DataContext = createContext();
 export const UIContext = createContext();
 const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
+  clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', position: 'absolute', bottom: 0, left: 0,
+  whiteSpace: 'nowrap', width: 1,
 });
 
 
@@ -35,10 +27,13 @@ function App() {
 
   const [inputData, setInputData] = useState({});
   const [selectedFacilityID, setSelectedFacilityID] = useState(null);
+  const [selectedPathwayID, setSelectedPathwayID] = useState(null)
   const [highlightedFacility, setHighlightedFacility] = useState(null);
+  const [pickedLocation, setPickedLocation] = useState(null);
+  const [isPickingLocation, setIsPickingLocation] = useState(false);
   const [outputData, setOutputData] = useState({});
   const [activeTab, setActiveTab] = useState("tab-facilities")
-
+  
 
   const handleTabChange = (_, val) => {
     setActiveTab(val);
@@ -50,6 +45,7 @@ function App() {
 
     const text = await file.text();
     const jsonData = JSON.parse(text)
+
     const response = await fetch("/api/read_file", {
       method: "POST",
       body: JSON.stringify(jsonData),
@@ -62,11 +58,24 @@ function App() {
       ...result
     }));
     setOutputData(null)
+    setActiveTab("tab-facilities")
   };
+
+  useEffect(() => {
+    async function loadState() {
+      const res = await fetch("/api/state");
+      const data = await res.json()
+      setInputData(data)
+    }
+    loadState()
+  }, []);
+
+
   const enabled_optimize = inputData?.entries ? false : true
 
   const optimizeInstance = async () => {
     console.log("Calling optimize_instance..")
+
     const response_convert = await fetch("/api/optimize", {
       method: "POST",
       body: JSON.stringify({ "instance": inputData?.entries?.instance }),
@@ -75,11 +84,12 @@ function App() {
 
     const payload = await response_convert.json()
     setOutputData(payload)
+    setActiveTab("tab-resources")
   };
 
   return (
-    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab }}>
-      <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility }}>
+    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab, selectedPathwayID, setSelectedPathwayID }}>
+      <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility, isPickingLocation, setIsPickingLocation, pickedLocation, setPickedLocation }}>
         <AppBar sx={{ backgroundColor: "#ffffffff" }}>
           <Toolbar sx={{ display: "flex", gap: 4 }}>
             <Box sx={{ minWidth: 500 }}>
@@ -92,10 +102,10 @@ function App() {
             </Box>
             <Box sx={{ flexGrow: 1 }} />
 
-            <Button component="label" variant="outlined" sx={{ flexShrink: 0 }}>  Upload
+            <Button component="label" variant="contained" sx={{ flexShrink: 0 }}>  Upload
               <VisuallyHiddenInput type="file" onChange={handleUpload} multiple />
             </Button>
-            <Button  onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Optimize</Button>
+            <Button variant="outlined" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Optimize</Button>
             <Typography variant="h4" sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, letterSpacing: "0.05em", color: "#333333" }}> SAFEPAW </Typography>
             <Box />
             <Box component="img" src="logo_safepaw.jpg" sx={{ height: 50, width: "auto" }}></Box>
@@ -106,19 +116,19 @@ function App() {
           </Toolbar>
         </AppBar>
         <Divider />
-        <Group style={{ height: 900, }}>
-          <Panel defaultSize={550} minSize={10} maxSize={550}>
+        <Group style={{ height: "100svh", }}>
+          <Panel minSize={10} maxSize={750}>
             <Group orientation="vertical" >
-              <Panel  minSize={200} maxSize={700}>
-                <InputForm activeTab={activeTab} />
+              <Panel minSize={200} maxSize={700}>
+                <DataGridForm activeTab={activeTab} />
               </Panel>
-              <Separator style={{height: "2px", minHeight: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize",flexShrink: 0}} />
+              <Separator style={{ height: "2px", minHeight: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize", flexShrink: 0 }} />
               <Panel>
                 <ResultsForm />
               </Panel>
             </Group>
           </Panel>
-          <Separator style={{width: "2px",  backgroundColor: "#c8cdd6ff", cursor: "row-resize",flexShrink: 0}} />
+          <Separator style={{ width: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize", flexShrink: 0 }} />
           <Panel>
             <CustomMap />
           </Panel>

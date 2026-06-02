@@ -44,7 +44,7 @@ def get_ActivityResources():
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")
     required_resources={"cap":config["avg_length_of_stay"]}
-    return [ActivityResources(activity_id="a"+g, pathway_id= "p"+g, group_id=g, resource_id=r, required_capacity=cap) for g in ["1", "2a", "2b", "3"]
+    return [ActivityResources(activity_id="accouchement_"+g, pathway_id= "p"+g, group_id=g, resource_id=r, required_capacity=cap) for g in ["1", "2a", "2b", "3"]
             for r, cap in required_resources.items()]
 
 

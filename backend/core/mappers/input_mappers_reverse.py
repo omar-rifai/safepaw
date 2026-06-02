@@ -15,6 +15,8 @@ def create_Regions_from_json(params_system: dict) -> list:
     list_regions = []
     for r in params_system["R"]:
         list_regions.append(Region(id=r,
+                                   lat=params_system["regions_metadata"][r]["lat"],
+                                   lon=params_system["regions_metadata"][r]["lon"],
                                    dep_code=params_system["regions_metadata"][r]["dep_code"],
                                    comm_code=params_system["regions_metadata"][r]["comm_code"],
                                    can_code= params_system["regions_metadata"][r]["can_code"]))

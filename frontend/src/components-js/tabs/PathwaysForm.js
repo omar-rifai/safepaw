@@ -6,12 +6,12 @@ import { DataContext, UIContext } from '../../App';
 
 export default function PathwaysForm() {
 
-
-    const { inputData } = useContext(DataContext);
+    const { inputData, setSelectedPathwayID } = useContext(DataContext);
     const { selectedFacilityID } = useContext(UIContext);
+
     const pathways = inputData.entries?.pathways || inputData.instance?.pathways || [];
     const columns = [
-        { field: 'pathway_id', headerName: 'Pathway ID', width: 140},
+        { field: 'pathway_id', headerName: 'Pathway ID', width: 120},
         { field: 'group_id', headerName: 'Patients Group', width: 140},
         { field: "activities", headerName: "Activities List", width: 280 }
     ];
@@ -25,12 +25,16 @@ export default function PathwaysForm() {
         r => r.pathway_id === row.pathway_id && r.pathway_id === row.pathway_id && r.group_id === row.group_id)
     )
 
+    function handleRowClick(obj){
+        setSelectedPathwayID(obj.row.pathway_id + obj.row.group_id)
+    }
+
     function getRowId(row) {
         return (row.facility_id + row.pathway_id + row.group_id);
     }
 
     return (
-        <Box sx={{flexGrow: 1, minWidth: 0, width: "100%", ml: 2}}>
+        <Box sx={{flexGrow: 1, minWidth: 0, width: "100%", ml: 5}}>
 
             <DataGrid
                 rows={unique_rows}
@@ -44,8 +48,7 @@ export default function PathwaysForm() {
                 }}
                 getRowId={getRowId}
                 pageSizeOptions={[5]}
-                checkboxSelection
-                disableRowSelectionOnClick
+                onRowClick={handleRowClick}
             />
 
         </Box >

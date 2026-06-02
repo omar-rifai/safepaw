@@ -2,7 +2,7 @@ import { DeckGL } from '@deck.gl/react';
 import { FlyToInterpolator } from '@deck.gl/core';
 import { Map } from 'react-map-gl/maplibre';
 import { useMemo, useRef, useState, useEffect, useContext } from 'react';
-import { getInitializeViewFromGeoJSON, useRegionGeoJSON } from '../utils/mapInitializer';
+import { getInitializeViewFromGeoJSON } from '../utils/mapInitializer';
 import { DataContext, UIContext } from "../App";
 import { Box, Checkbox, FormGroup, FormControlLabel, Typography } from '@mui/material';
 import PatientsTransfersLayer from './map-layers/PatientsTransfersLayer';
@@ -10,14 +10,16 @@ import Legend from './map-layers/Legend';
 import { RegionFacilityLoadLayer, getRegionFacilityToolTip } from './map-layers/RegionFacilityLoadLayer';
 import { FacilityLoadLayer, getFacilityToolTip } from './map-layers/FacilityLoadLayer'
 import { FacilityCapacityLayer, getFacilityCapacityToolTip } from './map-layers/FacilityCapacityLayer'
-
+import { HighlightLayer } from './map-layers/HighlightLayer';
+import { newLocationLayer } from './map-layers/NewLocationLayer';
 
 export default function customMap() {
 
   const { inputData, outputData } = useContext(DataContext);
-  const { selectedFacilityID, setSelectedFacilityID } = useContext(UIContext);
+  const { selectedFacilityID, setSelectedFacilityID, pickedLocation, setPickedLocation, setIsPickingLocation, isPickingLocation } = useContext(UIContext);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
+  const [animationFrame, setAnimationFrame] = useState(false)
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
 
   const regionGeoJSON = inputData?.bbox;
@@ -68,10 +70,10 @@ export default function customMap() {
       list_layers.push(layer_facilityLoads)
     }
 
-    if (outputData?.results?.list_facility_load && outputData.results.regions) {
+    if (outputData?.facilities_regions_loads) {
+      console.log("we out there in MAP!")
       const layer_regionFacilityLoads = RegionFacilityLoadLayer({
-        loads: outputData.results.list_facility_load_regions,
-        regions: outputData.results.regions,
+        loads: outputData.facilities_regions_loads,
         selectedItem: selectedFacilityID
       });
       list_layers.push(layer_regionFacilityLoads)
@@ -101,9 +103,22 @@ export default function customMap() {
       });
       list_layers.push(layer_facilityLoads)
     }
+    if (selectedFacilityID != null) {
+      const layer_highlight = HighlightLayer({
+        facilities: inputData.facilities_capacities || [],
+        selectedFacilityID: selectedFacilityID
+      });
+      list_layers.push(layer_highlight)
+    }
+
+    if (pickedLocation) {
+      const new_location_pin = newLocationLayer(pickedLocation, animationFrame, setAnimationFrame);
+      list_layers.push(new_location_pin);
+    }
+
     return list_layers;
 
-  }, [inputData, inputData.facilities_capacities, selectedFacilityID]);
+  }, [inputData, inputData.facilities_capacities, pickedLocation, animationFrame, selectedFacilityID]);
 
   useEffect(() => {
     console.log("input data:", inputData);
@@ -178,8 +193,21 @@ export default function customMap() {
             controller={true}
             layers={renderedLayers}
             getTooltip={getTooltip}
-            onClick={({ object }) => {
-              if (!object) {
+            on
+            onClick={(info) => {
+              console.log("ON CLICK", info.coordinate, isPickingLocation)
+              if (isPickingLocation) {
+
+                const [lon, lat] = info.coordinate;
+
+                const newLoc = { lat, lon };
+                setPickedLocation(newLoc);
+                console.log("setting:", newLoc);
+                setIsPickingLocation(false);
+
+                return;
+              }
+              if (!info.object) {
                 setSelectedFacilityID(null);
               }
             }}
@@ -195,7 +223,6 @@ export default function customMap() {
             <Legend inputData={inputData} outputData={outputData} />
           </DeckGL>
         </div>
-        {selectedFacilityID && <Typography>Data filtered for facilitiy {selectedFacilityID}. Click anywhere on the map to unfilter.</Typography>}
       </Box>
     </Box >
   );

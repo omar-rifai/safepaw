@@ -14,7 +14,7 @@ def create_facilityLoad(results: dict, params_system: dict, by_region: bool = Fa
     Delta_moins = pd.DataFrame(results["Delta_moins"])
 
 
-    df_loads = _compute_load(results, by_region,by_group,by_pathway, params_system)
+    df_loads = _compute_load(results, by_region, by_group,by_pathway, params_system)
     hl_usage = _get_hl_usage(results, params_system)
 
     delta_plus_value = Delta_plus.groupby(["facility","resource"], dropna=False)["value"].sum().reset_index()
@@ -34,10 +34,13 @@ def create_facilityLoad(results: dict, params_system: dict, by_region: bool = Fa
         g = getattr(row, "group", None)
         k = getattr(row, "pathway", None)
         r = getattr(row, "region", None)
-        
+        region_coords = None
+        if (not r is None):
+            region_coords = [float(params_system["regions_metadata"][r]["lat"]),float(params_system["regions_metadata"][r]["lon"])]
         facility_instance = FacilityLoad(
             facility_id=h,
             coordinates=params_system["facilities_metadata"][h]["coords"],
+            region_coordinates=region_coords,
             patient_group=g,
             patient_pathway=k,
             region_id=str(r),
