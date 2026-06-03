@@ -10,7 +10,7 @@ export default function FacilitiesForm() {
 
     const { inputData } = useContext(DataContext);
     const { selectedFacilityID, setSelectedFacilityID } = useContext(UIContext);
-    
+
     const openCreateDialog = function () {
         setOpenDialog(true)
         //setIsPickingLocation(true)
@@ -25,7 +25,7 @@ export default function FacilitiesForm() {
     function hasValues(facilities, col) {
         return Array.isArray(facilities) && facilities.some(d => d[col] != null);
     }
-  
+
     const columns = useMemo(() => (
         [
             { field: 'facility_id', headerName: 'ID', width: 100 },
@@ -40,10 +40,7 @@ export default function FacilitiesForm() {
     }
 
     return (
-        <Box sx={{flexGrow: 1, minWidth: 0, width: "100%", ml: 5}}>
-            <Button size="small" onClick={openCreateDialog}>
-                Create a Facility
-            </Button>
+        <Box sx={{ flexGrow: 1, minWidth: 0, width: "100%", ml: 5 }}>
             <DataGrid
                 rows={rows}
                 columns={columns}
@@ -55,6 +52,9 @@ export default function FacilitiesForm() {
                 rowSelectionModel={{ ids: new Set([selectedFacilityID]), type: 'include' }}
             />
             <FacilityDialog openDialog={openDialog} setOpenDialog={setOpenDialog} />
+            
+            <Button size="small"  onClick={openCreateDialog}>Create </Button>
+            <Button size="small"  onClick={openCreateDialog}>Delete </Button>
         </Box>
     );
 }

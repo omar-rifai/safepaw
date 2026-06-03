@@ -64,7 +64,7 @@ function ResourcesInputChart({ resources, currentResource, chartData, selectedFa
           sx={{ overflowX: "auto" }}>
           {resources.map(r => <Tab key={r} value={r} label={r}></Tab>)}
         </Tabs>
-        <ResponsiveContainer width="100%" height={400} style={{ flex: 1, minWidth: 0 }}>
+        <ResponsiveContainer width="100%" height={300} style={{ flex: 1, minWidth: 0 }}>
           <ComposedChart data={chartData}
             margin={{ top: 30, right: 30, bottom: 20, left: 20 }}>
             <Tooltip />

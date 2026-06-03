@@ -134,7 +134,7 @@ export default function customMap() {
   }, [inputData]);
 
 
-  const newLocLayer = pickedLocation  ? newLocationLayer(pickedLocation, animationFrame) : null;
+  const newLocLayer = pickedLocation ? newLocationLayer(pickedLocation, animationFrame) : null;
 
   useEffect(() => {
     if (containerRef.current) {
@@ -226,7 +226,30 @@ export default function customMap() {
             <Legend inputData={inputData} outputData={outputData} />
           </DeckGL>
         </div>
+        <Box
+          sx={{
+            position: "absolute",
+            top: 100,
+            right: 20,
+            zIndex: 1000,
+            bgcolor: "white",
+            p: 2,
+            borderRadius: 2,
+            boxShadow: 3,
+            minWidth: 250,
+             backgroundColor: "transparent",
+          }}
+        >
+          <Typography variant="h6">
+            Selected Facility
+          </Typography>
+
+          <Typography>
+            {selectedFacilityID ?? "None"}
+          </Typography>
+        </Box>
+
       </Box>
-    </Box >
+    </Box>
   );
 }

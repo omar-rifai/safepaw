@@ -29,7 +29,7 @@ export default function Legend({ inputData, outputData }) {
     }
     else if (inputData) {
 
-        return (<div style={{ position: 'absolute', bottom: 0, right: 0, zIndex: 1 }}>
+        return (<div style={{ position: 'absolute', bottom: 20, right: 10, zIndex: 1 }}>
             {unique_types.length !== 0 && unique_types.map((type, i) => {
                 const color = getColor(type);
                 return (
