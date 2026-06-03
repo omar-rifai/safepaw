@@ -19,7 +19,7 @@ export default function customMap() {
   const { selectedFacilityID, setSelectedFacilityID, pickedLocation, setPickedLocation, setIsPickingLocation, isPickingLocation } = useContext(UIContext);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
-  const [animationFrame, setAnimationFrame] = useState(false)
+  const [animationFrame, setAnimationFrame] = useState(0)
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
 
   const regionGeoJSON = inputData?.bbox;
@@ -32,6 +32,17 @@ export default function customMap() {
   })
 
   const [visibleLayers, setVisibleLayers] = useState({});
+
+  useEffect(() => {
+    let raf;
+    if (!pickedLocation) return;
+    const animate = () => {
+      setAnimationFrame(f => f + 1);
+      raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [pickedLocation]);
 
 
   useEffect(() => {
@@ -71,7 +82,7 @@ export default function customMap() {
     }
 
     if (outputData?.facilities_regions_loads) {
-      console.log("we out there in MAP!")
+
       const layer_regionFacilityLoads = RegionFacilityLoadLayer({
         loads: outputData.facilities_regions_loads,
         selectedItem: selectedFacilityID
@@ -103,6 +114,8 @@ export default function customMap() {
       });
       list_layers.push(layer_facilityLoads)
     }
+
+
     if (selectedFacilityID != null) {
       const layer_highlight = HighlightLayer({
         facilities: inputData.facilities_capacities || [],
@@ -111,18 +124,17 @@ export default function customMap() {
       list_layers.push(layer_highlight)
     }
 
-    if (pickedLocation) {
-      const new_location_pin = newLocationLayer(pickedLocation, animationFrame, setAnimationFrame);
-      list_layers.push(new_location_pin);
-    }
 
     return list_layers;
 
-  }, [inputData, inputData.facilities_capacities, pickedLocation, animationFrame, selectedFacilityID]);
+  }, [inputData, inputData.facilities_capacities, selectedFacilityID]);
 
   useEffect(() => {
     console.log("input data:", inputData);
   }, [inputData]);
+
+
+  const newLocLayer = pickedLocation  ? newLocationLayer(pickedLocation, animationFrame) : null;
 
   useEffect(() => {
     if (containerRef.current) {
@@ -133,11 +145,11 @@ export default function customMap() {
 
 
   const layers = useMemo(
-    () => (output_layers && output_layers.length > 0 ? output_layers : input_layers).filter(Boolean),
+    () => (output_layers && output_layers.length > 0 ? output_layers : [...input_layers]).filter(Boolean),
     [input_layers, output_layers]
   );
 
-  const renderedLayers = layers.map(layer =>
+  const renderedLayers = [...layers, newLocLayer].filter(Boolean).map(layer =>
     layer.clone({
       visible: visibleLayers[layer.id] !== false
     })
@@ -153,7 +165,7 @@ export default function customMap() {
           { ...prev }
         ));
     }
-  }, [layers]);
+  }, [input_layers, output_layers]);
 
   return (
     <Box sx={{ height: "100%" }} ref={containerRef} >
@@ -184,27 +196,18 @@ export default function customMap() {
         <div
           style={{
             width: '100%',
-            height: '100%'
+            height: '100%',
           }}
         >
-          <DeckGL
-            viewState={viewState}
-            onViewStateChange={({ viewState }) => setViewState(viewState)}
-            controller={true}
-            layers={renderedLayers}
-            getTooltip={getTooltip}
-            on
-            onClick={(info) => {
+          <DeckGL viewState={viewState} onViewStateChange={({ viewState }) => setViewState(viewState)} controller={true} layers={renderedLayers} getTooltip={getTooltip}
+            //getCursor={({ isPickingLocation }) => isPickingLocation ? 'crosshair' : undefined}
+            on onClick={(info) => {
               console.log("ON CLICK", info.coordinate, isPickingLocation)
               if (isPickingLocation) {
-
                 const [lon, lat] = info.coordinate;
-
                 const newLoc = { lat, lon };
                 setPickedLocation(newLoc);
-                console.log("setting:", newLoc);
                 setIsPickingLocation(false);
-
                 return;
               }
               if (!info.object) {
