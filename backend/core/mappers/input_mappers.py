@@ -251,6 +251,7 @@ def create_json_from_instance(instance: Instance,  params_system: dict) -> dict:
     params_system["D"] = instance.total_demand * instance.perc_demand
     params_system["alpha"] = instance.alpha
     params_system["mode"] = instance.id
+    params_system["dep_code"] = instance.dep_code
     params_system["p_transf"] = instance.perc_transfers
     return params_system 
 

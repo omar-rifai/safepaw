@@ -7,7 +7,7 @@ function DashboardForm() {
 
     const { inputData } = useContext(DataContext);
 
-    if (!inputData?.dashboard_stats) {
+    if (!inputData?.instance_data) {
 
         return <Typography>Upload stats to see dashboard summary.</Typography>;
     }
@@ -16,7 +16,7 @@ function DashboardForm() {
 
     return (
         <Grid container spacing={2}>
-            {Object.entries(inputData.dashboard_stats).map(([key, value]) => (
+            {Object.entries(inputData.instance_data).map(([key, value]) => (
                 <Grid item xs={12} sm={6} md={4} key={key}>
                     <Card elevation={3}>
                         <CardContent>

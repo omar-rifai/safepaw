@@ -12,8 +12,8 @@ export default function ResourcesChart() {
 
   console.log("in resource diagram outputdata", outputData)
 
-  const facilities_capacities = inputData?.facilities_capacities ?? null;
-  const facilities_loads = outputData?.facilities_loads ?? null
+  const facilities_capacities = inputData?.facilities_capacities ?? [];
+  const facilities_loads = outputData?.facilities_loads ?? []
 
   const resources = useMemo(() => {
     return facilities_capacities?.[0]

@@ -14,7 +14,23 @@ from pulp import *
 def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system):
     
     match params_system["mode"]:
-        case "default":
+        case "slack":
+            LP += lpSum(-s_hl[h][l] for h in params_system["H"] for l in params_system["L"])
+        case "maternities":
+            LP +=  lpSum([params_system["D"] * P[g][k][r][a][h] \
+                                                   * params_system["w_rh"][r][h]
+                                                   for g in params_system["G"]
+                                                   for k in params_system["K_idx"][g]
+                                                   for r in params_system["R"]
+                                                   for a in params_system["A_idx"][g][k]
+                                                   for h in params_system["H"]]) \
+                                                    -  1e-6*lpSum([Delta_plus[h][l]
+                                                                   for h in params_system["H"]
+                                                                   for l in params_system["L"]])\
+                                                    -  1e-6*lpSum([Delta_minus[h][l]
+                                                                   for h in params_system["H"]
+                                                                   for l in params_system["L"]])
+        case _:
             LP += (1 - params_system["alpha"]) * lpSum([params_system["c_gk"][g][k] * params_system["D"] * P_gk[g][k] 
                                                         for g in params_system["G"]
                                                         for k in params_system["K_idx"][g]]) \
@@ -30,24 +46,6 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system):
                 -  1e-6*lpSum([Delta_minus[h][l]
                                for h in params_system["H"]
                                for l in params_system["L"]])
-        case "slack":
-            LP += lpSum(-s_hl[h][l] for h in params_system["H"] for l in params_system["L"])
-        case "maternity":
-            LP +=  lpSum([params_system["D"] * P[g][k][r][a][h] \
-                                                   * params_system["w_rh"][r][h]
-                                                   for g in params_system["G"]
-                                                   for k in params_system["K_idx"][g]
-                                                   for r in params_system["R"]
-                                                   for a in params_system["A_idx"][g][k]
-                                                   for h in params_system["H"]]) \
-                                                    -  1e-6*lpSum([Delta_plus[h][l]
-                                                                   for h in params_system["H"]
-                                                                   for l in params_system["L"]])\
-                                                    -  1e-6*lpSum([Delta_minus[h][l]
-                                                                   for h in params_system["H"]
-                                                                   for l in params_system["L"]])
-        case _:
-            raise ValueError(f"Objective function definition in mode {params_system["mode"]} is undefined.")
 
 
 
@@ -457,17 +455,15 @@ def declare_constraints(LP, vars_system, params_system):
                            def_const_delta_plus_b_hl_in, def_const_delta_moins_b_hl_out]
 
     match params_system["mode"]:
-        case "default":
-            print("Defining default set of constraints.")
-            for fn in CONSTRAINTS_DEFAULT:
-                fn(LP, vars_system, params_system)
         case "slack":
             print("Defining set of constraints with slack capacity.")
             for fn in CONSTRAINTS_SLACK:
                 fn(LP, vars_system, params_system)
-        case "maternity":
+        case "maternities":
             print("Defining constraints for maternity instance.")
             for fn in CONSTRAINTS_MATERNITY:
                 fn(LP, vars_system, params_system)
         case _:
-            raise ValueError(f"Constraints definition in {params_system["mode"]} is undefined.")
+            print("Defining default set of constraints.")
+            for fn in CONSTRAINTS_DEFAULT:
+                fn(LP, vars_system, params_system)

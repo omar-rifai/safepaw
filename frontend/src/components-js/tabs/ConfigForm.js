@@ -6,7 +6,7 @@ import { DataContext } from "../../App";
 
 export default function ConfigForm() {
 
-    const { inputData, setOutputData } = useContext(DataContext)
+    const { inputData, setInputData, setOutputData } = useContext(DataContext)
 
     const handleReset  = function(){
         setOutputData({})
@@ -45,7 +45,6 @@ export default function ConfigForm() {
                 </Stack>
                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
                     <Button onClick={handleReset}>Reset</Button>
-                   
                 </Box>
             </Stack>
 
@@ -62,7 +61,7 @@ function DynamicSlider({ value, frac = false, param_key }) {
     const max = frac ? 1 : 50
     const step = frac ? 0.1 : 5;
 
-    const handleChange = async (event, newVal) => {
+    const handleChange = async (_, newVal) => {
 
         const api_value = frac ? newVal : 1 + (newVal / 100);
         setInputData(prev => ({

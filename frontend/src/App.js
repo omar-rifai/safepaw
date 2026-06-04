@@ -5,7 +5,7 @@ import DataGridForm from "./components-js/TabsForm";
 import ResultsForm from "./components-js/ResultsForm";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import CustomMap from './components-js/Map';
-import InputForm from "./components-js/InputForm"
+import ToolbarForm from "./components-js/ToolbarForm"
 
 
 import "./App.css"
@@ -44,8 +44,8 @@ function App() {
       <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility, isPickingLocation, setIsPickingLocation, pickedLocation, setPickedLocation }}>
         <AppBar sx={{ backgroundColor: "#fff", color: "#000" }}>
           <Toolbar sx={{ display: "flex", gap: 4 }}>
-            <Typography variant="h4" sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, letterSpacing: "0.05em", color: "#333333", mr:40 }}> SAFEPAW </Typography>
-            <InputForm/>
+            <Typography variant="h4" sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, letterSpacing: "0.05em", color: "#333333", mr:10 }}> SAFEPAW </Typography>
+            <ToolbarForm/>
             <Box flexGrow={1} />
             <Box component="img" src="logo_safepaw.jpg" sx={{ height: 50, width: "auto" }}></Box>
             <Box component="img" src="logo_anr.png" sx={{ height: 30, width: "auto" }}></Box>
@@ -63,7 +63,7 @@ function App() {
               </Panel>
               <Separator style={{ height: "2px", minHeight: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize", flexShrink: 0 }} />
               <Panel>
-                <ResultsForm />
+                {inputData.entries && <ResultsForm />}
               </Panel>
             </Group>
           </Panel>

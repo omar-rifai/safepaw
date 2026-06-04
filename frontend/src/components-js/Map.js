@@ -202,7 +202,7 @@ export default function customMap() {
           <DeckGL viewState={viewState} onViewStateChange={({ viewState }) => setViewState(viewState)} controller={true} layers={renderedLayers} getTooltip={getTooltip}
             //getCursor={({ isPickingLocation }) => isPickingLocation ? 'crosshair' : undefined}
             on onClick={(info) => {
-              console.log("ON CLICK", info.coordinate, isPickingLocation)
+              console.log("on click:", info.coordinate, isPickingLocation)
               if (isPickingLocation) {
                 const [lon, lat] = info.coordinate;
                 const newLoc = { lat, lon };
@@ -240,12 +240,8 @@ export default function customMap() {
              backgroundColor: "transparent",
           }}
         >
-          <Typography variant="h6">
-            Selected Facility
-          </Typography>
-
           <Typography>
-            {selectedFacilityID ?? "None"}
+            {selectedFacilityID ?? ""}
           </Typography>
         </Box>
 

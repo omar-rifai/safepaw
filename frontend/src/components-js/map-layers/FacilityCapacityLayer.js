@@ -35,7 +35,7 @@ function getColor(type) {
   if (!type) return [0, 0, 255, 100]
   const hash = [...type].reduce((a, c) => a + c.charCodeAt(0), 0);
   const [r, g, b, a] = color_scale(hash % 10 / 10).rgba();
-  return [Math.round(r), Math.round(g), Math.round(b), Math.round(a * 255)];
+  return [Math.round(r), Math.round(g), Math.round(b), Math.round(a * 200)];
 }
 
 function jitter([lng, lat], amount = 0.00045) {

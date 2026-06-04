@@ -12,40 +12,33 @@ export default function FacilitiesDiagrams() {
   const { inputData } = useContext(DataContext);
   const { selectedFacilityID } = useContext(UIContext);
 
-  const pathways = inputData?.entries?.pathways ? inputData.entries.pathways :
-    null
+  const pathways = inputData?.entries?.pathways ?? [];
 
   const pathways_unique = pathways.filter((obj1, i, arr) =>
     arr.findIndex(obj2 => ['facility_id', 'pathway_id'].every(key => obj2[key] === obj1[key])
     ) === i
   )
 
-  const groups = inputData?.entries?.patients_groups ? inputData?.entries?.patients_groups :
-    null
+  const groups = inputData?.entries?.patients_groups ?? [];
 
   const patientsGroupsChartData = Object.values(
-    groups.reduce((acc, { group_id }) => {
+    (groups??[]).reduce((acc, { group_id }) => {
       acc[group_id] ??= { group_id, n_facilities: 0 };
       acc[group_id].n_facilities++;
       return acc;
     }, {})
   );
 
-  const selectedGroups = groups
-    .filter((e) => e.facility_id === selectedFacilityID)
-    .map((e) => e.group_id);
-
 
   const pathwaysChartData = Object.values(
-    pathways_unique.reduce((acc, { pathway_id }) => {
+    (pathways_unique??[]).reduce((acc, { pathway_id }) => {
       acc[pathway_id] ??= { pathway_id, n_facilities: 0 };
       acc[pathway_id].n_facilities++;
       return acc;
     }, {})
   );
 
-  const selectedPathways = pathways_unique
-    .filter((e) => e.facility_id === selectedFacilityID)
+  const selectedPathways = pathways_unique.filter((e) => e.facility_id === selectedFacilityID)
     .map((e) => e.pathway_id);
 
 
@@ -65,8 +58,8 @@ export default function FacilitiesDiagrams() {
             <XAxis dataKey="pathway_id" type="category" tickMargin={10} label={{ value: "Pathway ID", position: "bottom", offset: 10 }} />
             <YAxis type="number" allowDecimals={false} />
             <Legend verticalAlign="top" />
-            <ReferenceArea y1={selectedPathways[0]} y2={selectedPathways[selectedPathways.length - 1]}
-              fill="#88adc8ff" fillOpacity={0.3} />
+            {selectedPathways.length > 0 && (<ReferenceArea y1={selectedPathways[0]} y2={selectedPathways[selectedPathways.length - 1]}
+              fill="#88adc8ff" fillOpacity={0.3} />)}
             <Bar stackId="a" dataKey="n_facilities" fill="#7eb0eaff" radius={[6, 6, 6, 6]} />
           </ComposedChart>
         </ResponsiveContainer>

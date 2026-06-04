@@ -9,7 +9,9 @@ class FacilityCapacity(BaseModel):
     resources_capacity: dict = Field(default_factory=dict)
     coordinates: list
 
-class DashboardStats(BaseModel):
+class InstanceData(BaseModel):
+    instance_mode: str
+    dep_code: str
     nbr_facilities: int
     nbr_pathways: int
     nbr_patients_groups: int
@@ -34,6 +36,8 @@ class FacilityResourceRow(BaseModel):
     facility_id: str
     resource_id: str
     capacity: Optional[float] = None
+    max_transferable_in: Optional[float] = None
+    max_transferable_out: Optional[float] = None
 
 class FacilityGroupsRow(BaseModel):
     facility_id: str

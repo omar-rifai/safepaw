@@ -9,7 +9,7 @@ import CaseMixDiagram from './CaseMixDiagram';
 export default function ConfigChart() {
     const { inputData } = useContext(DataContext);
 
-    const casemix = inputData?.dashboard_stats.case_mix ?? [];
+    const casemix = inputData?.instance_data?.case_mix ?? [];
 
     return (
          <Stack container spacing={1}>

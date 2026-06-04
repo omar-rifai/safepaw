@@ -386,9 +386,10 @@ def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, de
             "population": "sum",
             "pop65p": "sum"
     }).reset_index().rename(columns={"bureau":"nom"})
-    gdf_geo  = gdf_geo.explode(index_parts=False).reset_index(drop=True)
+    #gdf_geo  = gdf_geo.explode(index_parts=False).reset_index(drop=True)
     gdf_geo["perc_65p"] = gdf_geo["pop65p"] / gdf_geo["population"] * 100
     gdf_geo["adjacent"] = [gdf_geo.loc[gdf_geo.geometry.touches(geom),"can_code"].to_list() for geom in gdf_geo.geometry]
+
     return gdf_geo
 
 def get_region_affinities(gdf_summary: pd.DataFrame, df_finess: pd.DataFrame) -> dict:

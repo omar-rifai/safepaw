@@ -4,7 +4,7 @@ from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
 from backend.core.data_models.input_models import FacilityResources, Facility
-from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box, get_DashboardStats
+from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box, get_InstanceData
 import traceback, json
 
 api = APIRouter()
@@ -60,6 +60,44 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@api.post("/generate")
+async def generate(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
+    import traceback
+    from backend.core.mappers.datasets_mappers.maternities_serializer import serialize_maternities
+    from backend.core.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
+    from backend.api.services import  clear_all_tables
+    from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
+
+    try:
+        clear_all_tables(session)
+        if payload["mode"] == "maternities": params = serialize_maternities(region_code = None, dep_code=payload["dep_code"], save_params=False)
+        elif payload["mode"] == "pthptg": params =serialize_ptgpth(dep_code=payload["dep_code"], p_transf = 1, p_orth= 0,
+                                                                    resources_mult= 1, quality_requirement= False, save_params= False)
+    
+        convert_dm_from_json(params, session)
+        session.commit()
+        facilities_capacities = get_facilities_capacities(session)
+        data_grid_entries = get_DataGridEntries(session)
+        instance_data = get_InstanceData(session)
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "facilities_capacities":[f.model_dump() for f in facilities_capacities],
+                "entries": data_grid_entries,
+                "instance_data": instance_data,
+                "bbox": get_bounding_box(session)
+            },
+        )
+
+    except Exception:
+        print("Error in api.read_file route:")
+        session.rollback() 
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+
 @api.put("/update_FacilityResources")
 async def update_facility_type(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     
@@ -107,14 +145,14 @@ async def read_maternites(params: dict = Body(...), session:Session = Depends(ge
         session.commit()
         facilities_capacities = get_facilities_capacities(session)
         data_grid_entries = get_DataGridEntries(session)
-        dashboard_stats = get_DashboardStats(session)
+        instance_data = get_InstanceData(session)
 
         return JSONResponse(
             status_code=200,
             content={
                 "facilities_capacities":[f.model_dump() for f in facilities_capacities],
                 "entries": data_grid_entries,
-                "dashboard_stats": dashboard_stats,
+                "instance_data": instance_data,
                 "bbox": get_bounding_box(session)
             },
         )
@@ -128,13 +166,20 @@ async def read_maternites(params: dict = Body(...), session:Session = Depends(ge
 
 @api.get("/state")
 async def get_state(session: Session = Depends(get_session)):
-    facilities_capacities = get_facilities_capacities(session)
-    data_grid_entries = get_DataGridEntries(session)
-    dashboard_stats = get_DashboardStats(session)
+    try:
+        facilities_capacities = get_facilities_capacities(session)
+        data_grid_entries = get_DataGridEntries(session)
+        instance_data = get_InstanceData(session)
 
-    return {
-        "facilities_capacities": [f.model_dump() for f in facilities_capacities],
-        "entries": data_grid_entries,
-        "dashboard_stats": dashboard_stats,
-        "bbox": get_bounding_box(session)
-    }
+        return {
+            "facilities_capacities": [f.model_dump() for f in facilities_capacities],
+            "entries": data_grid_entries,
+            "instance_data": instance_data,
+            "bbox": get_bounding_box(session)
+        }
+
+    except Exception:
+        print("Error in api.read_file route:")
+        session.rollback() 
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")

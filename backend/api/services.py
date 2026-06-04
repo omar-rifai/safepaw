@@ -5,7 +5,7 @@ import logging
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance
-from backend.core.data_models.output_models import FacilityCapacity, DashboardStats
+from backend.core.data_models.output_models import FacilityCapacity, InstanceData
 from sqlalchemy import func
 
 logging.basicConfig(level=logging.DEBUG)
@@ -38,7 +38,7 @@ def get_bounding_box(session):
         ]
     }
 
-def get_DashboardStats(session: Session) -> DashboardStats:
+def get_InstanceData(session: Session) -> InstanceData:
     from collections import defaultdict
 
     nbr_facilities = session.exec(select(func.count()).select_from(Facility)).one()
@@ -47,8 +47,8 @@ def get_DashboardStats(session: Session) -> DashboardStats:
     case_mix = session.exec(select(CaseMixRatios)).all()
     instance = session.exec(select(Instance)).one()
     case_mix = [c.model_dump() for c in case_mix]
-    stats = DashboardStats(nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=instance.total_demand, case_mix=case_mix)
-    return stats.model_dump() 
+    instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=instance.total_demand, case_mix=case_mix)
+    return instance_data.model_dump() 
 
 
 def update_instance(session: Session, new_instance):
@@ -99,7 +99,8 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     if facility_ids:
         query_resources = query_resources.where(FacilityResources.facility_id.in_(facility_ids))
     resources = session.exec(query_resources).all()
-    resources_entries = [FacilityResourceRow(facility_id = fr.facility_id, resource_id=fr.resource_id, capacity=fr.capacity) for fr in resources]
+    resources_entries = [FacilityResourceRow(facility_id = fr.facility_id, resource_id=fr.resource_id, capacity=fr.capacity,
+                                              max_transferable_in=fr.max_transferable_in, max_transferable_out=fr.max_transferable_out) for fr in resources]
   
     query_groups = select(PatientsGroup, FacilityPathways.facility_id)\
         .join(Pathway, Pathway.group_id == PatientsGroup.id)\
@@ -131,7 +132,6 @@ def clear_all_tables(session):
     for table in reversed(SQLModel.metadata.sorted_tables):
         session.exec(text(f"DELETE FROM {table.name}"))
 
-    session.commit()
 
 
 

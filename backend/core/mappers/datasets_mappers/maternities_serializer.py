@@ -50,7 +50,6 @@ def get_Facilities(df_instance: pd.DataFrame) -> list[Facility]:
     and availiable pathways dependent on to the facility type (1,2a,2b,3). We average the number of deliveries
     per facility across the yearsand take the latest number of beds recorded
     """
-
     def row_to_facility(row):
         return Facility(
             id = str(row['nofinesset']),
@@ -67,12 +66,13 @@ def get_Facilities(df_instance: pd.DataFrame) -> list[Facility]:
 
 
 
-def get_Instance(df_instance) -> Instance:
+def get_Instance(df_instance:dict, dep_code:str) -> Instance:
     """Returns object to store optimization instance parameters"""
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")    
     return Instance(
-            id= "maternity",
+            id= "maternities",
+            dep_code = dep_code,
             total_demand =int(df_instance["deliveries_per_facility"].sum()),
             perc_demand = 1,
             perc_capacity = 1,
@@ -115,7 +115,7 @@ def get_PatientPathways(groups_ids: list) -> list[Pathway]:
     
 
 
-def serialize_maternity_core(df_instance, save_params: bool = False) -> Union[dict, dict]:
+def serialize_maternity_core(df_instance:dict, dep_code:str, save_params: bool = False) -> Union[dict, dict]:
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     import json, os
     from backend.core.mappers.input_mappers import convert_dm_to_json
@@ -135,7 +135,7 @@ def serialize_maternity_core(df_instance, save_params: bool = False) -> Union[di
         list_patients = get_PatientsGroups(FACILITY_TYPES)
         list_pathways = get_PatientPathways(FACILITY_TYPES)
         list_activities = get_Activities(FACILITY_TYPES)
-        instance = get_Instance(df_instance)
+        instance = get_Instance(df_instance, dep_code)
         list_qualities = list(set([k.quality_level for k in list_pathways]))
         
         list_facility_affinities = get_FacilityAffinity(df_instance, DF_GEO_COMMS_METERS)
@@ -184,7 +184,7 @@ def serialize_maternities(
         beds=("beds", "first")))
     df_instance = df_instance.drop_duplicates(subset=["nofinesset"], keep="first")
 
-    return serialize_maternity_core(df_instance, save_params)
+    return serialize_maternity_core(df_instance, dep_code, save_params)
 
 
 if __name__ == "__main__":
