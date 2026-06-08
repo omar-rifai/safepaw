@@ -11,7 +11,7 @@ export function HighlightLayer({ facilities, selectedFacilityID}) {
         ({
             id: 'highlight',
             data: highlighted_facility,
-            getPosition: d => d["coordinates"],
+            getPosition: d => [d["coordinates"][1], d["coordinates"][0]],
             getRadius: d => 50,
             getFillColor: [255, 244, 26, 80],
             getLineColor: [255, 255, 255, 180],

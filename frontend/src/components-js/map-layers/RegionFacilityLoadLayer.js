@@ -12,8 +12,8 @@ export function RegionFacilityLoadLayer({ loads, selectedFacilityID }) {
         ({
             id: 'region-to-facility',
             data: facilityLoads,
-            getSourcePosition: d => d.region_coordinates,
-            getTargetPosition: d => d.coordinates,
+            getSourcePosition: d =>[d.region_coordinates[1], d.region_coordinates[0]],
+            getTargetPosition: d => [d.coordinates[1], d.coordinates[0]],
             getSourceColor: d => {
                 const t = d["load"] / maxLoad;
                 return [0, 0, Math.round(t * 255), 20 + t * 255];

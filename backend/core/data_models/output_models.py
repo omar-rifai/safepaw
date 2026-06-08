@@ -5,7 +5,7 @@ from typing import Optional
 
 class FacilityCapacity(BaseModel):
     facility_id: str
-    facility_type: str = None
+    facility_type: Optional[str] = None
     resources_capacity: dict = Field(default_factory=dict)
     coordinates: list
 
@@ -21,7 +21,7 @@ class InstanceData(BaseModel):
 class FacilityRow(BaseModel):
     facility_id: str
     facility_name: str
-    facility_type: str
+    facility_type: Optional[str] = None
     
 
 class FacilityPathwaysRow(BaseModel):

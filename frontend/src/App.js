@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useId } from "react";
-import { Box,  AppBar, Toolbar, Typography, } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, } from '@mui/material';
 
 import DataGridForm from "./components-js/TabsForm";
 import ResultsForm from "./components-js/ResultsForm";
@@ -44,8 +44,8 @@ function App() {
       <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility, isPickingLocation, setIsPickingLocation, pickedLocation, setPickedLocation }}>
         <AppBar sx={{ backgroundColor: "#fff", color: "#000" }}>
           <Toolbar sx={{ display: "flex", gap: 4 }}>
-            <Typography variant="h4" sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, letterSpacing: "0.05em", color: "#333333", mr:10 }}> SAFEPAW </Typography>
-            <ToolbarForm/>
+            <Typography variant="h4" sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, letterSpacing: "0.05em", color: "#333333", mr: 10 }}> SAFEPAW </Typography>
+            <ToolbarForm />
             <Box flexGrow={1} />
             <Box component="img" src="logo_safepaw.jpg" sx={{ height: 50, width: "auto" }}></Box>
             <Box component="img" src="logo_anr.png" sx={{ height: 30, width: "auto" }}></Box>
@@ -55,7 +55,7 @@ function App() {
           </Toolbar>
         </AppBar>
 
-        <Group style={{ height: "100svh", }}>
+        <Group style={{ height:"100svh" }}>
           <Panel defaultSize={550} minSize={400} maxSize={750}>
             <Group orientation="vertical" >
               <Panel defaultSize={600} minSize={200} maxSize={700}>
@@ -68,9 +68,11 @@ function App() {
             </Group>
           </Panel>
           <Separator style={{ width: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize", flexShrink: 0 }} />
-          <Panel>
+
+          <Panel  style={{ overflow: "hidden" }}>
             <CustomMap />
           </Panel>
+
         </Group>
       </UIContext.Provider>
     </DataContext.Provider >

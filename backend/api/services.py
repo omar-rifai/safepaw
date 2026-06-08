@@ -4,7 +4,7 @@ import logging
 
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
-from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance
+from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region
 from backend.core.data_models.output_models import FacilityCapacity, InstanceData
 from sqlalchemy import func
 
@@ -23,8 +23,8 @@ def check_executable():
 def get_bounding_box(session):
     from shapely.geometry import box, mapping
 
-    xs = session.exec(select(Facility.lat)).all()
-    ys = session.exec(select(Facility.lon)).all()
+    xs = session.exec(select(Facility.lon)).all()
+    ys = session.exec(select(Facility.lat)).all()
 
     bbox = box(min(xs), min(ys), max(xs), max(ys))
     return {
@@ -123,6 +123,29 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
 
     return entry.model_dump() if entry else {}
 
+def createAffinitiesMatrix(session, new_facility):
+    import geopandas as gpd
+    from shapely.geometry import Point
+    from backend.core.data_models.input_models import FacilityAffinity
+
+
+    facility_point = gpd.GeoSeries([Point(float(new_facility.lon), float(new_facility.lat))], crs="EPSG:4326").to_crs("EPSG:2154") 
+    regions = session.exec(select(Region)).all()
+    affinities = []
+    for region in regions:
+        affinity_score = getAffinity(region,facility_point)
+        affinities.append(FacilityAffinity(facility_id=new_facility.id, region_id=region.id, affinity_score=affinity_score))
+    session.add_all(affinities)
+ 
+
+
+def getAffinity(region: Region, facility_point):
+    import geopandas as gpd
+    from shapely.geometry import Point
+    epsilon = 1e-6
+    region_point = gpd.GeoSeries([Point(float(region.lon), float(region.lat))],crs="EPSG:4326").to_crs("EPSG:2154")
+    distance = facility_point.iloc[0].distance(region_point.iloc[0])
+    return 1 / max(distance, epsilon)
 
 
 def clear_all_tables(session):
@@ -131,7 +154,6 @@ def clear_all_tables(session):
 
     for table in reversed(SQLModel.metadata.sorted_tables):
         session.exec(text(f"DELETE FROM {table.name}"))
-
 
 
 

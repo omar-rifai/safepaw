@@ -1,20 +1,24 @@
 import { DataGrid } from '@mui/x-data-grid';
 import { useCallback, useMemo } from 'react';
 import { Box, Button } from '@mui/material'
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { DataContext, UIContext } from '../../App';
 import FacilityDialog from './FacilityDialogForm';
 
 export default function FacilitiesForm() {
     const [openDialog, setOpenDialog] = useState(false)
 
-    const { inputData } = useContext(DataContext);
+    const { inputData, setInputData, setOutputData} = useContext(DataContext);
     const { selectedFacilityID, setSelectedFacilityID } = useContext(UIContext);
 
     const openCreateDialog = function () {
         setOpenDialog(true)
-        //setIsPickingLocation(true)
     }
+
+    const rowSelectionModel = useMemo(() => ({
+        ids: selectedFacilityID == null ? new Set() : new Set([selectedFacilityID]),
+        type: 'include',
+    }), [selectedFacilityID]);
 
     const facilities = inputData.entries?.facilities || [];
 
@@ -24,6 +28,20 @@ export default function FacilitiesForm() {
 
     function hasValues(facilities, col) {
         return Array.isArray(facilities) && facilities.some(d => d[col] != null);
+    }
+
+
+    async function loadState() {
+        const res = await fetch("/api/state");
+        const data = await res.json()
+        setInputData(data)
+    }
+
+    const deleteFacility = async (facility_id) => {
+        if (!facility_id) return;
+        await fetch(`/api/deleteFacility/${facility_id}`, { method: "DELETE" })
+        loadState()
+        setOutputData({})
     }
 
     const columns = useMemo(() => (
@@ -49,12 +67,12 @@ export default function FacilitiesForm() {
                 getRowId={getRowId}
                 pageSizeOptions={[5]}
                 onRowSelectionModelChange={handleRowSelectionModelChange}
-                rowSelectionModel={{ ids: new Set([selectedFacilityID]), type: 'include' }}
+                rowSelectionModel={rowSelectionModel}
             />
             <FacilityDialog openDialog={openDialog} setOpenDialog={setOpenDialog} />
-            
-            <Button size="small"  onClick={openCreateDialog}>Create </Button>
-            <Button size="small"  onClick={openCreateDialog}>Delete </Button>
+
+            <Button size="small" onClick={openCreateDialog}>Create </Button>
+            <Button size="small" onClick={() => deleteFacility(selectedFacilityID)}>Delete </Button>
         </Box>
     );
 }

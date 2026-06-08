@@ -3,7 +3,7 @@ import geopandas as gpd
 from typing import Tuple
 from backend.core.data_models.input_models import FacilityAffinity, FacilityResources, FacilityPathways, LinkedFacilities, ActivityResources,\
     CaseMixRatios, TreatmentBounds, QualityBounds
-
+from backend.core.data_models.input_models import Facility
 
 nb_kine_preop = {"PTG":10, "PTH":15}
 specialities = ["CSC", "DERMA", "ENDO", "GASTRO", "GYNECO", "OPH", "ORL", "RHUMA", "URO"]
@@ -25,9 +25,9 @@ df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU",
                             "URO": "PTRUE", "ORL": "PTRUE"}
 
 
-def get_FacilityAffinity(df_finess: pd.DataFrame, gdf_summary: pd.DataFrame):
-    list_finess = list(df_finess["nofinesset"].unique()) + ["DOM", "ORTH"]
-    affinities = get_region_affinities(gdf_summary, df_finess)
+def get_FacilityAffinity(list_Facilities: list[Facility], gdf_summary: pd.DataFrame):
+    list_finess = [x.id for x in list_Facilities]
+    affinities = get_region_affinities(gdf_summary, list_Facilities)
     return [
         FacilityAffinity(facility_id= nofinesset,region_id= can_code, affinity_score = affinities[can_code][nofinesset]) 
             for nofinesset in list_finess for can_code in gdf_summary["can_code"]]
@@ -355,11 +355,11 @@ def get_finess_info(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, gdf_geo: gpd.Geo
                             low_memory=False)
     
     transformer = Transformer.from_crs(2154, 4326, always_xy=True)
-    df_finess["lat"], df_finess["lon"] = transformer.transform(
+    df_finess["lon"], df_finess["lat"] = transformer.transform(
         df_finess["coordx"].str.replace(",", "").astype(float),
         df_finess["coordy"].str.replace(",", "").astype(float)
     )
-    gdf_finess = gpd.GeoDataFrame(df_finess, geometry=[Point(xy) for xy in zip(df_finess["lat"],df_finess["lon"])], crs="EPSG:4326")
+    gdf_finess = gpd.GeoDataFrame(df_finess, geometry=[Point(xy) for xy in zip(df_finess["lon"],df_finess["lat"])], crs="EPSG:4326")
     gdf_finess = gpd.sjoin(gdf_finess, gdf_geo[["can_code", "geometry"]], how="left", predicate="intersects")
     all_finess = pd.concat([df_ssr["FI_ET"], df_mco["FI_ET"]]).dropna().unique()
     gdf_finess = gdf_finess[(gdf_finess["nofinesset"].isin(all_finess)) & (gdf_finess["can_code"].notnull())]
@@ -392,24 +392,16 @@ def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, de
 
     return gdf_geo
 
-def get_region_affinities(gdf_summary: pd.DataFrame, df_finess: pd.DataFrame) -> dict:
+def get_region_affinities(gdf_summary: pd.DataFrame, list_Facilities: list[Facility]) -> dict:
     """Returns a dict with the affinities of each facility to each region"""
-    w_rh = {}
-    all_regions = list(gdf_summary["can_code"].unique())
-
-    orth_can_code, _ = get_default_geo_info(gdf_summary)
-    for r in all_regions:
-        list_adjacent = gdf_summary[gdf_summary["can_code"]==r]["adjacent"]
-        w_rh[r] = {"DOM":2, "ORTH":get_orth_wrh(orth_can_code,r, list_adjacent)}
-
-        for _,row in df_finess.iterrows():
-            h = row["nofinesset"]
-            if row["can_code"] == r:
-                w_rh[r][h] = 2
-            elif row["can_code"] in list_adjacent.values[0]:
-                w_rh[r][h] = 1
-            else:
-                w_rh[r][h] = 0.5
+    import numpy as np
+    gdf_proj = gdf_summary.to_crs("EPSG:2154") 
+    longitudes = [x.lon for x in list_Facilities]
+    latitudes = [x.lat for x in list_Facilities]
+    facilities = gpd.GeoSeries(gpd.points_from_xy(longitudes, latitudes), crs="EPSG:4326").to_crs("EPSG:2154") 
+    centroids = gdf_proj.geometry.centroid 
+    dist_matrix = np.column_stack([facilities.distance(c) for c in centroids]) 
+    w_rh = {can: dict(zip([x.id for x in list_Facilities], 1/dist_matrix[:, i])) for i, can in enumerate(gdf_proj.can_code)}
     return w_rh
 
 
@@ -530,7 +522,7 @@ def get_frac_resource_capacities(m_hl, p_orth:float) -> dict:
 
 def getFacilityType(nofinesset, df_mco, df_ssr):
     if nofinesset in df_mco["FI_ET"].unique() and nofinesset in df_ssr["FI_ET"].unique():
-        return "Polyclinic"
+        return "Other"
     elif nofinesset in df_mco["FI_ET"].unique():
         return "MCO"
     elif nofinesset in df_ssr["FI_ET"].unique():

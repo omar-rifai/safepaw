@@ -17,6 +17,7 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system):
         case "slack":
             LP += lpSum(-s_hl[h][l] for h in params_system["H"] for l in params_system["L"])
         case "maternities":
+            print("we are optimizing maternities")
             LP +=  lpSum([params_system["D"] * P[g][k][r][a][h] \
                                                    * params_system["w_rh"][r][h]
                                                    for g in params_system["G"]

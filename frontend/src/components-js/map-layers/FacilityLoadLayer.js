@@ -16,7 +16,7 @@ function getMaxCapacities(loads) {
 }
 
 
-function jitter([lng, lat], amount = 0.00045) {
+function jitter([lat, lng], amount = 0.00045) {
   return [
     lng + (Math.random() - 0.5) * amount,
     lat + (Math.random() - 0.5) * amount

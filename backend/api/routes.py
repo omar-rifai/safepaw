@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
-from backend.core.data_models.input_models import FacilityResources, Facility
+from backend.core.data_models.input_models import FacilityResources, Facility, LinkedFacilities, FacilityAffinity,FacilityPathways, Region, Pathway
 from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box, get_InstanceData
 import traceback, json
 
@@ -12,21 +12,78 @@ api = APIRouter()
 @api.get("/")
 def health():
     return {"status": "ok"}
+    
 
 
 @api.post("/addFacility")
 async def addFacility(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
+    from backend.api.services import createAffinitiesMatrix
     try: 
-        new_facility = Facility(id=payload["facility_id"], name = payload["facility_name"], facility_type="2", region_id="test", lat=1.3, lon=42.2)
+
+        region = session.exec(select(Region).where(Region.id == payload["region_id"])).first()
+        if (region is None):
+            region = Region(id=payload["region_id"], lat=payload["lat"],lon = payload["lon"])
+            session.add(region)
+            session.flush()
+            
+
+        new_facility = Facility(id=payload["facility_id"], name = payload["facility_name"], region_id=payload["region_id"], lat=payload["lat"], lon=payload["lon"])
         session.add(new_facility)
-        session.commit()
-        session.refresh(new_facility)
+        
+        for r in payload["resources"]:
+            new_facility_resources = FacilityResources(facility_id = payload["facility_id"], resource_id = r["resource_id"],
+                                                        capacity = r["capacity"], max_transferable_in=r["max_transferable_in"], max_transferable_out=r["max_transferable_out"])
+            session.add(new_facility_resources)
      
-    except ExecutableNotFound as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        pathways = session.exec(select(Pathway)).all()
+        
+        for pathway in pathways:
+            new_facility_pathway = FacilityPathways(facility_id=payload["facility_id"],pathway_id = pathway.id, group_id = pathway.group_id)
+            session.add(new_facility_pathway)
+        
+        session.flush()
+        createAffinitiesMatrix(session, new_facility)
+
+        session.commit() 
+        session.refresh(new_facility)
+    
+  
+    
+    except Exception as e:
+        session.rollback()
+        print("Error in addFacility route:", e)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    return JSONResponse(
+        status_code=201,
+        content={"message": "Facility created successfully"}
+    )
+
+
+@api.delete("/deleteFacility/{facility_id}")
+async def delete_facility(facility_id: str, session: Session = Depends(get_session)) -> JSONResponse:
+    from sqlalchemy import delete
+    import traceback
+    
+
+    try: 
+        facility = session.get(Facility, facility_id)
+        if not facility:
+            raise HTTPException(status_code=404, detail="Facility not found")
+
+        stmt_facilityResources = delete(FacilityResources).where(FacilityResources.facility_id == facility_id)
+        stmt_facilityPathways = delete(FacilityPathways).where(FacilityPathways.facility_id == facility_id)
+        stmt_facility = delete(Facility).where(Facility.id == facility_id)
+        session.exec(stmt_facilityResources)
+        session.exec(stmt_facilityPathways)
+        session.exec(stmt_facility)
+        session.commit()
+        return JSONResponse(status_code=200, content={"message":"Facility and associated tables deleted"})
+     
 
     except Exception as e:
-        print("Error in optimize route:", e)
+        print("Error in facility delete route:", e)
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -91,7 +148,7 @@ async def generate(payload: dict = Body(...), session: Session = Depends(get_ses
         )
 
     except Exception:
-        print("Error in api.read_file route:")
+        print("Error in api.generate route:")
         session.rollback() 
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -107,7 +164,8 @@ async def update_facility_type(payload: dict = Body(...), session:Session = Depe
              .where(FacilityResources.facility_id == payload["facility_id"])\
              .where(FacilityResources.resource_id == payload["resource_id"])).first()
         
-        setattr(facilityResource, "capacity", payload["capacity"])
+        if isinstance(payload.get("capacity"), int):
+            setattr(facilityResource, "capacity", payload["capacity"])
 
         session.add(facilityResource)
         session.commit()
@@ -179,7 +237,7 @@ async def get_state(session: Session = Depends(get_session)):
         }
 
     except Exception:
-        print("Error in api.read_file route:")
+        print("Error in api.state route:")
         session.rollback() 
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")

@@ -10,7 +10,7 @@ pathway_benefit = {"HC":1, "DOM":2, "HCHDJ": 1.25, "HDJ":1.5}
 
 def get_Regions(gdf_summary: pd.DataFrame) -> list[Region]:
     """Creates Region instance (cantons) given a department code (cantons are grouped by bureau de vote)"""
-    list_regions = [Region(id=row["can_code"], lat=row["geometry"].centroid.x, lon=row["geometry"].centroid.y)for _,row in  gdf_summary.iterrows()]
+    list_regions = [Region(id=row["can_code"],lon=row["geometry"].centroid.x, lat=row["geometry"].centroid.y)for _,row in  gdf_summary.iterrows()]
     return list_regions
 
 
@@ -27,8 +27,8 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.D
             facility_type = getFacilityType(row.nofinesset, df_mco, df_ssr),
             name = row.rs,
             region_id = row.can_code,
-            lat = row.lat,
             lon = row.lon,
+            lat = row.lat,
             nbr_visits= get_facility_visits(row.nofinesset, df_mco, df_ssr)))
     list_facilities = add_dom_facility(list_facilities,  gdf_geo)
     list_facilities = add_orth_facility(list_facilities,  gdf_geo)
@@ -44,8 +44,8 @@ def add_orth_facility(list_facilities: list[Facility], gdf_geo: pd.DataFrame) ->
             name = "Orthopedic Center",
             facility_type="Other",
             region_id =  default_can_code,
-            lat =default_coords[0],
-            lon =default_coords[1]))
+            lat =default_coords[1],
+            lon =default_coords[0]))
     return list_facilities
 
 
@@ -60,8 +60,8 @@ def add_dom_facility(list_facilities: list[Facility],
             name = "Home Care",
             facility_type="Other",
             region_id = default_can_code,
-            lat =default_coords[0], 
-            lon = default_coords[1]))
+            lat =default_coords[1], 
+            lon = default_coords[0]))
     return list_facilities
 
 
@@ -172,9 +172,10 @@ def serialize_ptgpth_core(
     list_Pathways = get_PatientPathways(list_pathways_ids, list_patientGroups_ids, pathway_benefit, quality_levels)
     instance = get_Instance(int(df_types_parcours["nb"].sum()), resources_mult, p_transf, dep_code)
 
-    list_facility_affinities = get_FacilityAffinity(df_finess, gdf_summary)
     list_facility_resources = get_FacilityResources(t_gkal, list_resources_ids, df_mco, df_ssr, df_finess, df_types_parcours,
                                                     p_orth, resources_mult)
+    list_facility_affinities = get_FacilityAffinity(list_Facilities, gdf_summary)
+    
     list_facility_pathways = get_FacilityPathways(list_pathways_ids, list_patientGroups_ids, list_Facilities)
     list_linked_facilities = get_LinkedFacilities(list_Facilities)
     list_activity_resources = get_ActivityResources(t_gkal,  A_idx)
@@ -216,6 +217,7 @@ def read_ptgpth(dep_name):
     list_facilities = get_Facilities(df_mco, df_ssr, df_finess, df_types_parcours, dep_code, t_gkal, list_resources_ids, list_pathways_ids, 0)
 
     return pd.DataFrame([x.model_dump(mode='json') for x in list_facilities if x.facility_id not in ["DOM", "ORTH"]])
+
 
 
 if __name__ == "__main__":

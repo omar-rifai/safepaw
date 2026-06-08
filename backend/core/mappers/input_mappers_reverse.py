@@ -53,8 +53,8 @@ def create_Facilities_from_json(params_system: dict) -> list:
                                         name=params_system["facilities_metadata"][h]["name"],
                                         facility_type=params_system["facilities_metadata"][h]["type"],
                                         region_id=params_system["facilities_metadata"][h]["region_id"],
-                                        lat=params_system["facilities_metadata"][h]["coords"][0],
-                                        lon=params_system["facilities_metadata"][h]["coords"][1],
+                                        lat=params_system["facilities_metadata"][h]["lat"],
+                                        lon=params_system["facilities_metadata"][h]["lon"],
                                         nbr_visits=params_system["facilities_metadata"][h]["nbr_visits"]))
     return list_facilities
 

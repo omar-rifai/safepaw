@@ -201,7 +201,7 @@ export default function customMap() {
         >
           <DeckGL viewState={viewState} onViewStateChange={({ viewState }) => setViewState(viewState)} controller={true} layers={renderedLayers} getTooltip={getTooltip}
             //getCursor={({ isPickingLocation }) => isPickingLocation ? 'crosshair' : undefined}
-            on onClick={(info) => {
+            onClick={(info) => {
               console.log("on click:", info.coordinate, isPickingLocation)
               if (isPickingLocation) {
                 const [lon, lat] = info.coordinate;

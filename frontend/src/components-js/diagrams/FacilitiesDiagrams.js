@@ -65,24 +65,7 @@ export default function FacilitiesDiagrams() {
         </ResponsiveContainer>
 
       </Grid>
-      <Grid container sx={{ width: "95%", height: 300 }}>
-
-        <ResponsiveContainer width="100%" height="100%" style={{ flex: 1, minWidth: 0, background: "#fff", borderRadius: 2, p: 1 }}>
-          <ComposedChart data={patientsGroupsChartData} barCategoryGap="20%" margin={{ top: 30, right: 30, bottom: 50, left: 0 }}>
-
-            <Tooltip />
-
-            <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.5} />
-            <XAxis dataKey="group_id" type="category" tickMargin={10} label={{ value: "Patients Group", position: "bottom", offset: 10 }} />
-            <YAxis type="number" allowDecimals={false} />
-            <Legend verticalAlign="top" />
-            <ReferenceArea y1={selectedPathways[0]} y2={selectedPathways[selectedPathways.length - 1]}
-              fill="#88adc8ff" fillOpacity={0.3} />
-            <Bar stackId="a" dataKey="n_facilities" fill="#7eb0eaff" radius={[6, 6, 6, 6]} />
-          </ComposedChart>
-        </ResponsiveContainer>
-
-      </Grid>
+      
     </Stack >
   );
 }

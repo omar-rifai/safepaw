@@ -12,7 +12,7 @@ export function newLocationLayer(pickedLocation, animationFrame) {
         id: 'temp-location',
         data: [pickedLocation],
         getPosition: d => [d.lon, d.lat],
-        getFillColor: [40,200, 100, 130],
+        getFillColor: [40,200, 200, 100],
         getRadius: 6 + pulse*5,
         radiusScale:1,
         getLineColor: [255, 255, 255, 180],

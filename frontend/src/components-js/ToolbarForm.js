@@ -25,6 +25,7 @@ export default function ToolbarForm() {
 
 
     const handleUpload = async (event) => {
+        console.log("in handleUpload function")
         const file = event.target.files?.[0];
         if (!file) return;
 
@@ -83,7 +84,7 @@ export default function ToolbarForm() {
 
             <FormControl sx={{ m: 1, minWidth: 120 }}>
                 <InputLabel size="small" >Dataset Type</InputLabel>
-                <Select value={datasetType} size="small" label="dataset type" sx={{ width: 150 }} onChange={(e)=>(setDatasetType(e.target.value))}>
+                <Select value={datasetType} size="small" label="dataset type" sx={{ width: 190 }} onChange={(e)=>(setDatasetType(e.target.value))}>
                     <MenuItem key={""} value={""}>  </MenuItem>
                     <MenuItem key={"maternities"} value={"maternities"}> French Maternities </MenuItem>
                     <MenuItem key={"pthptg"} value={"pthptg"}> Hip/Knee Prosthesis </MenuItem>
@@ -91,7 +92,7 @@ export default function ToolbarForm() {
             </FormControl>
             <FormControl sx={{ m: 1, minWidth: 120 }}>
                 <InputLabel size="small" >Department</InputLabel>
-                <Select value={depCode} label="department" size="small" sx={{ width: 190 }} onChange={(e)=>(setDepCode(e.target.value))}>
+                <Select value={depCode} label="department" size="small" sx={{ width: 200 }} onChange={(e)=>(setDepCode(e.target.value))}>
                     <MenuItem value={""}>  </MenuItem>
                     {departments.map((e) => (
                         <MenuItem key={e.code} value={e.code}>{e.dep_name}</MenuItem>)
