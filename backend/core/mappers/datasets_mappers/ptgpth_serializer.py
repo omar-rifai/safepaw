@@ -21,6 +21,9 @@ def get_Facilities(df_mco : pd.DataFrame, df_ssr : pd.DataFrame,  df_finess:pd.D
     gdf_cantons = get_geo_polygon()
     gdf_geo = summarize_geo_data(gdf_cantons, get_pop65p(), dep_code)
     
+    if gdf_geo.empty:
+        raise Exception(f"Geographic data unavailable for department code: {dep_code}.")
+    
     for row in df_finess.itertuples():     
         list_facilities.append(Facility(
             id = row.nofinesset,

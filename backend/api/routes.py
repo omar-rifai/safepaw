@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
-from backend.core.data_models.input_models import FacilityResources, Facility, LinkedFacilities, FacilityAffinity,FacilityPathways, Region, Pathway
+from backend.core.data_models.input_models import FacilityResources, Facility, FacilityAffinity,FacilityPathways, Pathway, Resource, LinkedFacilities
 from backend.api.services import get_facilities_capacities, get_DataGridEntries, get_bounding_box, get_InstanceData
 import traceback, json
 
@@ -14,40 +14,59 @@ def health():
     return {"status": "ok"}
     
 
+@api.get("/newFacillityID")
+async def newFacilityID(session: Session = Depends(get_session)) -> JSONResponse:
+    from sqlalchemy import Integer, func, cast
+    try:
+        max_id = session.exec(select(func.max(cast(Facility.id, Integer)))).one()
+        next_id = (max_id or 0) + 1
+
+
+    except Exception as e:
+        session.rollback()
+        print("Error in newFacilityID route:", e)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    return JSONResponse(
+        status_code=201,
+        content={"id": next_id, "message": "New facility ID generated succesfully"}
+    )
+
 
 @api.post("/addFacility")
 async def addFacility(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
-    from backend.api.services import createAffinitiesMatrix
+    from backend.api.services import createAffinitiesMatrix, createLinkedFacilities, getClosestRegion
     try: 
+       
+        closest_region_id = getClosestRegion(session, lat=payload["lat"], lon=payload["lon"])         
 
-        region = session.exec(select(Region).where(Region.id == payload["region_id"])).first()
-        if (region is None):
-            region = Region(id=payload["region_id"], lat=payload["lat"],lon = payload["lon"])
-            session.add(region)
-            session.flush()
-            
-
-        new_facility = Facility(id=payload["facility_id"], name = payload["facility_name"], region_id=payload["region_id"], lat=payload["lat"], lon=payload["lon"])
+        new_facility = Facility(id=payload["facility_id"], name = payload["facility_name"], region_id=closest_region_id, lat=payload["lat"], lon=payload["lon"])
         session.add(new_facility)
         
+        remaining_resources_ids = session.exec(select(Resource.id)).all()
         for r in payload["resources"]:
+            remaining_resources_ids.remove(r["resource_id"])
             new_facility_resources = FacilityResources(facility_id = payload["facility_id"], resource_id = r["resource_id"],
                                                         capacity = r["capacity"], max_transferable_in=r["max_transferable_in"], max_transferable_out=r["max_transferable_out"])
             session.add(new_facility_resources)
+        for rid in remaining_resources_ids:
+            new_facility_resources = FacilityResources(facility_id = payload["facility_id"], resource_id = rid,
+                                                        capacity = 0, max_transferable_in=0, max_transferable_out=0)
+            session.add(new_facility_resources)
+
      
         pathways = session.exec(select(Pathway)).all()
         
         for pathway in pathways:
             new_facility_pathway = FacilityPathways(facility_id=payload["facility_id"],pathway_id = pathway.id, group_id = pathway.group_id)
             session.add(new_facility_pathway)
-        
-        session.flush()
+        session.commit()
+        createLinkedFacilities(session, new_facility)
         createAffinitiesMatrix(session, new_facility)
 
         session.commit() 
         session.refresh(new_facility)
-    
-  
     
     except Exception as e:
         session.rollback()
@@ -74,9 +93,11 @@ async def delete_facility(facility_id: str, session: Session = Depends(get_sessi
 
         stmt_facilityResources = delete(FacilityResources).where(FacilityResources.facility_id == facility_id)
         stmt_facilityPathways = delete(FacilityPathways).where(FacilityPathways.facility_id == facility_id)
+        stmt_facilityAffinities = delete(FacilityAffinity).where(FacilityAffinity.facility_id == facility_id)
         stmt_facility = delete(Facility).where(Facility.id == facility_id)
         session.exec(stmt_facilityResources)
         session.exec(stmt_facilityPathways)
+        session.exec(stmt_facilityAffinities)
         session.exec(stmt_facility)
         session.commit()
         return JSONResponse(status_code=200, content={"message":"Facility and associated tables deleted"})
@@ -100,8 +121,6 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
        update_instance(session, payload["instance"])
        params = convert_dm_to_json(session)
        
-       with open("experiments/test.json", "w") as fp:
-           json.dump(params, fp)
        status, _, dict_results = run_optimization(params)  
        list_facility_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params)]
        list_facility_region_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params, by_region=True)]
@@ -112,9 +131,8 @@ async def optimize(payload: dict = Body(...), session: Session = Depends(get_ses
         raise HTTPException(status_code=500, detail=str(e))
 
     except Exception as e:
-        print("Error in optimize route:", e)
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=repr(e))
 
 
 @api.post("/generate")
@@ -147,11 +165,11 @@ async def generate(payload: dict = Body(...), session: Session = Depends(get_ses
             },
         )
 
-    except Exception:
+    except Exception as e:
         print("Error in api.generate route:")
         session.rollback() 
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 

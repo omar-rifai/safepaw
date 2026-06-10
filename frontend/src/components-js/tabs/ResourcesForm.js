@@ -14,11 +14,12 @@ function hasValues(resources, col) {
 export default function ResourcesForm() {
 
 
-    const { inputData, setInputData } = useContext(DataContext);
+    const { inputData, setInputData, setOutputData } = useContext(DataContext);
     const { selectedFacilityID } = useContext(UIContext);
     const resources = inputData.entries?.resources || inputData.instance?.resources || [];
 
     const handRowUpdate = async (newRow) => {
+        setOutputData({})
         console.log("in resources form", selectedFacilityID)
         const response = await fetch(`/api/update_FacilityResources`, {
             method: "PUT",

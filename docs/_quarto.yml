@@ -15,8 +15,7 @@ website:
         text : Hip and Knee Protheses
       - about.qmd
       
-
-
+    
 
 format:
   html:
@@ -25,6 +24,11 @@ format:
       - brand
     css: styles.css
     toc: true
-
-
-
+  pdf:
+    geometry:
+      - landscape
+    include-in-header:
+      text: |
+        \usepackage{adjustbox}
+        \usepackage{longtable}
+        \usepackage{booktabs}

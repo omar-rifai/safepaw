@@ -5,19 +5,20 @@ import { DataContext } from "../App";
 import { useContext, useEffect, useState } from "react";
 
 export default function ToolbarForm() {
-
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [isOptimizing, setIsOptimizing] = useState(false)
     const [depCode, setDepCode] = useState("")
     const [datasetType, setDatasetType] = useState("")
 
     const { setOutputData, setInputData, inputData, setActiveTab } = useContext(DataContext);
 
 
-    useEffect(()=>{
+    useEffect(() => {
         setDatasetType(inputData.instance_data?.instance_mode ?? "")
         setDepCode(inputData.instance_data?.dep_code ?? "")
-    },[inputData])
+    }, [inputData])
 
-    
+
     const VisuallyHiddenInput = styled('input')({
         clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', position: 'absolute', bottom: 0, left: 0,
         whiteSpace: 'nowrap', width: 1,
@@ -50,32 +51,54 @@ export default function ToolbarForm() {
 
     const generateInstance = async () => {
         console.log("Generating new instance:", datasetType, depCode)
+        setIsGenerating(true)
 
-        const response_convert = await fetch("/api/generate", {
+        const response = await fetch("/api/generate", {
             method: "POST",
             body: JSON.stringify({ "mode": datasetType, "dep_code": depCode }),
             headers: { "Content-Type": "application/json" }
         })
 
-        const payload = await response_convert.json()
+        if (!response.ok) {
+            const error = await response.json()
+            alert(error.detail);
+            setIsGenerating(false)
+            return
+        }
+
+        const payload = await response.json()
         setInputData(payload)
         setOutputData(null)
         setActiveTab("tab-facilities")
+        setIsGenerating(false)
     };
 
 
     const enabled_optimize = inputData?.entries ? false : true
     const optimizeInstance = async () => {
         console.log("Calling optimize_instance..")
-
-        const response_convert = await fetch("/api/optimize", {
+        setIsOptimizing(true)
+        const response = await fetch("/api/optimize", {
             method: "POST",
             body: JSON.stringify({ "instance": inputData?.entries?.instance }),
             headers: { "Content-Type": "application/json" }
         })
 
-        const payload = await response_convert.json()
+        if (!response.ok) {
+            const error = await response.json()
+            alert(error.detail);
+            setIsOptimizing(false)
+            return
+        }
+        const payload = await response.json()
+        if (payload["status"] == "Infeasible") {
+            alert("Infeasible instance. Please modify instance parameters and try again.")
+            setIsOptimizing(false)
+            return
+        }
+
         setOutputData(payload)
+        setIsOptimizing(false)
         setActiveTab("tab-resources")
     };
 
@@ -84,7 +107,7 @@ export default function ToolbarForm() {
 
             <FormControl sx={{ m: 1, minWidth: 120 }}>
                 <InputLabel size="small" >Dataset Type</InputLabel>
-                <Select value={datasetType} size="small" label="dataset type" sx={{ width: 190 }} onChange={(e)=>(setDatasetType(e.target.value))}>
+                <Select value={datasetType} size="small" label="dataset type" sx={{ width: 190 }} onChange={(e) => (setDatasetType(e.target.value))}>
                     <MenuItem key={""} value={""}>  </MenuItem>
                     <MenuItem key={"maternities"} value={"maternities"}> French Maternities </MenuItem>
                     <MenuItem key={"pthptg"} value={"pthptg"}> Hip/Knee Prosthesis </MenuItem>
@@ -92,7 +115,7 @@ export default function ToolbarForm() {
             </FormControl>
             <FormControl sx={{ m: 1, minWidth: 120 }}>
                 <InputLabel size="small" >Department</InputLabel>
-                <Select value={depCode} label="department" size="small" sx={{ width: 200 }} onChange={(e)=>(setDepCode(e.target.value))}>
+                <Select value={depCode} label="department" size="small" sx={{ width: 200 }} onChange={(e) => (setDepCode(e.target.value))}>
                     <MenuItem value={""}>  </MenuItem>
                     {departments.map((e) => (
                         <MenuItem key={e.code} value={e.code}>{e.dep_name}</MenuItem>)
@@ -101,8 +124,8 @@ export default function ToolbarForm() {
                 </Select>
             </FormControl>
             <Box sx={{ width: 15 }} />
-            <Button size="small" variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>
-            <Button size="small" variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Optimize</Button>
+            <Button size="small" loading={isGenerating} variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>
+            <Button size="small" loading={isOptimizing} variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Optimize</Button>
             <Button size="small" component="label" sx={{ flexShrink: 0 }}>  Upload <VisuallyHiddenInput type="file" onChange={handleUpload} multiple /></Button>
 
         </Grid>

@@ -6,7 +6,7 @@ import numpy as np
 import typer
 
 FACILITY_TYPES = ["1", "2a", "2b", "3"]
-RESOURCE_ID = "cap"
+RESOURCE_ID = "bed/days"
 DF_LABOURS_ALL = pd.read_csv("backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
 DF_GEO_COMMS = gpd.read_parquet("backend/data/open_data/communes-50m.parquet")
 DF_GEO_COMMS_METERS= DF_GEO_COMMS.to_crs(epsg=2154)
@@ -21,7 +21,7 @@ DICT_COMM_CENTROIDS = dict(zip(
 
 def pad_single(dep_code: str):
     if not dep_code.isdigit():
-        raise("Unhandled department code number", dep_code)
+       return dep_code
     if int(dep_code) < 10 and len(dep_code) == 1:
         return "0" + dep_code
     return dep_code

@@ -61,7 +61,7 @@ function getFillColor(obj) {
   ]
 }
 
-export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacilityID}) {
+export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacilityID }) {
 
   if (!loads || loads.length === 0) {
     return null;
@@ -94,21 +94,17 @@ export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacili
 }
 
 export function getFacilityToolTip(info) {
-  if (!info) return null;
-
-
+  if (!info?.object) return null;
   const facilityId = info.object["facility_id"];
 
   return {
     html: `
-
-        <div style="font-weight:bold;margin-bottom:4px;">Facility: ${facilityId}</div>`,
+    <h3>Facility:</h3>
+    <div>${facilityId}</div>
+  `,
     style: {
-      backgroundColor: "rgba(254,254,254,0.95)",
-      color: "#000",
-      padding: "10px",
-      borderRadius: "6px",
-      maxWidth: "220px"
+      backgroundColor: 'rgba(254, 254, 254, 1)',
+      fontSize: '0.8em'
     }
-  };
-}
+  }
+};

@@ -43,7 +43,7 @@ div.csl-indent {
 }</style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
 <script src="site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -88,6 +88,9 @@ div.csl-indent {
     "search-label": "Search"
   }
 }</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -212,210 +215,47 @@ window.Quarto = {
 <li>Additional open data for precise coordinates of the regions, departments and communes in France.</li>
 </ul>
 <p>The data sources have been synthesized in our project as two files 📄 <a href="https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_capacity.csv?ref_type=heads"><em>summary_maternity_capacity.csv</em></a> for the capacity in <code>beds</code> by facility and 📄 <a href="https://gitlab.emse.fr/cis-public/i4s/thierry-garaix/safepaw_strategic/-/raw/demo-refactor/data/open_data/summary_maternity_labours.csv?ref_type=heads"><em>summary_maternity_labours.csv</em></a> to extract the demand by commune. Sample rows are shown below.</p>
-<div id="036cac36" class="cell" data-results="asis" data-execution_count="1">
-<div class="cell-output cell-output-display">
-<table class="dataframe table table-sm table-striped small">
+<div id="8e11b187" class="cell" data-results="asis" data-execution_count="1">
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
 
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
 <thead>
-
-<tr>
-
-<th>
-year
-</th>
-
-<th>
-nofinesset
-</th>
-
-<th>
-facility_name
-</th>
-
-<th>
-type
-</th>
-
-<th>
-region_code
-</th>
-
-<th>
-region_name
-</th>
-
-<th>
-dep_code
-</th>
-
-<th>
-dep_name
-</th>
-
-<th>
-comm_code
-</th>
-
-<th>
-comm_name
-</th>
-
-<th>
-coords
-</th>
-
-<th>
-deliveries_per_facility
-</th>
-
-<th>
-beds
-</th>
-
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">comm_code</th>
+<th data-quarto-table-cell-role="th">dep_code</th>
+<th data-quarto-table-cell-role="th">region_code</th>
+<th data-quarto-table-cell-role="th">coordinates</th>
+<th data-quarto-table-cell-role="th">deliveries_per_comm</th>
 </tr>
-
 </thead>
-
 <tbody>
-
-<tr>
-
-<td>
-2020
-</td>
-
-<td>
-010005239
-</td>
-
-<td>
-CH DU HAUT BUGEY - GEOVREISSET
-</td>
-
-<td>
-1
-</td>
-
-<td>
-84
-</td>
-
-<td>
-Auvergne-Rhône-Alpes
-</td>
-
-<td>
-01
-</td>
-
-<td>
-Ain
-</td>
-
-<td>
-01283
-</td>
-
-<td>
-OYONNAX
-</td>
-
-<td>
-(5.627347689975507, 46.275058914989415)
-</td>
-
-<td>
-672
-</td>
-
-<td>
-20
-</td>
-
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>2010</td>
+<td>46117</td>
+<td>46</td>
+<td>76</td>
+<td>('44.93911771041438', ' 1.884464767586863')</td>
+<td>1.0</td>
 </tr>
-
 </tbody>
-
 </table>
+
 </div>
-<div class="cell-output cell-output-display">
-<table class="dataframe table table-sm table-striped small">
-
-<thead>
-
-<tr>
-
-<th>
-year
-</th>
-
-<th>
-comm_code
-</th>
-
-<th>
-dep_code
-</th>
-
-<th>
-region_code
-</th>
-
-<th>
-coordinates
-</th>
-
-<th>
-deliveries_per_comm
-</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr>
-
-<td>
-2010
-</td>
-
-<td>
-46117
-</td>
-
-<td>
-46
-</td>
-
-<td>
-76
-</td>
-
-<td>
-('44.93911771041438', ' 1.884464767586863')
-</td>
-
-<td>
-1.0
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
 </div>
 </div>
 <section id="verifying-compatibility" class="level4">
 <h4 class="anchored" data-anchor-id="verifying-compatibility">Verifying compatibility</h4>
 <p>We made sure that the two data sources were coherent by summing the number of deliveries by region across 10 years.</p>
-<div id="27499eca" class="cell" data-results="asis" data-execution_count="2">
+<div id="a00ddf76" class="cell" data-results="asis" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="instance_maternities_files/figure-html/cell-3-output-1.png" width="602" height="467" class="figure-img"></p>
+<p><img src="instance_maternities_files/figure-html/cell-3-output-1.png" width="662" height="456" class="figure-img"></p>
 </figure>
 </div>
 </div>
@@ -435,8 +275,8 @@ deliveries_per_comm
 d_{gr} = \frac{\bar{L}_r}{\sum_{r} \bar{L}_r}
 \end{equation}\]</span></p>
 <p>This demand is global for all patient groups. As we do not have detailed info on the demand per pation group, we multiply the obtained global demands by the estimated statistics on delivery type [<span class="citation" data-cites="DREES2021_naissance_accouchements">DREES (<a href="#ref-DREES2021_naissance_accouchements" role="doc-biblioref">2021</a>)</span>].</p>
-<div id="8969eeb5" class="cell" data-results="asis" data-execution_count="3">
-<div class="cell-output cell-output-display" data-execution_count="15">
+<div id="4662bd59" class="cell" data-results="asis" data-execution_count="3">
+<div class="cell-output cell-output-display" data-execution_count="9">
 <table class="dataframe table table-sm table-striped small">
 
 <thead>

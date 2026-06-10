@@ -21,7 +21,7 @@ def  get_FacilityAffinity(df_instance: pd.DataFrame, df_geo_comms: pd.DataFrame)
             for facility_id, score in facility_scores.items()]
 
 
-def get_FacilityResources(df_instance: pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1, RESOURCE_ID="cap"):
+def get_FacilityResources(df_instance: pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1, RESOURCE_ID="bed/days"):
    return [FacilityResources(
         facility_id = str(row['nofinesset']),
         resource_id = RESOURCE_ID,
@@ -43,7 +43,7 @@ def get_LinkedFacilities(list_facilities):
 def get_ActivityResources():
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")
-    required_resources={"cap":config["avg_length_of_stay"]}
+    required_resources={"bed/days":config["avg_length_of_stay"]}
     return [ActivityResources(activity_id="accouchement_"+g, pathway_id= "p"+g, group_id=g, resource_id=r, required_capacity=cap) for g in ["1", "2a", "2b", "3"]
             for r, cap in required_resources.items()]
 

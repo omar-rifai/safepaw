@@ -30,6 +30,7 @@
     "@turf/bbox": "^7.3.0",
     "chroma-js": "^3.2.0",
     "maplibre-gl": "^5.23.0",
+    "mermaid": "^11.15.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-map-gl": "^8.1",

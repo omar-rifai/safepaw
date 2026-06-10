@@ -12,6 +12,7 @@ export default function FacilitiesForm() {
     const { selectedFacilityID, setSelectedFacilityID } = useContext(UIContext);
 
     const openCreateDialog = function () {
+        setOutputData({})
         setOpenDialog(true)
     }
 

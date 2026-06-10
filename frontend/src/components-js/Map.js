@@ -22,6 +22,8 @@ export default function customMap() {
   const [animationFrame, setAnimationFrame] = useState(0)
   const regions = useMemo(() => outputData?.results?.regions || [], [outputData]);
 
+  const selectedInfo = inputData.entries?.facilities?.find((e) => e.facility_id == selectedFacilityID)
+
   const regionGeoJSON = inputData?.bbox;
   const [viewState, setViewState] = useState({
     longitude: 2.5,
@@ -226,25 +228,48 @@ export default function customMap() {
             <Legend inputData={inputData} outputData={outputData} />
           </DeckGL>
         </div>
-        <Box
-          sx={{
-            position: "absolute",
-            top: 100,
-            right: 20,
-            zIndex: 1000,
-            bgcolor: "white",
-            p: 2,
-            borderRadius: 2,
-            boxShadow: 3,
-            minWidth: 250,
-             backgroundColor: "transparent",
-          }}
-        >
-          <Typography>
-            {selectedFacilityID ?? ""}
-          </Typography>
-        </Box>
+        {selectedInfo?.info &&
+          <Box
+            sx={{
+              position: "absolute",
+              top: 100,
+              right: 20,
+              zIndex: 1000,
+              bgcolor: "white",
+              p: 2,
+              borderRadius: 2,
+              boxShadow: 3,
+              minWidth: 250,
+              backgroundColor: "transparent",
+            }}
+          >
+            <Typography>
+              {selectedInfo?.info?.liblongcategetab}
+            </Typography>
+            <Typography>
+              {selectedInfo?.info?.rslongue}
+            </Typography>
+            <Typography>
+              N° finess {selectedFacilityID ?? ""}
+            </Typography>
+            {selectedInfo?.info?.siret &&
+              <Typography>
+                N° siret: {selectedInfo?.info?.siret}
+              </Typography>
+            }
+            {selectedInfo?.info?.codepostal &&
+              <Typography>
+                voie {selectedInfo?.info?.voie} {selectedInfo?.info?.codepostal}
+              </Typography>
+            }
+            {selectedInfo?.info?.liblongmft &&
+              <Typography>
+                MFT: {selectedInfo?.info?.liblongmft}
+              </Typography>
+            }
 
+          </Box>
+        }
       </Box>
     </Box>
   );

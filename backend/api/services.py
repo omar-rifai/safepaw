@@ -4,7 +4,7 @@ import logging
 
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
-from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region
+from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region, FacilityResources
 from backend.core.data_models.output_models import FacilityCapacity, InstanceData
 from sqlalchemy import func
 
@@ -53,8 +53,19 @@ def get_InstanceData(session: Session) -> InstanceData:
 
 def update_instance(session: Session, new_instance):
     instance = session.exec(select(Instance)).one()
-    for key, val in instance:
-        setattr(instance, key, new_instance[key])
+    facility_resources = session.exec(select(FacilityResources)).all()
+    for key, _ in instance: 
+        # Currently perc_transfers is used as a global proxy for resources transfers but originally it is meant for patients transfers 
+        #TODO change back the perc_transf handling for patient transfers instead of resource transfers
+        if (key != "perc_transfers"):
+            setattr(instance, key, new_instance[key])
+        else:
+            for fr in facility_resources:
+                setattr(fr, "max_transferable_out", new_instance["perc_transfers"])
+                if new_instance["perc_transfers"] > 0:
+                    setattr(fr, "max_transferable_in", 10)
+                else:
+                    setattr(fr, "max_transferable_in", 0)
     session.commit()
     session.refresh(instance)
 
@@ -85,6 +96,7 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     if facility_ids:
         query_facilities = query_facilities.where(Facility.id.in_(facility_ids))
     facilities = session.exec(query_facilities).all()
+    facilities_info = getFacilitiesInfo([f.id for f in facilities])
 
     query_pathways = select(Pathway, FacilityPathways.facility_id)\
         .join(FacilityPathways, FacilityPathways.pathway_id == Pathway.id)\
@@ -113,39 +125,90 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     instance_entry = session.exec(select(Instance)).one()
 
     entry = DataGridEntries(
-        facilities= [FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type) for f in facilities],
+        facilities= [FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type,\
+                                 info=facilities_info.get(f.id,{})) for f in facilities],
         pathways= pathways_entries,
         resources= resources_entries,
         patients_groups= groups_entries,
         instance = instance_entry
     )
-
-
     return entry.model_dump() if entry else {}
 
+def getFacilitiesInfo(list_finess) -> dict:
+    import pandas as pd
+    import numpy as np 
+    cols = ["rslongue", "voie", "codepostal", "liblongcategetab", "siret", "liblongmft"]
+    df = pd.read_csv("backend/data/open_data/finess_2018.csv", sep=";", encoding="latin1",\
+                            usecols=["nofinesset"] + cols,  dtype={"coordx": str, "coordy": str},\
+                            low_memory=False)
+    df["nofinesset"] = df["nofinesset"].astype(str)
+    df = df.set_index("nofinesset")
+    
+
+    return df.reindex(list_finess)[cols].replace({np.nan: None}).to_dict(orient="index")
+
+
+def getClosestRegion(session, lat, lon):
+    import math
+    min_distance = math.inf
+    closest_region = None
+
+    facilities = session.exec(select(Facility)).all()
+    for f in facilities:
+        p1 = coords_to_point(lat,lon)
+        p2 = coords_to_point(f.lat, f.lon)
+        distance = p1.distance(p2).iloc[0]
+        if distance < min_distance:
+            min_distance = distance
+            closest_region = f.region_id        
+
+    return closest_region
+
+
+def createLinkedFacilities(session, new_facility):
+    from backend.core.data_models.input_models import LinkedFacilities
+
+    linked_facilities = []
+    facilities = session.exec(select(Facility)).all()
+    for f in facilities:
+        linked_facilities.append(LinkedFacilities(facility_id=new_facility.id, linked_facility_id=f.id))
+        if f.id == new_facility.id: continue
+        linked_facilities.append(LinkedFacilities(facility_id=f.id, linked_facility_id=new_facility.id))
+    session.add_all(linked_facilities)
+
+
 def createAffinitiesMatrix(session, new_facility):
-    import geopandas as gpd
-    from shapely.geometry import Point
     from backend.core.data_models.input_models import FacilityAffinity
 
-
-    facility_point = gpd.GeoSeries([Point(float(new_facility.lon), float(new_facility.lat))], crs="EPSG:4326").to_crs("EPSG:2154") 
-    regions = session.exec(select(Region)).all()
+    regions = session.exec(select(Region)).all()    
     affinities = []
-    for region in regions:
+
+    facility_point = coords_to_point(new_facility.lat, new_facility.lon)
+    for region in regions: 
         affinity_score = getAffinity(region,facility_point)
         affinities.append(FacilityAffinity(facility_id=new_facility.id, region_id=region.id, affinity_score=affinity_score))
+
     session.add_all(affinities)
  
+
+def coords_to_point(lat,lon):
+    import geopandas as gpd
+    from shapely.geometry import Point
+    return (
+        gpd.GeoSeries([Point(float(lon), float(lat))], crs="EPSG:4326")\
+            .to_crs("EPSG:2154")
+    )
+    
 
 
 def getAffinity(region: Region, facility_point):
     import geopandas as gpd
     from shapely.geometry import Point
-    epsilon = 1e-6
     region_point = gpd.GeoSeries([Point(float(region.lon), float(region.lat))],crs="EPSG:4326").to_crs("EPSG:2154")
     distance = facility_point.iloc[0].distance(region_point.iloc[0])
-    return 1 / max(distance, epsilon)
+    if distance == 0: score = 1/100 
+    else: score = 1 / distance
+    return score
 
 
 def clear_all_tables(session):

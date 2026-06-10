@@ -22,6 +22,7 @@ class FacilityRow(BaseModel):
     facility_id: str
     facility_name: str
     facility_type: Optional[str] = None
+    info: Optional[dict] = Field(default_factory=dict)
     
 
 class FacilityPathwaysRow(BaseModel):

@@ -1,8 +1,8 @@
-import { PieChart, Pie, ResponsiveContainer, Tooltip} from 'recharts';
+import { PieChart, Pie, ResponsiveContainer, Tooltip } from 'recharts';
 import { useMemo } from "react";
 import { Grid, Typography } from '@mui/material';
 
-export default function CaseMixDiagram({casemix}) {
+export default function CaseMixDiagram({ casemix }) {
     const GROUP_COLORS = [
         "#6388b4", "#f1c480ff", ' #ef6f6a', "#8cc2ca",
         "#55ad89", "#e4e093ff", "#bb7693", "#baa094",
@@ -83,6 +83,18 @@ export default function CaseMixDiagram({casemix}) {
         <Grid sx={{ width: "auto" }}>
 
             <Typography align="left" sx={{ fontSize: 16 }}>Case Mix Distribution</Typography>
+            <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                    mt: 0.5,
+                    mb: 2,
+                    maxWidth: 500,
+                    lineHeight: 1.5,
+                }}
+            >
+                This chart shows the proportional distribution of patient groups in our sample population (inner ring). The outter ring breaks down these proportions by region origin.
+                </Typography>
             <ResponsiveContainer width="100%" height={400}>
                 <PieChart>
                     <Pie

@@ -126,7 +126,7 @@ def load_data(dep_codes:list):
     df_mco = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_codes)
     df_ssr = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_codes)
     if df_mco.empty or df_ssr.empty or types_parcours.empty:
-        raise Exception(f"Data unavailable for departments codes: {dep_codes}.")
+        raise Exception(f"Data unavailable for department code: {dep_codes[0]}.")
     return types_parcours, df_mco, df_ssr
 
 def reduce_TYPES_PARCOURS(data: pd.DataFrame, min_patients: int, dep_code: str) -> pd.DataFrame:

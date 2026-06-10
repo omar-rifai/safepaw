@@ -1,4 +1,3 @@
-
 ---
 title: Maternity Instances
 ---
@@ -27,17 +26,18 @@ in `beds` by facility and 📄 [*summary_maternity_labours.csv*](https://gitlab.
 from IPython.display import display, Markdown
 import pandas as pd
 df= pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv")
+df = df.replace(r"\n", " ", regex=True)
 df_mat =df.loc[:, ~df.columns.str.contains("^Unnamed")]
 
-display(df_mat.head(n=1).to_html(index=False))
+df_mat.head(n=1)
 
 
 from IPython.display import display, Markdown
 import pandas as pd
 df = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-df = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+df = df.replace(r"\n", " ", regex=True)
 df_labours = df.loc[:, ~df.columns.str.contains("^Unnamed")]
-display(df_labours.head(n=1).to_html(index=False))
+df_labours.head(n=1)
 ```
 
 #### Verifying compatibility
@@ -53,14 +53,14 @@ from IPython.display import display, Markdown
 import numpy as np
 import pandas as pd
 
-df_materinity = pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv", low_memory=False)
+df_maternity = pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv", low_memory=False)
+df_maternity = df_maternity.replace(r"\n", " ", regex=True)
 df_labours = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
-df_materinity = pd.read_csv("../backend/data/open_data/summary_maternity_capacity.csv", low_memory=False)
-df_labours = pd.read_csv("../backend/data/open_data/summary_maternity_labours.csv", low_memory=False)
+df_labours = df_labours.replace(r"\n", " ", regex=True)
 
-years_cap = list(np.sort(df_materinity["year"].unique()))
-regions_cap = list(np.sort(df_materinity["region_code"].unique()))
-df_materinity = df_materinity.groupby(["region_code"]).agg(summary_maternity_capacity_csv=("deliveries_per_facility", "sum")).reset_index()
+years_cap = list(np.sort(df_maternity["year"].unique()))
+regions_cap = list(np.sort(df_maternity["region_code"].unique()))
+df_maternity = df_maternity.groupby(["region_code"]).agg(summary_maternity_capacity_csv=("deliveries_per_facility", "sum")).reset_index()
 
 
 df_labours = df_labours[(df_labours["year"].isin(years_cap)) & (df_labours["region_code"].isin(regions_cap))]
@@ -71,7 +71,7 @@ logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 fig, ax = plt.subplots()
 
-df_materinity.plot.bar(x="region_code", y="summary_maternity_capacity_csv", color="red", ax=ax, alpha=0.3, label="Deliveries from facilities statistics")
+df_maternity.plot.bar(x="region_code", y="summary_maternity_capacity_csv", color="red", ax=ax, alpha=0.3, label="Deliveries from facilities statistics")
 df_labours.plot.bar(x="region_code", y="summary_maternity_labours_csv", color="blue", ax=ax, alpha=0.3, label="Deliveries from communes statistics")
 
 ax.set_xlabel("French Region Code")
@@ -81,7 +81,7 @@ ax.legend()  # shows the labels
 
 plt.xlabel
 
-plt.show()
+plt.tight_layout()
 
 ```
 
@@ -197,8 +197,8 @@ params = {
 
 # Create DataFrame
 df_params = pd.DataFrame(params)
-
-df_params.to_html(index=False)
+df_params = df_params.replace(r"\n", " ", regex=True)
+display(Markdown(df_params.to_markdown(index=False)))
 ```
 
 

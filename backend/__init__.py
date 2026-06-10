@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from pathlib import Path
+import os
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .api.routes import api  # import APIRouter from routes.py
@@ -28,9 +30,10 @@ def create_app() -> FastAPI:
     # Include API routes
     app.include_router(api, prefix="/api")
 
-    #try:
-    #    app.mount("/", StaticFiles(directory="frontend/build", html=True), name="react")
-    #except FileNotFoundError:
-    #    print("frontend/build not found, skipping static files mount")
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    STATIC_DIR = BASE_DIR / "frontend" / "build"
 
+    if STATIC_DIR.exists():
+        app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="react")
+        
     return app
