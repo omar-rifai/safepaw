@@ -49,8 +49,21 @@ def get_FacilityResources(t_gkal: dict, list_resources_ids: list,df_mco : pd.Dat
                                                      max_transferable_in=max_transferable_in[l], max_transferable_out=max_transferable_out[l]) for l in orth_resource_capacities)
     return list_facility_resources
 
-def get_FacilityPathways(list_pathways_ids, list_group_ids, list_facilities):
-    return [FacilityPathways(facility_id=h.id, pathway_id=k, group_id=g) for h in list_facilities for k in list_pathways_ids for g in list_group_ids]
+
+
+
+def get_FacilityPathways(list_facility_resources, list_facilities, t_gkal, A_idx):
+    
+    pathway_resources = {g: {k: {r for a in A_idx[g][k] for r, amount in t_gkal[g][k][a].items() if amount > 0}for k in A_idx[g]} for g in A_idx}
+
+    facility_resources = {}
+    for fr in list_facility_resources:
+        if fr.capacity > 0:
+            facility_resources.setdefault(fr.facility_id, set()).add(fr.resource_id)
+    
+
+    return [FacilityPathways(facility_id=h.id, pathway_id=k, group_id=g) for h in list_facilities for g in A_idx for k in A_idx[g] \
+            if pathway_resources[g][k] & facility_resources.get(h.id, set())]
 
 
 def get_LinkedFacilities(list_facilities):
@@ -334,7 +347,7 @@ def get_pop65p() -> pd.DataFrame:
 
 def get_geo_polygon()->gpd.GeoDataFrame:
     """Returns a dataframe with the geographic polygon of each canton along with the total population"""
-    gdf = gpd.read_file("backend/data/open_data/data_cantons/cantons_2015_simpl.json")
+    gdf = gpd.read_file("backend/data/open_data/data_cantons/cantons_2015_simpl.json", engine="pyogrio")
     gdf["population"] = gdf["population"].astype(int)
     gdf["can_code"] = gdf["dep"].astype(str).str.zfill(2) + gdf["canton"].astype(str).str.zfill(2)
     gdf = gdf[["can_code", "bureau", "population", "dep", "geometry"]].drop_duplicates()
@@ -355,12 +368,15 @@ def get_finess_info(df_mco: pd.DataFrame, df_ssr: pd.DataFrame, gdf_geo: gpd.Geo
                             low_memory=False)
     
     transformer = Transformer.from_crs(2154, 4326, always_xy=True)
-    df_finess["lon"], df_finess["lat"] = transformer.transform(
-        df_finess["coordx"].str.replace(",", "").astype(float),
-        df_finess["coordy"].str.replace(",", "").astype(float)
-    )
-    gdf_finess = gpd.GeoDataFrame(df_finess, geometry=[Point(xy) for xy in zip(df_finess["lon"],df_finess["lat"])], crs="EPSG:4326")
-    gdf_finess = gpd.sjoin(gdf_finess, gdf_geo[["can_code", "geometry"]], how="left", predicate="intersects")
+    x = df_finess["coordx"].str.replace(",", "", regex=False).astype(float)
+    y = df_finess["coordy"].str.replace(",", "", regex=False).astype(float)
+    df_finess["lon"], df_finess["lat"] = transformer.transform(x.values,y.values)
+
+    gdf_finess = gpd.GeoDataFrame(df_finess, geometry=gpd.points_from_xy(df_finess["lon"], df_finess["lat"]), crs="EPSG:4326")
+
+    gdf_geo = gdf_geo[["can_code", "geometry"]].copy()
+    gdf_geo.sindex
+    gdf_finess = gpd.sjoin(gdf_finess,gdf_geo, how="left", predicate="intersects")
     all_finess = pd.concat([df_ssr["FI_ET"], df_mco["FI_ET"]]).dropna().unique()
     gdf_finess = gdf_finess[(gdf_finess["nofinesset"].isin(all_finess)) & (gdf_finess["can_code"].notnull())]
     

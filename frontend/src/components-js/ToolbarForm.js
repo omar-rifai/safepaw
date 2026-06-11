@@ -92,7 +92,7 @@ export default function ToolbarForm() {
         }
         const payload = await response.json()
         if (payload["status"] == "Infeasible") {
-            alert("Infeasible instance. Please modify instance parameters and try again.")
+            alert("Could not optimize instance. Please modify instance parameters and try again.")
             setIsOptimizing(false)
             return
         }

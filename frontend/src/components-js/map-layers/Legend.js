@@ -2,7 +2,7 @@
 import chroma from "chroma-js"
 import { useMemo } from 'react';
 
-const color_scale = chroma.scale(chroma.brewer.Set2)
+const color_scale = chroma.scale(chroma.brewer.Set1)
 function getColor(type) {
     if (!type) return [0, 0, 255, 100]
     const hash = [...type].reduce((a, c) => a + c.charCodeAt(0), 0);

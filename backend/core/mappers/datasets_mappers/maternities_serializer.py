@@ -118,6 +118,7 @@ def get_PatientPathways(groups_ids: list) -> list[Pathway]:
 def serialize_maternity_core(df_instance:dict, dep_code:str, save_params: bool = False) -> Union[dict, dict]:
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     import json, os
+    from backend.core.data_models.input_models import FacilityAffinity
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.mappers.datasets_mappers.maternities_utils import  get_FacilityAffinity, get_FacilityResources, get_FacilityPathways, get_LinkedFacilities,\
     get_ActivityResources, get_CaseMixRatios, get_TreatmentBounds, get_QualityBounds
@@ -137,8 +138,7 @@ def serialize_maternity_core(df_instance:dict, dep_code:str, save_params: bool =
         list_activities = get_Activities(FACILITY_TYPES)
         instance = get_Instance(df_instance, dep_code)
         list_qualities = list(set([k.quality_level for k in list_pathways]))
-        
-        list_facility_affinities = get_FacilityAffinity(df_instance, DF_GEO_COMMS_METERS)
+        list_facility_affinities_rows = get_FacilityAffinity(df_instance, DF_GEO_COMMS_METERS)
         list_facility_resources = get_FacilityResources(df_instance, max_transferable_in=10, max_transferable_out=1, RESOURCE_ID=RESOURCE_ID)
         list_facility_pathways = get_FacilityPathways(list_facilities)
         list_linked_facilities = get_LinkedFacilities(list_facilities)
@@ -147,10 +147,11 @@ def serialize_maternity_core(df_instance:dict, dep_code:str, save_params: bool =
         list_treatment_bounds = get_TreatmentBounds(list_patients)
         list_quality_bounds = get_QualityBounds(list_patients, list_qualities)
         
-        session.add_all([instance] + list_regions + list_facilities + list_resources + list_patients + list_pathways + list_activities + list_facility_affinities +
+        session.add_all([instance] + list_regions + list_facilities + list_resources + list_patients + list_pathways + list_activities  +
                          list_facility_resources + list_facility_pathways + list_linked_facilities + list_activity_resources + list_case_mix_ratios + 
                          list_treatment_bounds + list_quality_bounds)
 
+        session.bulk_insert_mappings(FacilityAffinity, list_facility_affinities_rows)
         session.flush()
         params_system  = convert_dm_to_json(session)
     

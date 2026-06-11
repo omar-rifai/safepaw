@@ -1,24 +1,33 @@
 import pandas as pd
 import numpy as np
-from backend.core.data_models.input_models import FacilityAffinity, FacilityResources, FacilityPathways, LinkedFacilities, ActivityResources,\
+from backend.core.data_models.input_models import FacilityResources, FacilityPathways, LinkedFacilities, ActivityResources,\
     CaseMixRatios, TreatmentBounds, QualityBounds
 
 
 
 def  get_FacilityAffinity(df_instance: pd.DataFrame, df_geo_comms: pd.DataFrame):
     from shapely.geometry import Point
+    from shapely import distance
     import geopandas as gpd
+    import numpy as np
+
     distances = np.zeros((len(df_instance), len(df_geo_comms)))
     facilities_points = gpd.GeoSeries([Point(c) for c in df_instance["coords"]], crs="EPSG:4326").to_crs(df_geo_comms.crs)
-    for i, comm_geometry in enumerate(df_geo_comms.geometry):
-        distances[:, i] = facilities_points.distance(comm_geometry)
+    facility_geoms = np.asarray(facilities_points.values)
+    region_geoms = np.asarray(df_geo_comms.geometry.values)
+
+    distances = distance(facility_geoms[:, None], region_geoms[None,:])
+  
     scores = 1 / np.where(distances == 0, 100, distances)
-    affinities_dict = {comm_id: dict(zip(df_instance["nofinesset"].tolist(), scores[:, i])) \
-                       for i, comm_id in enumerate(df_geo_comms["code"].tolist())}
-    
-    return [FacilityAffinity(facility_id=facility_id, region_id=comm_id, affinity_score=score)
-            for comm_id, facility_scores in affinities_dict.items()
-            for facility_id, score in facility_scores.items()]
+    facility_ids = df_instance["nofinesset"].to_numpy()
+    region_ids = df_geo_comms["code"].to_numpy()
+
+
+    rows = [{"facility_id": facility_ids[i], "region_id": region_ids[j], "affinity_score": float(scores[i, j]),}
+    for i in range(len(facility_ids))
+    for j in range(len(region_ids))]
+
+    return rows
 
 
 def get_FacilityResources(df_instance: pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1, RESOURCE_ID="bed/days"):

@@ -30,7 +30,7 @@ function getNormalizedCapacityAvg(facility, max_capacities) {
   return { ...facility, normalized_avg: avg }
 }
 
-const color_scale = chroma.scale(chroma.brewer.Set2)
+const color_scale = chroma.scale(chroma.brewer.Set1)
 function getColor(type) {
   if (!type) return [0, 0, 255, 100]
   const hash = [...type].reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -38,10 +38,10 @@ function getColor(type) {
   return [Math.round(r), Math.round(g), Math.round(b), Math.round(a * 200)];
 }
 
-function jitter([lat, lng], amount = 0.00045) {
+function reverse([lat, lng], jitter = 0) {
   return [
-    lng + (Math.random() - 0.5) * amount,
-    lat + (Math.random() - 0.5) * amount
+    lng + (Math.random() - 0.5) * jitter,
+    lat + (Math.random() - 0.5) * jitter
   ];
 }
 
@@ -57,7 +57,7 @@ export function FacilityCapacityLayer({ facilities, selectedFacilityID, setSelec
     ({
       id: 'facilities-capacity',
       data: facilities_w_avg,
-      getPosition: d => jitter(d["coordinates"]),
+      getPosition: d => reverse(d["coordinates"]),
       getRadius: d => 4 + 6 * d.normalized_avg,
       getFillColor: d =>  getColor(d["facility_type"]),
       getLineColor: [255, 255, 255, 180],

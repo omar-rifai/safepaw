@@ -6,6 +6,8 @@ import os
 from typing import Any
 from pydantic import BaseModel
 from pathlib import Path
+import time 
+
 
 class OptVars(BaseModel):
     P : Any
@@ -22,7 +24,7 @@ def run_driver(params_system):
 
     LP = pulp.LpProblem('regional_case_mix', pulp.LpMaximize)
 
-    P = {g: {k: {r: {a: {h: pulp.LpVariable(f"P_{g}_{k}_{r}_{a}_{h}", lowBound=0)
+    P = {g: {k: {r: {a: {h: pulp.LpVariable(f"P_{g}_{k}_{r}_{a}_{h}", lowBound=0, upBound=0 if h not in params_system["O_gk"][g][k] else None)
                          for h in params_system["H"]}
                          for a in params_system["A_idx"][g][k]}
                          for r in params_system["R"]}
@@ -53,11 +55,11 @@ def run_driver(params_system):
                        for l in params_system["L"]}
                        for h in params_system["H"]}
 
-    z_hl_plus = {h: {l: pulp.LpVariable(f"z_hl_plus_{h}_{l}", cat=pulp.LpInteger, lowBound=0)
+    z_hl_plus = {h: {l: pulp.LpVariable(f"z_hl_plus_{h}_{l}", lowBound=0)
                      for l in params_system["L"]}
                      for h in params_system["H"]}
 
-    z_hl_moins = {h: {l: pulp.LpVariable(f"z_hl_moins_{h}_{l}", cat=pulp.LpInteger, lowBound=0) 
+    z_hl_moins = {h: {l: pulp.LpVariable(f"z_hl_moins_{h}_{l}", lowBound=0) 
                       for l in params_system["L"]}
                       for h in params_system["H"]}
 
@@ -65,20 +67,30 @@ def run_driver(params_system):
                       for l in params_system["L"]}
                       for h in params_system["H"]}
 
+    
     vars_system = OptVars(P=P,P_gkr=P_gkr,P_gk=P_gk,Q=Q,Delta_plus=Delta_plus, Delta_moins=Delta_moins, z_hl_plus=z_hl_plus, z_hl_moins=z_hl_moins, s_hl=s_hl)
-
+    start = time.time()
     set_obj_fn(LP, P_gk, P, Delta_plus, Delta_moins, s_hl, params_system)
+    end = time.time()
+    print(f"setting obj fn time {end-start}")
     print("Declaring Constraints...")
+    start = time.time()
     declare_constraints(LP, vars_system, params_system)
+    end = time.time()
+    print(f"declaring constraints {end-start}")
     print("Running solver...")
     if "GRB_LICENSE_FILE" in os.environ:
-        LP.solve(pulp.GUROBI(msg=1))
+        LP.solve(pulp.GUROBI(msg=True, timeLimit=60))
     else:
-        LP.solve(pulp.HiGHS(msg=1))
+        print("Using HiGHs solver")
+        LP.solve(pulp.HiGHS(msg=1,gapRel=1e-4, timeLimit=60))
+    
     dict_results = package_results(vars_system, params_system)
     status =  pulp.LpStatus[LP.status]
+    if LP.sol_status!=1:
+        status = "Infeasible"
     objective = pulp.value(LP.objective)
-    
+
     return status, objective, dict_results
     
 

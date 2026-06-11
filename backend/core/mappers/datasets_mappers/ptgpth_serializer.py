@@ -167,6 +167,7 @@ def serialize_ptgpth_core(
     A_idx = get_activities_per_group_pathway(list_pathways_ids, list_patientGroups_ids)
     t_gkal = get_required_resources(A_idx, list_resources_ids)
 
+
     list_Regions = get_Regions(gdf_summary)
     list_Resources = get_Resources(list_resources_ids)
     list_PatientsGroups = get_PatientGroups(list_patientGroups_ids)
@@ -179,13 +180,12 @@ def serialize_ptgpth_core(
                                                     p_orth, resources_mult)
     list_facility_affinities = get_FacilityAffinity(list_Facilities, gdf_summary)
     
-    list_facility_pathways = get_FacilityPathways(list_pathways_ids, list_patientGroups_ids, list_Facilities)
+    list_facility_pathways = get_FacilityPathways(list_facility_resources, list_Facilities, t_gkal, A_idx)
     list_linked_facilities = get_LinkedFacilities(list_Facilities)
     list_activity_resources = get_ActivityResources(t_gkal,  A_idx)
     list_case_mix_ratios = get_CaseMixRatios(gdf_summary, df_types_parcours)
     list_treatment_bounds = get_TreatmentBounds(list_PatientsGroups)
     list_quality_bounds = get_QualityBounds(quality_levels, list_patientGroups_ids)
-
 
     DATABASE_URL = "sqlite://"
     engine = create_engine(DATABASE_URL)

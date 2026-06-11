@@ -220,7 +220,7 @@ export default function customMap() {
 
             <Map
               reuseMaps
-              mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+              mapStyle="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
               style={{ width: '100%', height: '100%' }}
               attributionControl={false}
             />

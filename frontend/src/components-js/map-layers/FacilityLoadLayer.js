@@ -16,10 +16,10 @@ function getMaxCapacities(loads) {
 }
 
 
-function jitter([lat, lng], amount = 0.00045) {
+function reverse([lat, lng], jitter = 0) {
   return [
-    lng + (Math.random() - 0.5) * amount,
-    lat + (Math.random() - 0.5) * amount
+    lng + (Math.random() - 0.5) * jitter,
+    lat + (Math.random() - 0.5) * jitter
   ];
 }
 
@@ -72,7 +72,7 @@ export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacili
     ({
       id: 'facilities-volume',
       data: loads,
-      getPosition: d => jitter(d.coordinates),
+      getPosition: d => reverse(d.coordinates),
       getRadius: d => {
         const capacity = getNormalizedCapacityAvg(d, max_capacities)
         return 4 + 6 * capacity
