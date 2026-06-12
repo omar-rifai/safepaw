@@ -76,7 +76,7 @@ def get_ActivityResources(t_gkal: dict, A_idx) -> list:
         for k in A_idx[g]:
             for a in A_idx[g][k]:
                 for l, cap in t_gkal[g][k][a].items():
-                    if (a, l) not in unique:
+                    if (g, k, a, l) not in unique:
                         unique[(g, k, a, l)] = cap
     return [ActivityResources(activity_id=a, pathway_id=k, group_id=g,resource_id=l, required_capacity=cap) 
             for (g,k, a, l), cap in unique.items()]

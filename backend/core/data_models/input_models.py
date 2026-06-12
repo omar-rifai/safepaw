@@ -27,12 +27,18 @@ class LinkedFacilities(SQLModel, table=True):
     
 
 class ActivityResources(SQLModel, table=True):
-    activity_id: str  = Field(default = None, foreign_key="activity.id", primary_key=True)
+    activity_id: str  = Field(primary_key=True)
     pathway_id: str = Field(foreign_key="pathway.id", primary_key=True)
     group_id: str = Field(foreign_key="patientsgroup.id", primary_key=True)
     resource_id: str = Field(default = None, foreign_key="resource.id", primary_key=True)  
     required_capacity: int
 
+    __table_args__ = (
+    ForeignKeyConstraint(
+        ["activity_id", "pathway_id", "group_id"],
+        ["activity.id", "activity.pathway_id", "activity.group_id"],
+    ),
+)
 
 
 class CaseMixRatios(SQLModel, table=True):
@@ -148,7 +154,17 @@ class Activity(SQLModel, table=True):
                                       sa_relationship_kwargs={
                                           "foreign_keys": "[Activity.pathway_id, Activity.group_id]",
                                           "primaryjoin": ("and_(Pathway.id == Activity.pathway_id, Pathway.group_id == Activity.group_id)")})
-    activity_resources: List["ActivityResources"] = Relationship()
+    activity_resources: List["ActivityResources"] =  Relationship(
+    sa_relationship_kwargs={
+        "primaryjoin": (
+            "and_("
+            "Activity.id == ActivityResources.activity_id, "
+            "Activity.pathway_id == ActivityResources.pathway_id, "
+            "Activity.group_id == ActivityResources.group_id"
+            ")"
+        )
+    }
+)
         
     __table_args__ = (
         ForeignKeyConstraint(

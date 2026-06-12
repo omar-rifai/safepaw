@@ -80,7 +80,7 @@ def run_driver(params_system):
     print(f"declaring constraints {end-start}")
     print("Running solver...")
     if "GRB_LICENSE_FILE" in os.environ:
-        LP.solve(pulp.GUROBI(msg=True, timeLimit=60))
+        LP.solve(pulp.GUROBI(msg=True, timeLimit=240))
     else:
         print("Using HiGHs solver")
         LP.solve(pulp.HiGHS(msg=1,gapRel=1e-4, timeLimit=60))
