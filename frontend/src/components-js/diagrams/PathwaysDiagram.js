@@ -20,9 +20,15 @@ export default function PathwaysChart() {
 
     const activities = selectedPathway?.activities ?? []
     const chart =
-        "graph TD\n" +
-        `START((Start)) --> ${activities.join(" --> ")} --> END((End))`;
-
+        [
+            "graph TD",
+            "START((Start))",
+            "END((End))",
+            ...activities.map((a, i) => `A${i}["${String(a)}"]`),
+            "START --> A0",
+            ...activities.slice(1).map((_, i) => `A${i} --> A${i + 1}`),
+            `A${activities.length - 1} --> END`,
+        ].join("\n");
     return (
         <Stack container direction="column" alignItems="center" sx={{ width: "95%" }}>
             <Typography>Patients Pathway</Typography>

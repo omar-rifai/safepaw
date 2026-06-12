@@ -1,33 +1,34 @@
-import { useEffect, useRef, useId } from "react";
+import { useEffect, useRef } from "react";
 import mermaid from "mermaid";
 
 mermaid.initialize({ startOnLoad: false });
 
 export default function MermaidDiagram({ chart }) {
   const ref = useRef(null);
-  const id = useId();
+  const id = useRef(`mmd-${Math.random().toString(36).slice(2)}`);
+  const renderId = useRef(0);
 
   useEffect(() => {
     if (!chart || !ref.current) return;
-    let cancelled = false;
-    const render = async () => {
+
+    const current = ++renderId.current;
+
+    const run = async () => {
       try {
-        const { svg } = await mermaid.render(`mermaid-${id}`, chart);
-        if (!cancelled && ref.current) {
-          ref.current.innerHTML = svg;
-        }
+        const { svg } = await mermaid.render(id.current, chart);
+
+        if (current !== renderId.current) return;
+        if (ref.current) ref.current.innerHTML = svg;
       } catch (e) {
-        if (!cancelled && ref.current) {
-          ref.current.innerHTML = `<pre style="color:red">${e.message}</pre>`;
+        console.error("Mermaid render error:", e);
+        if (ref.current) {
+          ref.current.innerHTML = `<pre style="color:red">${e?.message || e}</pre>`;
         }
       }
     };
 
-    render();
-    return () => {
-      cancelled = true;
-    };
-  }, [chart, id]);
+    run();
+  }, [chart]);
 
   return <div ref={ref} />;
 }
