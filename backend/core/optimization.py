@@ -229,32 +229,23 @@ def def_const_O_gk(LP, vars_system, params_system):
 
 # Define P_{g,k,r,a,h} \leq \sum_{h' \in J_h} P_{g,k,r,a',h'} as an lpSum
 
-def def_const_J_h(LP, vars_system, params_system):
-    H_set = set(params_system["H"])
-    J_full = {h: set(params_system["J_h"][h]) == H_set
-              for h in params_system["H"]}
+def const_J_h(P, h, g, k, r, a1, a2, J2_h):
+    return P[g][k][r][a1][h] <= lpSum([P[g][k][r][a2][h2] for h2 in J2_h])
+    
+# Define such constraint for every (g, k, r, a, a', h):
+#    - For every g \in G, k \in K_g, r \in R, a, a' \in A_{g,k}, a \neq a', h \in H
 
+def def_const_J_h(LP, vars_system, params_system):
     for g in params_system["G"]:
         for k in params_system["K_idx"][g]:
             for r in params_system["R"]:
-                P_gkr = vars_system.P[g][k][r]
-                P_gkr_var = vars_system.P_gkr[g][k][r]
-                for a1 in params_system["N_gka_1"][g][k]:
-                    a2 = params_system["N_gka_2"][g][k][a1]
-                    P_a1 = P_gkr[a1]
-                    P_a2 = P_gkr[a2]
-                    for h in params_system["H"]:
-                        if J_full[h]:
-                            # P_a1[h] - P_gkr_var <= 0
-                            e = LpAffineExpression(
-                                [(P_a1[h], 1.0), (P_gkr_var, -1.0)]
-                            )
-                        else:
-                            terms = [(P_a1[h], 1.0)]
-                            terms += [(P_a2[h2], -1.0)
-                                      for h2 in params_system["J_h"][h]]
-                            e = LpAffineExpression(terms)
-                        fast_add(LP, LpConstraint(e, LpConstraintLE, rhs=0))
+                for a1 in params_system["A_idx"][g][k]:
+                    if a1 in params_system["N_gka_1"][g][k]:
+                        a2 = params_system["N_gka_2"][g][k][a1]
+                        for h in params_system["H"]:
+                            J2_h = params_system["J_h"][h]
+                            fast_add(LP, const_J_h(vars_system.P, h, g, k, r, a1, a2, J2_h))
+
 
 # DEFINE THE CONSTRAINTS ON THE Q_{g,k,r,a,h}
 
