@@ -77,9 +77,9 @@ def get_ActivityResources(t_gkal: dict, A_idx) -> list:
             for a in A_idx[g][k]:
                 for l, cap in t_gkal[g][k][a].items():
                     if (a, l) not in unique:
-                        unique[(a, l)] = cap
+                        unique[(g, k, a, l)] = cap
     return [ActivityResources(activity_id=a, pathway_id=k, group_id=g,resource_id=l, required_capacity=cap) 
-            for (a, l), cap in unique.items()]
+            for (g,k, a, l), cap in unique.items()]
 
 def get_CaseMixRatios(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame):
     """ Represents the lower bound on patients asssigments per patient group, per canton"""
