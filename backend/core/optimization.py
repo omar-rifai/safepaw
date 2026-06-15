@@ -32,10 +32,10 @@ def set_obj_fn(LP, P_gk, P, Delta_plus, Delta_minus, s_hl, params_system):
           
             LP +=  lpSum( P[g][k][r][a][h] * coeff_rh[(r,h)]
                                                    for (g,k,r,a,h) in indices_a)\
-                                                    -  1e-6*lpSum(Delta_plus[h][l]
+                                                    -  1e-8*lpSum(Delta_plus[h][l]
                                                                    for h in params_system["H"]
                                                                    for l in params_system["L"])\
-                                                    -  1e-6*lpSum(Delta_minus[h][l]
+                                                    -  1e-8*lpSum(Delta_minus[h][l]
                                                                    for h in params_system["H"]
                                                                    for l in params_system["L"])
         case _:

@@ -118,18 +118,20 @@ export default function customMap() {
     }
 
 
-    if (selectedFacilityID != null) {
-      const layer_highlight = HighlightLayer({
-        facilities: inputData.facilities_capacities || [],
-        selectedFacilityID: selectedFacilityID
-      });
-      list_layers.push(layer_highlight)
-    }
-
-
     return list_layers;
 
   }, [inputData, inputData.facilities_capacities, selectedFacilityID]);
+
+
+  const highlightLayer = useMemo(()=> {
+    if (selectedFacilityID == null) return null;
+    
+    return HighlightLayer({
+      facilities: inputData?.facilities_capacities || [],
+      selectedFacilityID
+    });
+  },[inputData, selectedFacilityID])
+
 
   useEffect(() => {
     console.log("input data:", inputData);
@@ -147,8 +149,9 @@ export default function customMap() {
 
 
   const layers = useMemo(
-    () => (output_layers && output_layers.length > 0 ? output_layers : [...input_layers]).filter(Boolean),
-    [input_layers, output_layers]
+    () => [...(output_layers?.length > 0 ? output_layers : input_layers),
+           highlightLayer].filter(Boolean),
+    [input_layers, output_layers, highlightLayer]
   );
 
   const renderedLayers = [...layers, newLocLayer].filter(Boolean).map(layer =>

@@ -1,4 +1,4 @@
-import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea } from "recharts";
+import { ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceArea, useActiveTooltipDataPoints } from "recharts";
 import { Card, Box, Tabs, Tab, Stack } from '@mui/material';
 import { DataContext, UIContext } from '../../App';
 import { useContext, useState, useMemo } from "react";
@@ -8,7 +8,7 @@ export default function ResourcesChart() {
 
   const [activeResource, setActiveResource] = useState(null)
   const { outputData, inputData } = useContext(DataContext);
-  const { selectedFacilityID } = useContext(UIContext);
+  const { selectedFacilityID, setSelectedFacilityID } = useContext(UIContext);
 
   console.log("in resource diagram outputdata", outputData)
 
@@ -45,7 +45,7 @@ export default function ResourcesChart() {
   return (
     <Stack alignItems="center" gap={3} >
 
-      {inputData && <ResourcesInputChart resources={resources} currentResource={currentResource}
+      {inputData && <ResourcesInputChart resources={resources} currentResource={currentResource} setSelectedFacilityID={setSelectedFacilityID}
         chartData={chartInputData} selectedFacilityID={selectedFacilityID} setActiveResource={setActiveResource} />}
     </Stack >
 
@@ -53,7 +53,7 @@ export default function ResourcesChart() {
 }
 
 
-function ResourcesInputChart({ resources, currentResource, chartData, selectedFacilityID, setActiveResource }) {
+function ResourcesInputChart({ resources, currentResource, chartData, selectedFacilityID, setActiveResource, setSelectedFacilityID }) {
 
   const { outputData } = useContext(DataContext);
   return (
@@ -65,7 +65,8 @@ function ResourcesInputChart({ resources, currentResource, chartData, selectedFa
           {resources.map(r => <Tab key={r} value={r} label={r}></Tab>)}
         </Tabs>
         <ResponsiveContainer width="100%" height={300} style={{ flex: 1, minWidth: 0 }}>
-          <ComposedChart data={chartData}
+          <ComposedChart data={chartData} 
+           onClick={(e)=>{setSelectedFacilityID(e.activeLabel ?? null)}}
             margin={{ top: 30, right: 30, bottom: 20, left: 20 }}>
             <Tooltip />
 
