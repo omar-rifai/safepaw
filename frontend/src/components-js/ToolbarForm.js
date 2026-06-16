@@ -75,6 +75,9 @@ export default function ToolbarForm() {
 
 
     const enabled_optimize = inputData?.entries ? false : true
+
+    const disabled_generate = (depCode == "") || (datasetType == "")
+
     const optimizeInstance = async () => {
         console.log("Calling optimize_instance..")
         setIsOptimizing(true)
@@ -124,7 +127,7 @@ export default function ToolbarForm() {
                 </Select>
             </FormControl>
             <Box sx={{ width: 15 }} />
-            <Button size="small" loading={isGenerating} variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>
+            <Button size="small" disabled={disabled_generate} loading={isGenerating} variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>
             <Button size="small" loading={isOptimizing} variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Optimize</Button>
             <Button size="small" component="label" sx={{ flexShrink: 0 }}>  Upload <VisuallyHiddenInput type="file" onChange={handleUpload} multiple /></Button>
 

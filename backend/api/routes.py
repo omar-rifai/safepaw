@@ -146,7 +146,7 @@ async def generate(payload: dict = Body(...), session: Session = Depends(get_ses
     try:
         clear_all_tables(session)
         if payload["mode"] == "maternities": params = serialize_maternities(region_code = None, dep_code=payload["dep_code"], save_params=False)
-        elif payload["mode"] == "pthptg": params =serialize_ptgpth(dep_code=payload["dep_code"], p_transf = 1, p_orth= 0,
+        elif payload["mode"] == "pthptg": params =serialize_ptgpth(dep_code=payload["dep_code"], p_transf = 0, p_orth= 0,
                                                                     resources_mult= 1, quality_requirement= False, save_params= False)
     
         convert_dm_from_json(params, session)

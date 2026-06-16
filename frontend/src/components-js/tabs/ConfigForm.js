@@ -8,8 +8,13 @@ export default function ConfigForm() {
 
     const { inputData, setInputData, setOutputData } = useContext(DataContext)
 
+    const handleClearOutput  = function(){
+        setOutputData({})
+    }
+
     const handleReset  = function(){
         setOutputData({})
+        setInputData({})
     }
     return (
         <Box sx={{ flexGrow: 1, minWidth: 0, width: "100%", ml: 2 }}>
@@ -20,32 +25,35 @@ export default function ConfigForm() {
                 </Stack>
                 <Divider />
                 <Stack container direction="row" alignItems="center" >
-                    <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Global capacity (%)</Typography>
+                    <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Capacity variation (%)</Typography>
                     <DynamicSlider
                         value={inputData?.entries?.instance?.perc_capacity ?? 0} param_key="perc_capacity">
                     </DynamicSlider>
                 </Stack>
                 <Stack container direction="row" alignItems="center" >
-                    <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Demand (%)</Typography>
+                    <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Demand variation (%)</Typography>
                     <DynamicSlider
                         value={inputData?.entries?.instance?.perc_demand ?? 0} param_key="perc_demand">
                     </DynamicSlider>
                 </Stack>
-                <Stack container direction="row" alignItems="center" >
-                    <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Alpha </Typography>
-                    <DynamicSlider
-                        value={inputData?.entries?.instance?.alpha ?? 0} frac={true} param_key="alpha">
-                    </DynamicSlider>
-                </Stack>
+
                 <Stack container direction="row" alignItems="center" >
                     <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Allowed tranfers (%)</Typography>
                     <DynamicSlider
                         value={inputData?.entries?.instance?.perc_transfers ?? 0} frac={true} param_key="perc_transfers">
                     </DynamicSlider>
                 </Stack>
+                                <Stack container direction="row" alignItems="center" >
+                    <Typography sx={{ ml: 5, width: 180, fontSize: 15 }}>Alpha </Typography>
+                    <DynamicSlider
+                        value={inputData?.entries?.instance?.alpha ?? 0} frac={true} param_key="alpha">
+                    </DynamicSlider>
+                </Stack>
                 <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
+                    <Button onClick={handleClearOutput}>Clear Output</Button>
                     <Button onClick={handleReset}>Reset</Button>
                 </Box>
+
             </Stack>
 
         </Box >

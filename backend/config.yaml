@@ -1,7 +1,7 @@
 # config.yaml
 data_maternity:
   alpha: 1
-  allowed_transfer_fraction: 1
+  allowed_transfer_fraction: 0
   min_fraction_to_be_treated: 0
   max_fraction_to_be_treated: 1
   min_quality_bound: 0
