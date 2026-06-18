@@ -87,7 +87,7 @@ export default function customMap() {
 
       const layer_regionFacilityLoads = RegionFacilityLoadLayer({
         loads: outputData.facilities_regions_loads,
-        selectedItem: selectedFacilityID
+        selectedFacilityID: selectedFacilityID
       });
       list_layers.push(layer_regionFacilityLoads)
     }
