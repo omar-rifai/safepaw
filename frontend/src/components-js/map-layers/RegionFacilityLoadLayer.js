@@ -3,7 +3,9 @@ import { ArcLayer } from "@deck.gl/layers";
 export function RegionFacilityLoadLayer({ loads, selectedFacilityID }) {
     const maxLoad = loads?.reduce((max, d) => Math.max(max, d["load"]), 0);
     const facilityLoads = (loads || [])
-        .filter(d => Math.round(d["load"]) > 0)
+        .filter(d => (d["facility_id"]==selectedFacilityID))
+        .filter(d => (d["load"]>0))
+    console.log("facilityLoads is ", facilityLoads, loads, selectedFacilityID)
     if (facilityLoads.length === 0) {
         return null;
     }
