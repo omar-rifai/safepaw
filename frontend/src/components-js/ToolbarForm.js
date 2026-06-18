@@ -1,7 +1,8 @@
-import { Grid, Box, Button, Select, InputLabel, MenuItem, FormControl } from "@mui/material"
+import { Box, Button, Select, InputLabel, MenuItem, FormControl } from "@mui/material"
 import departments from "../departments.json"
 import { styled } from '@mui/material/styles';
 import { DataContext } from "../App";
+import { UIContext } from "../App";
 import { useContext, useEffect, useState } from "react";
 
 export default function ToolbarForm() {
@@ -10,6 +11,7 @@ export default function ToolbarForm() {
     const [depCode, setDepCode] = useState("")
     const [datasetType, setDatasetType] = useState("")
 
+    const { openJobsPanel, setOpenJobsPanel } = useContext(UIContext)
     const { setOutputData, setInputData, inputData, setActiveTab } = useContext(DataContext);
 
 
@@ -17,6 +19,7 @@ export default function ToolbarForm() {
         setDatasetType(inputData.instance_data?.instance_mode ?? "")
         setDepCode(inputData.instance_data?.dep_code ?? "")
     }, [inputData])
+
 
 
     const VisuallyHiddenInput = styled('input')({
@@ -81,34 +84,59 @@ export default function ToolbarForm() {
     const optimizeInstance = async () => {
         console.log("Calling optimize_instance..")
         setIsOptimizing(true)
-        const response = await fetch("/api/optimize", {
+
+        const submit_response = await fetch("/api/submit_job", {
             method: "POST",
             body: JSON.stringify({ "instance": inputData?.entries?.instance }),
             headers: { "Content-Type": "application/json" }
         })
 
-        if (!response.ok) {
-            const error = await response.json()
+        if (!submit_response.ok) {
+            const error = await submit_response.json()
             alert(error.detail);
             setIsOptimizing(false)
             return
         }
-        const payload = await response.json()
-        if (payload["status"] == "Infeasible") {
+
+        const payload_submit = await submit_response.json()
+        const job_id = payload_submit["job_id"]
+        console.log("job id:", job_id)
+
+        const retrieve_response = await fetch(`/api/retrieve_job/${job_id}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        })
+
+        if (!retrieve_response.ok) {
+            const error = await retrieve_response.json()
+            alert(error.detail);
+            setIsOptimizing(false)
+            return
+        }
+
+        const payload_retrieve = await retrieve_response.json()
+        if (payload_retrieve["status"] == "Infeasible") {
             alert("Could not optimize instance. Please modify instance parameters and try again.")
             setIsOptimizing(false)
             return
         }
 
-        setOutputData(payload)
+        setOutputData(payload_retrieve)
         setIsOptimizing(false)
         setActiveTab("tab-resources")
+
+        async function loadState() {
+            const res = await fetch("/api/get_state");
+            const data = await res.json()
+            setInputData(data)}
+        loadState()
     };
 
-    return (
-        <Grid sx={{ display: "flex", alignItems: "center", gap: 1, m: 1, minWidth: 700 }}>
 
-            <FormControl sx={{ m: 1, minWidth: 120 }}>
+    return (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, m: 1, minWidth: 900 }}>
+            <Button size="small" component="label" sx={{ flexShrink: 0 }}>  Upload File <VisuallyHiddenInput type="file" onChange={handleUpload} multiple /></Button>
+            <FormControl sx={{ m: 1, minWidth: 180 }}>
                 <InputLabel size="small" >Dataset Type</InputLabel>
                 <Select value={datasetType} size="small" label="dataset type" sx={{ width: 190 }} onChange={(e) => (setDatasetType(e.target.value))}>
                     <MenuItem key={""} value={""}>  </MenuItem>
@@ -118,7 +146,7 @@ export default function ToolbarForm() {
             </FormControl>
             <FormControl sx={{ m: 1, minWidth: 120 }}>
                 <InputLabel size="small" >Department</InputLabel>
-                <Select value={depCode} label="department" size="small" sx={{ width: 200 }} onChange={(e) => (setDepCode(e.target.value))}>
+                <Select value={depCode} label="department" size="small" sx={{ width: 190 }} onChange={(e) => (setDepCode(e.target.value))}>
                     <MenuItem value={""}>  </MenuItem>
                     {departments.map((e) => (
                         <MenuItem key={e.code} value={e.code}>{e.dep_name}</MenuItem>)
@@ -128,9 +156,10 @@ export default function ToolbarForm() {
             </FormControl>
             <Box sx={{ width: 15 }} />
             <Button size="small" disabled={disabled_generate} loading={isGenerating} variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>
-            <Button size="small" loading={isOptimizing} variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Optimize</Button>
-            <Button size="small" component="label" sx={{ flexShrink: 0 }}>  Upload <VisuallyHiddenInput type="file" onChange={handleUpload} multiple /></Button>
+            <Button size="small" loading={isOptimizing} variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Submit Job</Button>
+            <Button size="small" color="secondary" variant="contained" onClick={() => { setOpenJobsPanel(!openJobsPanel) }} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Jobs Panel</Button>
 
-        </Grid>
+
+        </Box>
     )
 }

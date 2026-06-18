@@ -4,6 +4,7 @@ import logging
 
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
+from backend.core.data_models.jobs_model import Job
 from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region, FacilityResources
 from backend.core.data_models.output_models import FacilityCapacity, InstanceData
 from sqlalchemy import func
@@ -39,7 +40,6 @@ def get_bounding_box(session):
     }
 
 def get_InstanceData(session: Session) -> InstanceData:
-    from collections import defaultdict
 
     nbr_facilities = session.exec(select(func.count()).select_from(Facility)).one()
     nbr_pathways = session.exec(select(func.count()).select_from(Pathway)).one()
@@ -49,6 +49,20 @@ def get_InstanceData(session: Session) -> InstanceData:
     case_mix = [c.model_dump() for c in case_mix]
     instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=instance.total_demand, case_mix=case_mix)
     return instance_data.model_dump() 
+
+
+def create_job(session: Session, job_id:str, mode, dep_code):
+    try:
+        print(f"Creating job {mode} in {dep_code}")
+        curr_job = Job(id=job_id, status="Running", mode=mode, dep_code=dep_code)
+        session.add(curr_job)
+        session.commit()
+        session.refresh(curr_job)
+    except Exception:
+        print("Exception in job creation...")
+        session.rollback()
+        raise
+    return 
 
 
 def update_instance(session: Session, new_instance):
@@ -86,6 +100,29 @@ def get_facilities_capacities(session: Session, facility_ids: list | None = None
     ]
 
 
+def save_instance_into_db(params:dict , session: Session):
+    from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
+    clear_all_tables(session)
+    convert_dm_from_json(params, session)
+    session.commit()
+    return 
+
+def get_input_elements(session: Session) -> dict:
+
+    facilities_capacities = get_facilities_capacities(session)
+    data_grid_entries = get_DataGridEntries(session)
+    instance_data = get_InstanceData(session)
+    jobs_list = getJobs(session)
+    return { "facilities_capacities":[f.model_dump() for f in facilities_capacities],
+             "entries": data_grid_entries,
+             "instance_data": instance_data,
+             "bbox": get_bounding_box(session),
+             "jobs": jobs_list
+            }
+
+def getJobs(session:Session):
+    jobs_list = session.exec(select(Job)).all()
+    return jobs_list
 
 def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
     from backend.core.data_models.output_models import FacilityRow, FacilityPathwaysRow, FacilityGroupsRow, FacilityResourceRow, DataGridEntries
@@ -214,10 +251,14 @@ def getAffinity(region: Region, facility_point):
 def clear_all_tables(session):
     from sqlmodel import text, SQLModel
     session.exec(text("PRAGMA foreign_keys=OFF"))  # SQLite only
-
-    for table in reversed(SQLModel.metadata.sorted_tables):
-        session.exec(text(f"DELETE FROM {table.name}"))
-
+    try:
+        for table in reversed(SQLModel.metadata.sorted_tables):
+            #if table.name != "job":
+            session.exec(text(f"DELETE FROM {table.name}"))
+    except Exception:
+        print("Exception in table deletion...")
+        session.rollback()
+     
 
 
 
@@ -231,3 +272,36 @@ def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     print("Optimization driver finished with status:", status)
     objective_str = f"{objective:.2f}" if objective is not None else None
     return status, objective_str, results
+
+
+
+def save_job( dict_results, params):
+    import os
+    import pickle, json
+    import uuid
+
+    job_id = str(uuid.uuid4())
+
+    path = f"experiments/jobs/job_{job_id}"
+
+    os.makedirs(path,exist_ok=True)
+    with open(f"experiments/jobs/job_{job_id}/params.json","w") as fp:
+        json.dump(params, fp)
+    with open(f"experiments/jobs/job_{job_id}/result.pkl","wb") as fp:
+        pickle.dump(dict_results, fp)
+    return job_id
+ 
+def load_params(job_id: str) -> dict:
+    import json
+    with open(f"experiments/jobs/job_{job_id}/params.json","r") as fp:
+        params = json.load(fp)
+    return params
+
+def load_results(job_id: str) -> dict:
+    import pickle 
+    with open(f"experiments/jobs/job_{job_id}/result.pkl","rb") as fp:
+       results = pickle.load(fp)
+
+    return results
+
+

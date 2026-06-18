@@ -17,6 +17,7 @@ backend/data/raw/*
 experiments/*.json
 experiments/*.csv
 experiments/pub/*
+experiments/jobs*
 
 # npm logs
 npm-debug.log*

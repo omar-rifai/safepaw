@@ -1,12 +1,12 @@
-import { useState, useEffect, createContext, useId } from "react";
-import { Box, AppBar, Toolbar, Typography, } from '@mui/material';
+import { useState, useEffect, createContext } from "react";
+import { Box, AppBar, Toolbar, Typography, Drawer } from '@mui/material';
 
 import DataGridForm from "./components-js/TabsForm";
 import ResultsForm from "./components-js/ResultsForm";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import CustomMap from './components-js/Map';
 import ToolbarForm from "./components-js/ToolbarForm"
-
+import JobsForm from "./components-js/JobsForm";
 
 import "./App.css"
 
@@ -26,22 +26,25 @@ function App() {
   const [isPickingLocation, setIsPickingLocation] = useState(false);
   const [outputData, setOutputData] = useState({});
   const [activeTab, setActiveTab] = useState("tab-facilities")
-
+  const [openJobsPanel, setOpenJobsPanel] = useState(false);
 
   useEffect(() => {
     async function loadState() {
-      const res = await fetch("/api/state");
+      const res = await fetch("/api/get_state");
       const data = await res.json()
       setInputData(data)
     }
     loadState()
   }, []);
 
+  const jobs_list = inputData?.jobs ?? []
+
+
 
 
   return (
     <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab, selectedPathwayID, setSelectedPathwayID }}>
-      <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility, isPickingLocation, setIsPickingLocation, pickedLocation, setPickedLocation }}>
+      <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility, openJobsPanel, setOpenJobsPanel, isPickingLocation, setIsPickingLocation, pickedLocation, setPickedLocation }}>
         <AppBar sx={{ backgroundColor: "#fff", color: "#000" }}>
           <Toolbar sx={{ display: "flex", gap: 4 }}>
             <Typography variant="h4" sx={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, letterSpacing: "0.05em", color: "#333333", mr: 10 }}> SAFEPAW </Typography>
@@ -54,8 +57,10 @@ function App() {
 
           </Toolbar>
         </AppBar>
-
-        <Group style={{ height:"100svh" }}>
+        <Drawer open={openJobsPanel} anchor="right" onClose={() => setOpenJobsPanel(false)}>
+         <JobsForm jobs_list={jobs_list} />
+        </Drawer>
+        <Group style={{ height: "100svh" }}>
           <Panel defaultSize={550} minSize={400} maxSize={750}>
             <Group orientation="vertical" >
               <Panel defaultSize={600} minSize={200} maxSize={700}>
@@ -69,7 +74,7 @@ function App() {
           </Panel>
           <Separator style={{ width: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize", flexShrink: 0 }} />
 
-          <Panel  style={{ overflow: "hidden" }}>
+          <Panel style={{ overflow: "hidden" }}>
             <CustomMap />
           </Panel>
 

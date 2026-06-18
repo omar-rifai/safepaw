@@ -33,7 +33,7 @@ export default function FacilitiesForm() {
 
 
     async function loadState() {
-        const res = await fetch("/api/state");
+        const res = await fetch("/api/get_state");
         const data = await res.json()
         setInputData(data)
     }
