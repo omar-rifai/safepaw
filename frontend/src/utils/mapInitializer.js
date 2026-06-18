@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 
 export function getInitializeViewFromGeoJSON(geojson, width = 800, height = 600, padding = 120) {
 
-    if (!geojson || !geojson.features?.length) {
+    if (!width || !height || width <= 0 || height <= 0) {
         return { longitude: 2.5, latitude: 46.7, zoom: 5, pitch: 0, bearing: 0 };
     }
 
@@ -23,13 +23,13 @@ export function getInitializeViewFromGeoJSON(geojson, width = 800, height = 600,
 export function useRegionGeoJSON(regionName) {
 
     const [regionGeoJSON, setRegionGeoJSON] = useState(null)
-    
+
     useEffect(() => {
         fetch("data/regions.geojson")
             .then(res => res.json())
             .then(data => {
                 const features = (data?.features ?? []).filter(feature => feature.properties.nom == regionName);
-                setRegionGeoJSON({type: "FeatureCollection", features})
+                setRegionGeoJSON({ type: "FeatureCollection", features })
             });
     }, [regionName]);
 
