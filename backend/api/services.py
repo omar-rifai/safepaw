@@ -1,7 +1,8 @@
 
 from typing import Tuple
 import logging
-
+from rq.decorators import job
+from redis import Redis
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.core.data_models.jobs_model import Job
@@ -10,7 +11,7 @@ from backend.core.data_models.output_models import FacilityCapacity, InstanceDat
 from sqlalchemy import func
 
 logging.basicConfig(level=logging.DEBUG)
-
+redis = Redis(host="localhost", port=6379)
 
 class ExecutableNotFound(Exception):
     pass
@@ -51,7 +52,7 @@ def get_InstanceData(session: Session) -> InstanceData:
     return instance_data.model_dump() 
 
 
-def create_job(session: Session, job_id:str, mode, dep_code):
+def create_job_db_entry(session: Session, job_id:str, mode, dep_code):
     try:
         print(f"Creating job {mode} in {dep_code}")
         curr_job = Job(id=job_id, status="Running", mode=mode, dep_code=dep_code)
@@ -113,11 +114,12 @@ def get_input_elements(session: Session) -> dict:
     data_grid_entries = get_DataGridEntries(session)
     instance_data = get_InstanceData(session)
     jobs_list = getJobs(session)
+    print(f"printing jobs_list {jobs_list}")
     return { "facilities_capacities":[f.model_dump() for f in facilities_capacities],
              "entries": data_grid_entries,
              "instance_data": instance_data,
              "bbox": get_bounding_box(session),
-             "jobs": jobs_list
+             "jobs": [j.model_dump(mode="json") for j in jobs_list]
             }
 
 def getJobs(session:Session):
@@ -253,8 +255,8 @@ def clear_all_tables(session):
     session.exec(text("PRAGMA foreign_keys=OFF"))  # SQLite only
     try:
         for table in reversed(SQLModel.metadata.sorted_tables):
-            #if table.name != "job":
-            session.exec(text(f"DELETE FROM {table.name}"))
+            if table.name != "job":
+                session.exec(text(f"DELETE FROM {table.name}"))
     except Exception:
         print("Exception in table deletion...")
         session.rollback()
@@ -265,32 +267,44 @@ def clear_all_tables(session):
 def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     """Returns status, objective function as str and a dict of result variables"""
     from backend.core.main import run_driver
-
+    
     check_executable()
     print("Starting optimization driver...")
-    status, objective, results = run_driver(params)
+    status, objective, vars_system = run_driver(params)
+
     print("Optimization driver finished with status:", status)
     objective_str = f"{objective:.2f}" if objective is not None else None
-    return status, objective_str, results
+    return status, objective_str, vars_system
 
 
 
-def save_job( dict_results, params):
+def save_results(job_id:str, status, dict_results:dict) -> str:
     import os
-    import pickle, json
-    import uuid
-
-    job_id = str(uuid.uuid4())
+    import pickle
 
     path = f"experiments/jobs/job_{job_id}"
 
     os.makedirs(path,exist_ok=True)
-    with open(f"experiments/jobs/job_{job_id}/params.json","w") as fp:
-        json.dump(params, fp)
+
+    with open(f"experiments/jobs/job_{job_id}/{status}","w") as fp:
+        pass
     with open(f"experiments/jobs/job_{job_id}/result.pkl","wb") as fp:
         pickle.dump(dict_results, fp)
     return job_id
  
+
+def save_params(job_id:str,  params: dict) -> str:
+    import os
+    import json
+
+    path = f"experiments/jobs/job_{job_id}"
+
+    os.makedirs(path, exist_ok=True)
+    with open(f"experiments/jobs/job_{job_id}/params.json","w") as fp:
+        json.dump(params, fp)
+
+    return job_id
+
 def load_params(job_id: str) -> dict:
     import json
     with open(f"experiments/jobs/job_{job_id}/params.json","r") as fp:
@@ -305,3 +319,7 @@ def load_results(job_id: str) -> dict:
     return results
 
 
+def submit_optimization(params):
+    status, _, vars_system = run_optimization(params)
+    return status, vars_system
+    

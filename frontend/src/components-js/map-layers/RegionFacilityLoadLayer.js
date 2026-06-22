@@ -38,9 +38,6 @@ export function RegionFacilityLoadLayer({ loads, selectedFacilityID }) {
 }
 
 
-
-
-
 export function getRegionFacilityToolTip(info, regions) {
     const region_lbl = Number(info.object.region_id) ?? ""
     return {

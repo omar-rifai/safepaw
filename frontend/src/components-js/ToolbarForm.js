@@ -7,12 +7,11 @@ import { useContext, useEffect, useState } from "react";
 
 export default function ToolbarForm() {
     const [isGenerating, setIsGenerating] = useState(false)
-    const [isOptimizing, setIsOptimizing] = useState(false)
     const [depCode, setDepCode] = useState("")
     const [datasetType, setDatasetType] = useState("")
 
     const { openJobsPanel, setOpenJobsPanel } = useContext(UIContext)
-    const { setOutputData, setInputData, inputData, setActiveTab } = useContext(DataContext);
+    const { setOutputData, setInputData, inputData, setActiveTab, isOptimizing, setIsOptimizing } = useContext(DataContext);
 
 
     useEffect(() => {
@@ -102,28 +101,9 @@ export default function ToolbarForm() {
         const job_id = payload_submit["job_id"]
         console.log("job id:", job_id)
 
-        const retrieve_response = await fetch(`/api/retrieve_job/${job_id}`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" }
-        })
-
-        if (!retrieve_response.ok) {
-            const error = await retrieve_response.json()
-            alert(error.detail);
-            setIsOptimizing(false)
-            return
-        }
-
-        const payload_retrieve = await retrieve_response.json()
-        if (payload_retrieve["status"] == "Infeasible") {
-            alert("Could not optimize instance. Please modify instance parameters and try again.")
-            setIsOptimizing(false)
-            return
-        }
-
-        setOutputData(payload_retrieve)
+     
         setIsOptimizing(false)
-        setActiveTab("tab-resources")
+       // setActiveTab("tab-resources")
 
         async function loadState() {
             const res = await fetch("/api/get_state");

@@ -27,6 +27,7 @@ function App() {
   const [outputData, setOutputData] = useState({});
   const [activeTab, setActiveTab] = useState("tab-facilities")
   const [openJobsPanel, setOpenJobsPanel] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false)
 
   useEffect(() => {
     async function loadState() {
@@ -43,7 +44,7 @@ function App() {
 
 
   return (
-    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab, selectedPathwayID, setSelectedPathwayID }}>
+    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab, selectedPathwayID, setSelectedPathwayID, isOptimizing, setIsOptimizing }}>
       <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility, openJobsPanel, setOpenJobsPanel, isPickingLocation, setIsPickingLocation, pickedLocation, setPickedLocation }}>
         <AppBar sx={{ backgroundColor: "#fff", color: "#000" }}>
           <Toolbar sx={{ display: "flex", gap: 4 }}>

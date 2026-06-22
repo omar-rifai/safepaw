@@ -1,6 +1,8 @@
 import pulp
 from backend.core.optimization import declare_constraints, set_obj_fn
+print("import package_results, get_results")
 from backend.core.utils.data_utils import package_results, get_results
+print("typer", flush=True)
 import typer
 import os
 from typing import Any
@@ -21,7 +23,7 @@ class OptVars(BaseModel):
     s_hl: Any
 
 def run_driver(params_system):
-
+    print("D", flush=True)
     LP = pulp.LpProblem('regional_case_mix', pulp.LpMaximize)
 
     P = {g: {k: {r: {a: {h: pulp.LpVariable(f"P_{g}_{k}_{r}_{a}_{h}", lowBound=0, upBound=0 if h not in params_system["O_gk"][g][k] else None)
@@ -83,15 +85,15 @@ def run_driver(params_system):
         LP.solve(pulp.GUROBI(msg=True, timeLimit=240))
     else:
         print("Using HiGHs solver")
-        LP.solve(pulp.HiGHS(msg=1,gapRel=1e-4, timeLimit=60))
-    
-    dict_results = package_results(vars_system, params_system)
+        LP.solve(pulp.HiGHS(msg=1,gapRel=1e-4, timeLimit=600))
     status =  pulp.LpStatus[LP.status]
+
     if LP.sol_status!=1:
         status = "Infeasible"
     objective = pulp.value(LP.objective)
 
-    return status, objective, dict_results
+    return status, objective, vars_system
+
     
 
 
@@ -108,7 +110,10 @@ def main(params_file : Path = typer.Argument(..., help="Path to JSON parameters 
 
     with open(params_file) as fp:
         params_system = json.load(fp)
-    status, objective, dict_results = run_driver(params_system)
+
+    status, objective, vars_system = run_driver(params_system)
+    dict_results = package_results(vars_system, params_system)
+
     get_results(dict_results, params_system, objective, out_file)
     return status
 

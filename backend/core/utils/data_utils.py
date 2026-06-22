@@ -1,13 +1,8 @@
 import pulp
 from pathlib import Path
-import geopandas as gpd
-from backend.core.data_models.input_models import PatientsGroup, Facility, Region
-import pandas as pd
-
 
 def read_inputs(file_params_system):
     import json
-
     with open(file_params_system, "r") as f:
         params_system = json.load(f)
 
@@ -26,9 +21,15 @@ def get_var(curr_var, row, list_dims):
     return pulp.value(v)
 
 
+def hl_to_records(var_hl, params_system):
+    """For variables only indexed by h (facilities) and l (resources) (e.g Delta, z, s)"""
+    return [
+        {"facility": h, "resource": l, "value": pulp.value(var_hl[h][l])}
+        for h in params_system["H"]
+        for l in params_system["L"]
+    ]
 
-def vars_to_df(curr_var, list_dims, params_system):
-    
+def vars_to_records(curr_var, list_dims, params_system):
     records = []
 
     for g in params_system["G"]:
@@ -44,30 +45,20 @@ def vars_to_df(curr_var, list_dims, params_system):
                                 if "resource" in list_dims: row["resource"]= l
                                 row["value"] = get_var(curr_var, row, list_dims)
                                 records.append(row)
-    df = pd.DataFrame(records)
-    return df
+    return records
 
 
 def package_results(vars_system, params_system):
-
     dict_results = {
-        "P_gkrah": vars_to_df(vars_system.P, ["group","pathway","region","activity","facility"], params_system),
-        "Q_gkrah": vars_to_df(vars_system.Q, ["group","pathway","region","activity","facility"], params_system),
-        "P_gkr": vars_to_df(vars_system.P_gkr, ["group","pathway","region"], params_system),
-        "P_gk": vars_to_df(vars_system.P_gk, ["group","pathway"], params_system),
-        "Delta_plus" : pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.Delta_plus[h][l])}
-                                         for h in params_system["H"] for l in params_system["L"]]),
-                                         
-        "Delta_moins": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.Delta_moins[h][l])}
-                                         for h in params_system["H"] for l in params_system["L"]]),
-
-        "z_hl_plus": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.z_hl_plus[h][l])}
-                                         for h in params_system["H"] for l in params_system["L"]]),
-
-        "z_hl_moins": pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.z_hl_moins[h][l])}
-                                         for h in params_system["H"] for l in params_system["L"]]),
-        "s_hl":  pd.DataFrame([{"facility": h, "resource": l, "value": pulp.value(vars_system.s_hl[h][l])}
-                                         for h in params_system["H"] for l in params_system["L"]])
+        "P_gkrah": vars_to_records(vars_system.P, ["group","pathway","region","activity","facility"], params_system),
+        "Q_gkrah": vars_to_records(vars_system.Q, ["group","pathway","region","activity","facility"], params_system),
+        "P_gkr": vars_to_records(vars_system.P_gkr, ["group","pathway","region"], params_system),
+        "P_gk": vars_to_records(vars_system.P_gk, ["group","pathway"], params_system),
+        "Delta_plus" : hl_to_records(vars_system.Delta_plus, params_system),
+        "Delta_moins": hl_to_records(vars_system.Delta_moins, params_system),
+        "z_hl_plus": hl_to_records(vars_system.z_hl_plus, params_system),
+        "z_hl_moins": hl_to_records(vars_system.z_hl_moins, params_system),
+        "s_hl": hl_to_records(vars_system.s_hl, params_system)
     }
     return dict_results
 
@@ -76,9 +67,10 @@ def package_results(vars_system, params_system):
 def get_results(dict_results, params_system, objective_value, output_path=None):
     """Returns summary file of results"""
     from backend.core.utils.data_utils_Burdett import get_patients_blocking
+    import pandas as pd
     import json
-    P = dict_results["P_gkrah"].groupby(["group", "pathway", "region","activity", "facility"])["value"].sum().to_dict()
-    P_gk = dict_results["P_gk"].groupby(["group", "pathway"])["value"].sum().to_dict()
+    P = pd.DataFrame(dict_results["P_gkrah"]).groupby(["group", "pathway", "region","activity", "facility"])["value"].sum().to_dict()
+    P_gk = pd.DataFrame(dict_results["P_gk"]).groupby(["group", "pathway"])["value"].sum().to_dict()
     n_patients = get_n_patients(params_system, P_gk)
     
     l_usage = get_resources_usage(params_system, P) 
@@ -100,7 +92,6 @@ def get_results(dict_results, params_system, objective_value, output_path=None):
     if output_path:
         with open(output_path, "w") as fp:
             json.dump(results, fp)
-
     return results
 
 

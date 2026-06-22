@@ -9,7 +9,6 @@ def create_facilityLoad(results: dict, params_system: dict, by_region: bool = Fa
     from backend.core.data_models.output_models import FacilityLoad
     
     list_facilities_loads = []
-    
     Delta_plus = pd.DataFrame(results["Delta_plus"])
     Delta_moins = pd.DataFrame(results["Delta_moins"])
 
@@ -72,9 +71,9 @@ def _compute_load(results, by_region, by_group, by_pathway, params_system):
 
 def _get_hl_usage(results:dict, params_system:dict) -> dict:
     """Returns the resources (l) usage by facility (h) """
-    P = results["P_gkrah"].groupby(["group", "pathway", "region","activity", "facility"])["value"].sum().to_dict()
-    Delta_plus = results["Delta_plus"].groupby(["facility", "resource"])["value"].sum().to_dict()
-    Delta_moins = results["Delta_moins"].groupby(["facility", "resource"])["value"].sum().to_dict()
+    P = pd.DataFrame(results["P_gkrah"]).groupby(["group", "pathway", "region","activity", "facility"])["value"].sum().to_dict()
+    Delta_plus = pd.DataFrame(results["Delta_plus"]).groupby(["facility", "resource"])["value"].sum().to_dict()
+    Delta_moins = pd.DataFrame(results["Delta_moins"]).groupby(["facility", "resource"])["value"].sum().to_dict()
     usage = {h: {l: 0 for l in params_system["L"]} for h in params_system["H"]}
     for l in params_system["L"]:
         for h in params_system["H"]:
@@ -94,7 +93,7 @@ def _get_hl_usage(results:dict, params_system:dict) -> dict:
 def get_average_distance(results, params_system):
     """Compute the weighted average distance (in kms) across all patients"""
     import pandas as pd
-    df_P = results["P_gkrah"]
+    df_P = pd.DataFrame(results["P_gkrah"])
     df_loads = df_P.groupby(["region", "facility"], dropna=False)["value"].sum().reset_index()
     df_loads.rename(columns={"value": "load"}, inplace=True)
 

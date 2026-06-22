@@ -3,10 +3,10 @@ import { DataContext } from "../App";
 import { useContext } from "react";
 
 
-export default function JobsForm({jobs_list}) {
-   
-    const { setInputData } = useContext(DataContext);
-   
+export default function JobsForm({ jobs_list }) {
+
+    const { setInputData, setOutputData, setIsOptimizing} = useContext(DataContext);
+
     const statusColors = {
         Finished: "success",
         Running: "warning",
@@ -14,13 +14,36 @@ export default function JobsForm({jobs_list}) {
     }
 
 
+    const retrieveJob = async (job_id) => {
+        const retrieve_response = await fetch(`/api/retrieve_job/${job_id}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        })
+
+        if (!retrieve_response.ok) {
+            const error = await retrieve_response.json()
+            alert(error.detail);
+            setIsOptimizing(false)
+            return
+        }
+
+        const payload_retrieve = await retrieve_response.json()
+        if (payload_retrieve["status"] == "Infeasible") {
+            alert("Could not optimize instance. Please modify instance parameters and try again.")
+            setIsOptimizing(false)
+            return
+        }
+
+        setOutputData(payload_retrieve)
+    }
+
     async function loadState() {
         const res = await fetch("/api/get_state");
         const data = await res.json()
         setInputData(data)
     }
 
-    async function deleteJob (job_id){
+    async function deleteJob(job_id) {
         if (!job_id) return;
         await fetch(`/api/deleteJob/${job_id}`, { method: "DELETE" })
         loadState()
@@ -56,8 +79,8 @@ export default function JobsForm({jobs_list}) {
                         </Typography>
 
                         <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1, gap: 1 }}>
-                            <Button size="small" variant="text" onClick={() => console.log("loading job")}> Load </Button>
-                            <Button size="small" variant="text" onClick={()=>deleteJob(job.id)}> Delete </Button>
+                            <Button size="small" variant="text" onClick={() => retrieveJob(job.id)}> Load </Button>
+                            <Button size="small" variant="text" onClick={() => deleteJob(job.id)}> Delete </Button>
                         </Stack>
 
                     </CardContent>
