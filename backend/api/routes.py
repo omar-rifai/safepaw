@@ -8,13 +8,14 @@ from backend.core.data_models.jobs_model import Job
 from backend.api.services import get_facilities_capacities, get_DataGridEntries
 from rq import Queue
 from rq.job import Job as RQJob
-from rq.exceptions import NoSuchJobError
-
+import os
 from redis import Redis
 import traceback
 
 api = APIRouter()
-redis = Redis(host="localhost", port=6379)
+
+
+redis = Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
 queue = Queue("safepaw", connection=redis)
 
 @api.get("/")
@@ -146,21 +147,17 @@ def delete_facility(facility_id: str, session: Session = Depends(get_session)) -
 
 
 @api.post("/submit_job")
-def submit_job(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
-    from backend.api.services import  create_job_db_entry
-    from backend.core.data_models.input_models import Instance
-    from backend.api.services import submit_optimization, update_instance, save_params
-    from backend.core.mappers.input_mappers import convert_dm_to_json
-    import traceback
-
+def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
+    from backend.api.services import submit_optimization, submit_generate, create_job_db_entry
+    from uuid import uuid4
     try: 
-        update_instance(session, payload["instance"])
-        params = convert_dm_to_json(session)
-        instance = session.exec(select(Instance)).one()
-        job = queue.enqueue(submit_optimization, params, job_timeout=600)
-        job_id = job.id
-        create_job_db_entry(session, job_id, mode=instance.id, dep_code=instance.dep_code)
-        save_params(job_id, params)
+        job_id = str(uuid4())
+        
+        create_job_db_entry(session, job_id, mode=payload["mode"], dep_code= payload["dep_code"])
+        job_generate = queue.enqueue(submit_generate, job_id, payload["mode"], payload["dep_code"], result_ttl=86400)
+        queue.enqueue(submit_optimization, job_id, job_generate.id, job_timeout=-1,  result_ttl=86400, depends_on=job_generate)
+      
+        
         return JSONResponse(status_code=200, content = {"job_id": job_id})
 
     except ExecutableNotFound as e:
@@ -172,38 +169,58 @@ def submit_job(payload: dict = Body(...), session: Session = Depends(get_session
 
 
 @api.get("/retrieve_job/{job_id}")
-def retrieve_job(job_id: str) -> JSONResponse:
+def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONResponse:
     from backend.core.mappers.output_mappers import create_facilityLoad
-    from backend.api.services import load_params, load_results, save_results
+    from backend.api.services import load_params, load_results, save_results, save_instance_into_db, get_input_elements
     from backend.core.utils.data_utils import package_results
-    from rq.job import Job, JobStatus
+    from rq.job import Job as RQJob, JobStatus
 
     try:
-        print(f"JOB ID {job_id}")
-        job = Job.fetch(job_id, connection=redis)
+        db_entry = session.exec(select(Job).where(Job.id == job_id)).one()
+        opt_id = db_entry.opt_id
+
+        if opt_id is None:
+            input_data = get_input_elements(session)
+            return JSONResponse(status_code=202, content={"status": "pending", "input_data": input_data})
+
+        job = RQJob.fetch(opt_id, connection=redis)
         job_status = job.get_status()
 
-        if job_status == JobStatus.QUEUED or job_status == JobStatus.STARTED:
-            return JSONResponse(status_code=202, content={"status": "pending"})
-        
-        if job_status == JobStatus.FAILED:
-            return JSONResponse(status_code=500, content={"status": "failed", "error": str(job.exc_info)})
+        if job_status == JobStatus.QUEUED:
+            try:
+                params = load_params(job_id)
+                save_instance_into_db(params, session)
+            except FileNotFoundError:
+                pass 
+            input_data = get_input_elements(session)
+            return JSONResponse(status_code=202, content={"status": "pending", "input_data": input_data})
 
-        if job_status == JobStatus.FINISHED:
-            results = job.result
-            
+        if job_status == JobStatus.STARTED:
+            print("HERE WE ARE in STARTED CASE", job_id)
             params = load_params(job_id) 
-            
-            status = results[0]
-            dict_results = package_results(results[1], params)
-            
-            save_results(job_id, status, dict_results )
+            save_instance_into_db(params, session)
+            input_data = get_input_elements(session)
+            return JSONResponse(status_code=200, content={"status": db_entry.status, "input_data": input_data})
+                
+        if job_status == JobStatus.FINISHED :
 
-            dict_results = load_results(job_id)
-            list_facility_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params)]
-            list_facility_region_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params, by_region=True)]
-        
-            return JSONResponse(status_code=200, content = {"status": "OK", "facilities_loads": list_facility_load, "facilities_regions_loads": list_facility_region_load})
+            params = load_params(job_id) 
+            save_instance_into_db(params, session)
+            input_data = get_input_elements(session)
+            results = job.result
+            optimization_status = results[0]
+
+            dict_results = package_results(results[1], params)
+            save_results(job_id, optimization_status, dict_results )
+            if optimization_status == "Optimal":
+                dict_results = load_results(job_id)
+                list_facility_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params)]
+                list_facility_region_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params, by_region=True)]
+                output_data = {"facilities_loads": list_facility_load, "facilities_regions_loads": list_facility_region_load}
+            else: 
+                output_data = {}
+            
+            return JSONResponse(status_code=200, content = {"status": db_entry.status, "input_data": input_data, "output_data": output_data})
 
     except Exception as e:
         traceback.print_exc()
@@ -213,7 +230,7 @@ def retrieve_job(job_id: str) -> JSONResponse:
 @api.post("/generate")
 def generate(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
     # Generate a new problem instance and save into frontend DB 
-    import traceback
+
     from backend.core.mappers.datasets_mappers.maternities_serializer import serialize_maternities
     from backend.core.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
     from backend.api.services import  save_instance_into_db, get_input_elements
@@ -276,7 +293,6 @@ def update_facility_type(payload: dict = Body(...), session:Session = Depends(ge
 
 @api.post("/read_file")
 def read_file(params: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
-    import traceback
     from backend.api.services import  get_input_elements, save_instance_into_db
 
     try:

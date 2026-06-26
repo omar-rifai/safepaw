@@ -186,7 +186,7 @@ def read_configs(config_category, config_path="backend/config.yaml"):
 
 
 
-def read_geojson_projected(filename: str | Path) -> gpd.GeoDataFrame:
+def read_geojson_projected(filename: str | Path):
     import geopandas as gpd
     gdf = gpd.read_file(Path(filename))
     if gdf.empty:

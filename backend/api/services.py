@@ -1,7 +1,6 @@
 
 from typing import Tuple
 import logging
-from rq.decorators import job
 from redis import Redis
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
@@ -28,7 +27,11 @@ def get_bounding_box(session):
     xs = session.exec(select(Facility.lon)).all()
     ys = session.exec(select(Facility.lat)).all()
 
-    bbox = box(min(xs), min(ys), max(xs), max(ys))
+    if not xs or not ys:
+        bbox = box(-5.2, 41.3, 9.7, 51.1)  # Metropolitan France
+    else:
+        bbox = box(min(xs), min(ys), max(xs), max(ys))
+
     return {
         "type": "FeatureCollection",
         "features": [
@@ -46,16 +49,17 @@ def get_InstanceData(session: Session) -> InstanceData:
     nbr_pathways = session.exec(select(func.count()).select_from(Pathway)).one()
     nbr_groups = session.exec(select(func.count()).select_from(PatientsGroup)).one()
     case_mix = session.exec(select(CaseMixRatios)).all()
-    instance = session.exec(select(Instance)).one()
+    instance = session.exec(select(Instance)).one_or_none()
     case_mix = [c.model_dump() for c in case_mix]
-    instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=instance.total_demand, case_mix=case_mix)
-    return instance_data.model_dump() 
+    if instance:
+        instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=instance.total_demand, case_mix=case_mix)
+    return instance_data.model_dump() if instance else {}
 
 
 def create_job_db_entry(session: Session, job_id:str, mode, dep_code):
     try:
         print(f"Creating job {mode} in {dep_code}")
-        curr_job = Job(id=job_id, status="Running", mode=mode, dep_code=dep_code)
+        curr_job = Job(id=job_id, status="Generating", mode=mode, dep_code=dep_code)
         session.add(curr_job)
         session.commit()
         session.refresh(curr_job)
@@ -64,6 +68,29 @@ def create_job_db_entry(session: Session, job_id:str, mode, dep_code):
         session.rollback()
         raise
     return 
+
+def update_job_status(session: Session, job_id: str, new_status:str):
+    try:
+        job = session.exec(select(Job).where(Job.id == job_id)).one()
+        setattr(job, "status", new_status)
+        session.add(job)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    return
+
+
+def update_job_optid(session: Session, job_id: str, opt_id:str):
+    try:
+        job = session.exec(select(Job).where(Job.id == job_id)).one()
+        setattr(job, "opt_id",opt_id)
+        session.add(job)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    return
 
 
 def update_instance(session: Session, new_instance):
@@ -83,6 +110,7 @@ def update_instance(session: Session, new_instance):
                     setattr(fr, "max_transferable_in", 0)
     session.commit()
     session.refresh(instance)
+
 
 def get_facilities_capacities(session: Session, facility_ids: list | None = None) -> list[FacilityCapacity]:
 
@@ -114,7 +142,6 @@ def get_input_elements(session: Session) -> dict:
     data_grid_entries = get_DataGridEntries(session)
     instance_data = get_InstanceData(session)
     jobs_list = getJobs(session)
-    print(f"printing jobs_list {jobs_list}")
     return { "facilities_capacities":[f.model_dump() for f in facilities_capacities],
              "entries": data_grid_entries,
              "instance_data": instance_data,
@@ -161,17 +188,17 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     patients_groups =  session.exec(query_groups).unique().all()
     groups_entries = [FacilityGroupsRow(facility_id= facility_id, group_id=pg.id, lbl=pg.lbl, pathways=[p.id for p in pg.pathways]) for pg, facility_id in patients_groups]
 
-    instance_entry = session.exec(select(Instance)).one()
-
-    entry = DataGridEntries(
-        facilities= [FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type,\
-                                 info=facilities_info.get(f.id,{})) for f in facilities],
-        pathways= pathways_entries,
-        resources= resources_entries,
-        patients_groups= groups_entries,
-        instance = instance_entry
-    )
-    return entry.model_dump() if entry else {}
+    instance_entry = session.exec(select(Instance)).one_or_none()
+    if instance_entry:
+        entry = DataGridEntries(
+            facilities= [FacilityRow(facility_id=f.id, facility_name=f.name, facility_type=f.facility_type,\
+                                    info=facilities_info.get(f.id,{})) for f in facilities],
+            pathways= pathways_entries,
+            resources= resources_entries,
+            patients_groups= groups_entries,
+            instance = instance_entry
+        )
+    return entry.model_dump() if instance_entry else {}
 
 def getFacilitiesInfo(list_finess) -> dict:
     import pandas as pd
@@ -286,14 +313,14 @@ def save_results(job_id:str, status, dict_results:dict) -> str:
 
     os.makedirs(path,exist_ok=True)
 
-    with open(f"experiments/jobs/job_{job_id}/{status}","w") as fp:
-        pass
+    with open(f"experiments/jobs/job_{job_id}/status","w") as fp:
+        fp.write(status)
     with open(f"experiments/jobs/job_{job_id}/result.pkl","wb") as fp:
         pickle.dump(dict_results, fp)
     return job_id
  
 
-def save_params(job_id:str,  params: dict) -> str:
+def save_params_into_file(job_id:str,  params: dict) -> str:
     import os
     import json
 
@@ -319,7 +346,45 @@ def load_results(job_id: str) -> dict:
     return results
 
 
-def submit_optimization(params):
-    status, _, vars_system = run_optimization(params)
-    return status, vars_system
+def submit_optimization(job_id, gen_job_id) -> Tuple:
+    from rq import get_current_job
+    from backend.db import engine
+    from rq.job import Job as RQJob 
+
+    gen_job = RQJob.fetch(gen_job_id, connection=redis)
+    params = gen_job.result
+
+    with Session(engine) as session:
+        opt_job = get_current_job()
+        update_job_optid(session, job_id, opt_job.id)
+        status, _, vars_system = run_optimization(params)
+        update_job_status(session, job_id, status)
+        return status, vars_system
+
+
+def submit_generate(job_id, instance_type, dep_code):
+    from backend.db import engine
+    from backend.core.mappers.input_mappers import convert_dm_to_json
+    from backend.core.mappers.datasets_mappers.maternities_serializer import serialize_maternities
+    from backend.core.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
+
+    with Session(engine) as session:
+        try:
+            if instance_type == "maternities": params = serialize_maternities(region_code = None, dep_code = dep_code, save_params=False)
+            elif instance_type == "pthptg": params =serialize_ptgpth(dep_code= dep_code, p_transf = 0, p_orth= 0,
+                                                                        resources_mult= 1, quality_requirement= False, save_params= False)
+            #save_instance_into_db(params , session)
+            #update_instance(session, instance)
+            #instance = session.exec(select(Instance)).one()
+            #params = convert_dm_to_json(session)
+            save_params_into_file(job_id, params)
+            print(f"saving dataa for department {params["dep_code"]} into {job_id}")
+            update_job_status(session, job_id, "Running")
+            return params
+        
+        except Exception:
+            update_job_status(session, job_id, "Failed")
+            raise 
+
+    
     

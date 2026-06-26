@@ -23,7 +23,6 @@ class OptVars(BaseModel):
     s_hl: Any
 
 def run_driver(params_system):
-    print("D", flush=True)
     LP = pulp.LpProblem('regional_case_mix', pulp.LpMaximize)
 
     P = {g: {k: {r: {a: {h: pulp.LpVariable(f"P_{g}_{k}_{r}_{a}_{h}", lowBound=0, upBound=0 if h not in params_system["O_gk"][g][k] else None)

@@ -66,7 +66,8 @@ export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacili
   if (!loads || loads.length === 0) {
     return null;
   }
-
+  loads = loads.map((e)=>({...e, load: Math.max(0, e.load)}))
+  
   max_capacities = getMaxCapacities(loads)
   return new ScatterplotLayer
     ({
@@ -74,7 +75,7 @@ export function FacilityLoadLayer({ loads, selectedFacilityID, setSelectedFacili
       data: loads,
       getPosition: d => reverse(d.coordinates),
       getRadius: d => {
-        const capacity = getNormalizedCapacityAvg(d, max_capacities)
+        const capacity = Math.min(1, Math.max(0, getNormalizedCapacityAvg(d, max_capacities)));
         return 4 + 6 * capacity
       },
       getFillColor: d => getFillColor(d),

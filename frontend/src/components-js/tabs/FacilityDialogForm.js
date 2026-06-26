@@ -31,13 +31,12 @@ export default function FacilityDialog({ openDialog, setOpenDialog }) {
     };
 
     useEffect(() => {
-        const unique_resources = [...new Set(inputData.entries?.resources.map((e) => e.resource_id))].filter(e => newResources.map(e => e.resource_id).includes(e) == false) ?? []
+        const unique_resources = [...new Set(inputData.entries?.resources?.map((e) => e.resource_id))].filter(e => newResources.map(e => e.resource_id).includes(e) == false) ?? []
         setResourcesIDs(unique_resources)
     }, [inputData, newResources])
 
 
     useEffect(()=>{
-        console.log("here we are")
         async function loadIDSuggestion() {
             const res = await fetch("/api/newFacillityID");
             const data = await res.json()
@@ -79,7 +78,6 @@ export default function FacilityDialog({ openDialog, setOpenDialog }) {
         const res = await fetch("/api/get_state");
         const data = await res.json();
         setInputData(data);
-        console.log(data)
         setOpenDialog(false);
         setPickedLocation(null)
     };

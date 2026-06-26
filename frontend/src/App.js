@@ -59,7 +59,7 @@ function App() {
           </Toolbar>
         </AppBar>
         <Drawer open={openJobsPanel} anchor="right" onClose={() => setOpenJobsPanel(false)}>
-         <JobsForm jobs_list={jobs_list} />
+         <JobsForm />
         </Drawer>
         <Group style={{ height: "100svh" }}>
           <Panel defaultSize={550} minSize={400} maxSize={750}>
@@ -69,7 +69,7 @@ function App() {
               </Panel>
               <Separator style={{ height: "2px", minHeight: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize", flexShrink: 0 }} />
               <Panel>
-                {inputData.entries && <ResultsForm />}
+                {inputData?.entries && <ResultsForm />}
               </Panel>
             </Group>
           </Panel>

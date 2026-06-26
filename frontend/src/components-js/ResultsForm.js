@@ -15,7 +15,7 @@ export default function ResultsForm() {
   return (
     <Grid sx={{width:"100%",mt:3, ml:2}} >
       {status && <Card sx={{ textAlign: 'left', mb: 2, backgroundColor:"#F9FAFB" }}> <Typography>Status : {status}</Typography> </Card>}
-      {Object.keys(inputData).length != 0 &&
+      {Object.keys(inputData.entries).length != 0 &&
         <Grid >
         {activeTab == "tab-facilities" && <Dashboard />}
           {activeTab == "tab-pathways" && <PathwaysChart />}

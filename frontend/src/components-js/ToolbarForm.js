@@ -86,7 +86,7 @@ export default function ToolbarForm() {
 
         const submit_response = await fetch("/api/submit_job", {
             method: "POST",
-            body: JSON.stringify({ "instance": inputData?.entries?.instance }),
+            body: JSON.stringify({ "instance": inputData?.entries?.instance,  "mode": datasetType, "dep_code": depCode }),
             headers: { "Content-Type": "application/json" }
         })
 
@@ -135,8 +135,8 @@ export default function ToolbarForm() {
                 </Select>
             </FormControl>
             <Box sx={{ width: 15 }} />
-            <Button size="small" disabled={disabled_generate} loading={isGenerating} variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>
-            <Button size="small" loading={isOptimizing} variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Submit Job</Button>
+            {false && <Button size="small" disabled={disabled_generate} loading={isGenerating} variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>}
+            <Button size="small" loading={isOptimizing} variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={disabled_generate}>Submit Job</Button>
             <Button size="small" color="secondary" variant="contained" onClick={() => { setOpenJobsPanel(!openJobsPanel) }} sx={{ flexShrink: 0 }} disabled={enabled_optimize}>Jobs Panel</Button>
 
 

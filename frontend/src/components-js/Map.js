@@ -84,7 +84,7 @@ export default function customMap() {
     }
 
     if (outputData?.facilities_regions_loads) {
-
+      console.log("OutputData facilities_regions_loads detected", outputData.facilities_regions_loads)
       const layer_regionFacilityLoads = RegionFacilityLoadLayer({
         loads: outputData.facilities_regions_loads,
         selectedFacilityID: selectedFacilityID
@@ -134,7 +134,7 @@ export default function customMap() {
 
 
   useEffect(() => {
-    console.log("input data:", inputData);
+    console.log("input data in Maps:", inputData);
   }, [inputData]);
 
 
