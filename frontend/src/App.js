@@ -27,6 +27,7 @@ function App() {
   const [outputData, setOutputData] = useState({});
   const [activeTab, setActiveTab] = useState("tab-facilities")
   const [openJobsPanel, setOpenJobsPanel] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
   const [isOptimizing, setIsOptimizing] = useState(false)
 
   useEffect(() => {
@@ -38,13 +39,16 @@ function App() {
     loadState()
   }, []);
 
-  const jobs_list = inputData?.jobs ?? []
 
-
-
+  function handleClose(){
+    if (isLoading){
+      return
+    }
+    setOpenJobsPanel(false)
+  }
 
   return (
-    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab, selectedPathwayID, setSelectedPathwayID, isOptimizing, setIsOptimizing }}>
+    <DataContext.Provider value={{ inputData, setInputData, outputData, setOutputData, activeTab, setActiveTab, selectedPathwayID, setSelectedPathwayID, isOptimizing, setIsOptimizing, isLoading, setIsLoading}}>
       <UIContext.Provider value={{ selectedFacilityID, setSelectedFacilityID, setHighlightedFacility, highlightedFacility, openJobsPanel, setOpenJobsPanel, isPickingLocation, setIsPickingLocation, pickedLocation, setPickedLocation }}>
         <AppBar sx={{ backgroundColor: "#fff", color: "#000" }}>
           <Toolbar sx={{ display: "flex", gap: 4 }}>
@@ -58,7 +62,7 @@ function App() {
 
           </Toolbar>
         </AppBar>
-        <Drawer open={openJobsPanel} anchor="right" onClose={() => setOpenJobsPanel(false)}>
+        <Drawer open={openJobsPanel} anchor="right" onClose={handleClose}>
          <JobsForm />
         </Drawer>
         <Group style={{ height: "100svh" }}>

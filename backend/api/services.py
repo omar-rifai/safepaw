@@ -59,7 +59,7 @@ def get_InstanceData(session: Session) -> InstanceData:
 def create_job_db_entry(session: Session, job_id:str, mode, dep_code):
     try:
         print(f"Creating job {mode} in {dep_code}")
-        curr_job = Job(id=job_id, status="Generating", mode=mode, dep_code=dep_code)
+        curr_job = Job(id=job_id, status="Running", mode=mode, dep_code=dep_code)
         session.add(curr_job)
         session.commit()
         session.refresh(curr_job)
@@ -346,17 +346,14 @@ def load_results(job_id: str) -> dict:
     return results
 
 
-def submit_optimization(job_id, gen_job_id) -> Tuple:
-    from rq import get_current_job
-    from backend.db import engine
-    from rq.job import Job as RQJob 
+def submit_optimization(job_id) -> Tuple:
 
-    gen_job = RQJob.fetch(gen_job_id, connection=redis)
-    params = gen_job.result
+    from backend.db import engine
+    from backend.core.mappers.input_mappers import convert_dm_to_json
 
     with Session(engine) as session:
-        opt_job = get_current_job()
-        update_job_optid(session, job_id, opt_job.id)
+        params = convert_dm_to_json(session)
+        save_params_into_file(job_id, params)
         status, _, vars_system = run_optimization(params)
         update_job_status(session, job_id, status)
         return status, vars_system
@@ -364,7 +361,7 @@ def submit_optimization(job_id, gen_job_id) -> Tuple:
 
 def submit_generate(job_id, instance_type, dep_code):
     from backend.db import engine
-    from backend.core.mappers.input_mappers import convert_dm_to_json
+
     from backend.core.mappers.datasets_mappers.maternities_serializer import serialize_maternities
     from backend.core.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
 
@@ -376,7 +373,7 @@ def submit_generate(job_id, instance_type, dep_code):
             #save_instance_into_db(params , session)
             #update_instance(session, instance)
             #instance = session.exec(select(Instance)).one()
-            #params = convert_dm_to_json(session)
+            
             save_params_into_file(job_id, params)
             print(f"saving dataa for department {params["dep_code"]} into {job_id}")
             update_job_status(session, job_id, "Running")

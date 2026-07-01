@@ -123,7 +123,7 @@ def get_PatientPathways(list_pathways_ids: list, list_groups: list, pathway_bene
 def get_data(dep_code: str):
     """prepare the raw data in DataFrames."""
     from backend.core.mappers.datasets_mappers.ptgpth_utils import verify_department_finess
-    df_types_parcours, df_mco, df_ssr = load_data([int(dep_code)])
+    df_types_parcours, df_mco, df_ssr = load_data(dep_code)
     df_types_parcours = df_types_parcours.groupby(["sej_type", "type_parcours", "SSR_TYPE"], as_index=False)["nb"].sum()
     df_types_parcours = df_types_parcours[df_types_parcours["nb"].fillna(0) >= 3]
     gdf_geo =  get_geo_polygon()
@@ -163,6 +163,7 @@ def serialize_ptgpth_core(
 
     df_types_parcours, df_mco, df_ssr, gdf_summary, df_finess = get_data(dep_code)
     list_patientGroups_ids = list(set(df_types_parcours['sej_type'] +  "_" + df_types_parcours['type_parcours'].str.replace(" + ", "_", regex=False)))
+
     list_pathways_ids =  list(df_types_parcours["SSR_TYPE"].unique())
     A_idx = get_activities_per_group_pathway(list_pathways_ids, list_patientGroups_ids)
     t_gkal = get_required_resources(A_idx, list_resources_ids)

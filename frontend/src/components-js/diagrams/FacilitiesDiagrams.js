@@ -56,8 +56,7 @@ export default function FacilitiesDiagrams() {
 
             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.5} />
             <XAxis dataKey="pathway_id" type="category" tickMargin={10} label={{ value: "Pathway ID", position: "bottom", offset: 10 }} />
-            <YAxis type="number" allowDecimals={false} />
-            <Legend verticalAlign="top" />
+            <YAxis type="number" allowDecimals={false} label={{value: "Number of occurences", offset:5, angle:-90}} />
             {selectedPathways.length > 0 && (<ReferenceArea y1={selectedPathways[0]} y2={selectedPathways[selectedPathways.length - 1]}
               fill="#88adc8ff" fillOpacity={0.3} />)}
             <Bar stackId="a" dataKey="n_facilities" fill="#7eb0eaff" radius={[6, 6, 6, 6]} />

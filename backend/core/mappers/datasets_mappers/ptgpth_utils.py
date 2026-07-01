@@ -134,17 +134,21 @@ def load_ssr_data(path: str, dep_code: str):
     df = df.fillna(0)
     return reduce_SSR_LOIRE(df, dep_code)
 
-def load_data(dep_codes:list):
-    types_parcours = load_types_parcours("backend/data/raw/TYPES_PARCOURS.csv", 3, dep_codes)
-    df_mco = load_mco_data("backend/data/raw/MCO_2018r.csv", dep_codes)
-    df_ssr = load_ssr_data("backend/data/raw/SSR_2018r.csv", dep_codes)
-    if df_mco.empty or df_ssr.empty or types_parcours.empty:
-        raise Exception(f"Data unavailable for department code: {dep_codes[0]}.")
+def load_data(dep_code:str):
+    try:
+        types_parcours = load_types_parcours("backend/data/raw/TYPES_PARCOURS.csv", 3, int(dep_code))
+        df_mco = load_mco_data("backend/data/raw/MCO_2018r.csv", int(dep_code))
+        df_ssr = load_ssr_data("backend/data/raw/SSR_2018r.csv", int(dep_code))
+        if df_mco.empty or df_ssr.empty or types_parcours.empty:
+            raise Exception(f"Data unavailable for department code: {dep_code}.")
+    except Exception as e:
+        raise(e)
+        #raise Exception(f"Data unavailable for department code: {dep_code}.")
     return types_parcours, df_mco, df_ssr
 
 def reduce_TYPES_PARCOURS(data: pd.DataFrame, min_patients: int, dep_code: str) -> pd.DataFrame:
     """Keep only Loire departments and groups with enough patients."""
-    df = data[data['BEN_RES_DPT'].isin(dep_code)].copy()
+    df = data[data['BEN_RES_DPT'] == dep_code].copy()
     df["SSR_TYPE"] = df["SSR_TYPE"].str.replace("_", "")
     df['SSR_TYPE'] = df['SSR_TYPE'].fillna('DOM')
     grouped = df.groupby(['BEN_RES_DPT', 'sej_type', 'type_parcours', 'SSR_TYPE'], as_index=False)['nb'].sum()
@@ -157,13 +161,13 @@ def reduce_TYPES_PARCOURS(data: pd.DataFrame, min_patients: int, dep_code: str) 
 def reduce_MCO_LOIRE(data: pd.DataFrame, dep_code: str) -> pd.DataFrame:
     """Keep only rows corresponding to Loire department in MCO data. (FINESS number starts with 42)"""
     dept_code = data['FI_ET'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
-    return data[dept_code.isin(dep_code)].reset_index(drop=True)
+    return data[dept_code.isin([dep_code])].reset_index(drop=True)
 
 
 def reduce_SSR_LOIRE(data: pd.DataFrame, dep_code) -> pd.DataFrame:
     """Keep only SSR_A rows corresponding to Loire department"""
     dept_code = data['FI_ET'].astype(str).apply(lambda s: int(s[:2]) if s[:2].isdigit() else 0)
-    return data[dept_code.isin(dep_code) & (data['GDE'] == "SSR_A")].reset_index(drop=True)
+    return data[dept_code.isin([dep_code]) & (data['GDE'] == "SSR_A")].reset_index(drop=True)
 
 
 def get_resources_capacities(t_gkal: dict, list_finess: list, df_types_parcours: pd.DataFrame, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,

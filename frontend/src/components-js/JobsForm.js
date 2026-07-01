@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from "react";
 
 export default function JobsForm() {
 
-    const { setInputData, setOutputData, setIsOptimizing, inputData } = useContext(DataContext);
+    const { setInputData, setOutputData, setIsOptimizing, inputData, setIsLoading } = useContext(DataContext);
     const { setOpenJobsPanel } = useContext(UIContext);
     const [loadingJobID, setLoadingJobID] = useState(null)
 
@@ -31,6 +31,7 @@ export default function JobsForm() {
 
     const retrieveJob = async (job_id) => {
         setLoadingJobID(job_id)
+        setIsLoading(true)
         const retrieve_response = await fetch(`/api/retrieve_job/${job_id}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" }
@@ -38,10 +39,10 @@ export default function JobsForm() {
 
         if (!retrieve_response.ok) {
             console.log("not setting InputData")
-            const error = await retrieve_response.json()
             alert("No data to display.");
             setIsOptimizing(false)
             setLoadingJobID(null)
+            setIsLoading(false)
             return
         }
 
@@ -53,9 +54,10 @@ export default function JobsForm() {
             return
         }
         console.log("setting output data to:", payload_retrieve["output_data"])
-        setInputData(payload_retrieve["input_data"])
         setOutputData(payload_retrieve["output_data"])
+        setInputData(payload_retrieve["input_data"])
         setLoadingJobID(null)
+        setIsLoading(false)
         setOpenJobsPanel(false)
         console.log("in jobs forms after retrieve job, inputData:", payload_retrieve["input_data"])
     }

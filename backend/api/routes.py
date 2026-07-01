@@ -148,17 +148,16 @@ def delete_facility(facility_id: str, session: Session = Depends(get_session)) -
 
 @api.post("/submit_job")
 def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
-    from backend.api.services import submit_optimization, submit_generate, create_job_db_entry
-    from uuid import uuid4
+    from backend.api.services import submit_optimization, create_job_db_entry, update_job_optid
+    import uuid
     try: 
-        job_id = str(uuid4())
-        
+        job_id = str(uuid.uuid4())
         create_job_db_entry(session, job_id, mode=payload["mode"], dep_code= payload["dep_code"])
-        job_generate = queue.enqueue(submit_generate, job_id, payload["mode"], payload["dep_code"], result_ttl=86400)
-        queue.enqueue(submit_optimization, job_id, job_generate.id, job_timeout=-1,  result_ttl=86400, depends_on=job_generate)
-      
+        job = queue.enqueue(submit_optimization, job_id, job_timeout=-1,  result_ttl=86400 )
+        update_job_optid(session, job_id, job.id)
+
         
-        return JSONResponse(status_code=200, content = {"job_id": job_id})
+        return JSONResponse(status_code=200, content = {"job_id": job.id})
 
     except ExecutableNotFound as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -196,7 +195,6 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
             return JSONResponse(status_code=202, content={"status": "pending", "input_data": input_data})
 
         if job_status == JobStatus.STARTED:
-            print("HERE WE ARE in STARTED CASE", job_id)
             params = load_params(job_id) 
             save_instance_into_db(params, session)
             input_data = get_input_elements(session)
@@ -236,12 +234,13 @@ def generate(payload: dict = Body(...), session: Session = Depends(get_session))
     from backend.api.services import  save_instance_into_db, get_input_elements
 
     try:
-        
+        print(f"dep_code is {payload["dep_code"]}")
         if payload["mode"] == "maternities": params = serialize_maternities(region_code = None, dep_code=payload["dep_code"], save_params=False)
-        elif payload["mode"] == "pthptg": params =serialize_ptgpth(dep_code=payload["dep_code"], p_transf = 0, p_orth= 0,
+        elif payload["mode"] == "pthptg": params =serialize_ptgpth(dep_code=payload["dep_code"], p_transf = 1, p_orth= 0,
                                                                     resources_mult= 1, quality_requirement= False, save_params= False)
     
         save_instance_into_db(params , session)
+
         response = get_input_elements(session)
 
         return JSONResponse(
@@ -293,6 +292,7 @@ def update_facility_type(payload: dict = Body(...), session:Session = Depends(ge
 
 @api.post("/read_file")
 def read_file(params: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
+
     from backend.api.services import  get_input_elements, save_instance_into_db
 
     try:
