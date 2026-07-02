@@ -52,7 +52,7 @@ def get_InstanceData(session: Session) -> InstanceData:
     instance = session.exec(select(Instance)).one_or_none()
     case_mix = [c.model_dump() for c in case_mix]
     if instance:
-        instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=instance.total_demand, case_mix=case_mix)
+        instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=int(instance.total_demand), case_mix=case_mix)
     return instance_data.model_dump() if instance else {}
 
 
@@ -97,14 +97,11 @@ def update_instance(session: Session, new_instance):
     instance = session.exec(select(Instance)).one()
     facility_resources = session.exec(select(FacilityResources)).all()
     for key, _ in instance: 
-        # Currently perc_transfers is used as a global proxy for resources transfers but originally it is meant for patients transfers 
-        #TODO change back the perc_transf handling for patient transfers instead of resource transfers
-        if (key != "perc_transfers"):
-            setattr(instance, key, new_instance[key])
-        else:
+        setattr(instance, key, new_instance[key])
+        if key == "global_multiplier_transfers":
             for fr in facility_resources:
-                setattr(fr, "max_transferable_out", new_instance["perc_transfers"])
-                if new_instance["perc_transfers"] > 0:
+                setattr(fr, "max_transferable_out", new_instance["global_multiplier_transfers"])
+                if new_instance["global_multiplier_transfers"] > 0:
                     setattr(fr, "max_transferable_in", 10)
                 else:
                     setattr(fr, "max_transferable_in", 0)

@@ -69,17 +69,18 @@ def add_dom_facility(list_facilities: list[Facility],
 
 
 
-def get_Instance(total_demand: float, mult:float, p_transf: float, dep_code:str) -> Instance:
+def get_Instance(total_demand: float, capacity_mult:float, p_transf: float, dep_code:str) -> Instance:
     """Returns object to store optimization instance parameters."""
     
     return Instance(
             id="pthptg",
             dep_code=dep_code,
             total_demand=total_demand,
-            perc_demand=1,
-            perc_capacity=mult,
             perc_transfers = p_transf,
-            alpha = 0.0125
+            alpha = 0.0125,
+            global_multiplier_demand = 1,
+            global_multiplier_capacity = capacity_mult,
+            global_perc_transfers = 0, 
         )
 
 def get_Resources(list_resources_ids: list) -> list[Resource]:

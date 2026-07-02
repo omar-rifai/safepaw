@@ -74,10 +74,11 @@ def get_Instance(df_instance:dict, dep_code:str) -> Instance:
             id= "maternities",
             dep_code = dep_code,
             total_demand =int(df_instance["deliveries_per_facility"].sum()),
-            perc_demand = 1,
-            perc_capacity = 1,
-            perc_transfers = config["allowed_transfer_fraction"],
+            perc_transfers= 0,
             alpha = config["alpha"],
+            global_multiplier_demand = 1,
+            global_multiplier_capacity = 1,
+            global_perc_transfers = config["allowed_resources_transfer_fraction"],   
         )
 
 

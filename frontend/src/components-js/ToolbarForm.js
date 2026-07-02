@@ -33,8 +33,8 @@ export default function ToolbarForm() {
         "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95"]
 
     useEffect(() => {
-        setDatasetType(inputData.instance_data?.instance_mode ?? "")
-        setDepCode(inputData.instance_data?.dep_code ?? "")
+        setDatasetType(inputData.entries?.instance?.id ?? "")
+        setDepCode(inputData.entries?.instance?.dep_code ?? "")
     }, [inputData])
 
     function handleCloseSnackBar(){
@@ -149,7 +149,7 @@ export default function ToolbarForm() {
             <Button size="small" component="label" sx={{ flexShrink: 0 }}>  Upload File <VisuallyHiddenInput type="file" onChange={handleUpload} multiple /></Button>
             <FormControl sx={{ m: 1, minWidth: 180 }}>
                 <InputLabel size="small" >Dataset Type</InputLabel>
-                <Select disabled={disabled_selection} value={datasetType} size="small" label="dataset type" sx={{ width: 190 }} onChange={(e) => { changeDatasetType(e.target.value) }}>
+                <Select disabled={disabled_selection} value={datasetType ?? ""} size="small" label="dataset type" sx={{ width: 190 }} onChange={(e) => { changeDatasetType(e.target.value) }}>
                     <MenuItem key={""} value={""}>  </MenuItem>
                     <MenuItem key={"maternities"} value={"maternities"}> French Maternities </MenuItem>
                     <MenuItem key={"pthptg"} value={"pthptg"}> Hip/Knee Prosthesis </MenuItem>
@@ -157,10 +157,10 @@ export default function ToolbarForm() {
             </FormControl>
             <FormControl sx={{ m: 1, minWidth: 120 }}>
                 <InputLabel size="small" >Department</InputLabel>
-                <Select disabled={disabled_generate} value={depCode} label="department" size="small" sx={{ width: 190 }} onChange={(e) => (generateInstance(e.target.value))}>
+                <Select disabled={disabled_generate} value={depCode ?? ""} label="department" size="small" sx={{ width: 190 }}>
                     <MenuItem value={""}>  </MenuItem>
-                    {filtered_departments.map((e) => (
-                        <MenuItem key={e.code} value={e.code}>{e.dep_name}</MenuItem>)
+                    {filtered_departments.map((department) => (
+                        <MenuItem key={department.code} value={department.code}  onClick={(e) => (generateInstance(department.code))}>{department.dep_name}</MenuItem>)
                     )}
 
                 </Select>
@@ -169,7 +169,7 @@ export default function ToolbarForm() {
             {false && <Button size="small" disabled={disabled_generate} loading={isGenerating} variant="contained" onClick={generateInstance} sx={{ flexShrink: 0 }} >Generate</Button>}
             <Button size="small" loading={isGenerating || isOptimizing} variant="contained" onClick={optimizeInstance} sx={{ flexShrink: 0 }} disabled={disabled_optimize}>Optimize</Button>
             <Button size="small" color="secondary" variant="contained" onClick={() => { setOpenJobsPanel(!openJobsPanel) }} sx={{ flexShrink: 0 }}>Jobs Panel</Button>
-            <Snackbar open={openSnackBar} autoHideDuration={1500} message="Job Submitted" onClose={handleCloseSnackBar}/>
+            <Snackbar open={openSnackBar} autoHideDuration={2000} message="Job Submitted" onClose={handleCloseSnackBar}/>
         </Box>
 
     )

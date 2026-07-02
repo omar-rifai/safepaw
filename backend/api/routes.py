@@ -148,10 +148,11 @@ def delete_facility(facility_id: str, session: Session = Depends(get_session)) -
 
 @api.post("/submit_job")
 def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
-    from backend.api.services import submit_optimization, create_job_db_entry, update_job_optid
+    from backend.api.services import submit_optimization, create_job_db_entry, update_job_optid, update_instance
     import uuid
     try: 
         job_id = str(uuid.uuid4())
+        update_instance(session, payload["instance"])
         create_job_db_entry(session, job_id, mode=payload["mode"], dep_code= payload["dep_code"])
         job = queue.enqueue(submit_optimization, job_id, job_timeout=-1,  result_ttl=86400 )
         update_job_optid(session, job_id, job.id)

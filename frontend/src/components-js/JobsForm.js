@@ -83,7 +83,7 @@ export default function JobsForm() {
                 Jobs
             </Typography>
 
-            {inputData.jobs.map((job) => (
+            {inputData.jobs?.map((job) => (
                 <Card variant="outlined" sx={{ mb: 1 }}>
                     <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
 

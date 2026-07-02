@@ -189,9 +189,12 @@ def reconstruct_m_hl(list_facilities: list, capacity_mult, params_system: dict) 
     return params_system
 
 
-def create_metadata(params_system: dict, list_facilities: list[Facility], list_regions: list[Region]) -> dict:
+def create_metadata(params_system: dict, list_facilities: list[Facility], list_regions: list[Region], instance) -> dict:
     """Create dictionary with metadata from the problem instance not used in the optimization model"""
-
+    params_system["global_multiplier_capacity"] = instance.global_multiplier_capacity
+    params_system["global_multiplier_demand"] = instance.global_multiplier_demand
+    params_system["global_perc_transfers"] = instance.global_perc_transfers
+    
     params_system["facilities_metadata"] = {h.id: {"lat": h.lat, "lon": h.lon, "name": h.name,
                                                             "id": h.id, "nbr_visits": h.nbr_visits, "region_id": h.region_id,
                                                             "type": h.facility_type}
@@ -248,7 +251,7 @@ def create_json_from_instance(instance: Instance,  params_system: dict) -> dict:
     """ Adds json parameters ("D", mode, "p_transf" and "alpha")
     associated with an Instance object to params_system
     """
-    params_system["D"] = instance.total_demand * instance.perc_demand
+    params_system["D"] = instance.total_demand * instance.global_multiplier_demand
     params_system["alpha"] = instance.alpha
     params_system["mode"] = instance.id
     params_system["dep_code"] = instance.dep_code
@@ -321,7 +324,7 @@ def convert_dm_to_json(session, params_system: dict | None = None) -> dict:
     list_case_mix_ratios = session.exec(select(CaseMixRatios)).all()
     list_quality_bounds = session.exec(select(QualityBounds)).all()
     list_treatment_bounds = session.exec(select(TreatmentBounds)).all()
-    capacity_mult = list_instances[0].perc_capacity
+    capacity_mult = list_instances[0].global_multiplier_capacity
 
     params_system = create_json_from_patients(list_patients, params_system)
     params_system = create_json_from_regions(list_regions, params_system)
@@ -334,5 +337,5 @@ def convert_dm_to_json(session, params_system: dict | None = None) -> dict:
     params_system = create_json_fromQualityBounds(list_quality_bounds, params_system)
     params_system = create_json_fromTreatmentBounds(list_treatment_bounds, params_system)
 
-    params_system = create_metadata(params_system, list_facilities, list_regions)
+    params_system = create_metadata(params_system, list_facilities, list_regions, list_instances[0])
     return params_system
