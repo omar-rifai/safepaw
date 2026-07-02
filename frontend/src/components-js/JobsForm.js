@@ -8,6 +8,7 @@ export default function JobsForm() {
     const { setInputData, setOutputData, setIsOptimizing, inputData, setIsLoading } = useContext(DataContext);
     const { setOpenJobsPanel } = useContext(UIContext);
     const [loadingJobID, setLoadingJobID] = useState(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     const statusColors = {
         Optimal: "success",
@@ -70,8 +71,10 @@ export default function JobsForm() {
 
     async function deleteJob(job_id) {
         if (!job_id) return;
+        setIsDeleting(true)
         await fetch(`/api/deleteJob/${job_id}`, { method: "DELETE" })
         loadState()
+        setIsDeleting(false)
     }
 
     return (
@@ -105,7 +108,7 @@ export default function JobsForm() {
 
                         <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1, gap: 1 }}>
                             <Button size="small" variant="text" onClick={() => retrieveJob(job.id)} loading={loadingJobID==job.id}> Load </Button>
-                            <Button size="small" variant="text" onClick={() => deleteJob(job.id)}> Delete </Button>
+                            <Button size="small" variant="text" loading={isDeleting} onClick={() => deleteJob(job.id)}> Delete </Button>
                         </Stack>
 
                     </CardContent>
