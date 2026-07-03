@@ -2,7 +2,7 @@
 import { Stack, Typography } from '@mui/material';
 import { DataContext } from '../../App';
 import { useContext, useMemo } from "react";
-import MermaidDiagram from "./MermaidDiagram";
+import FlowDiagram from "./FlowDiagram";
 
 
 export default function PathwaysChart() {
@@ -30,9 +30,9 @@ export default function PathwaysChart() {
             `A${activities.length - 1} --> END`,
         ].join("\n");
     return (
-        <Stack container direction="column" alignItems="center" sx={{ width: "95%" }}>
+        <Stack container direction="column" alignItems="center" sx={{ width: "95%", height:300 }}>
             <Typography>Patients Pathway</Typography>
-            <MermaidDiagram chart={chart} />
+            <FlowDiagram />
         </Stack>
     );
 }

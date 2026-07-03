@@ -13,7 +13,7 @@ export default function ResultsForm() {
   const status = outputData?.status || "";
 
   return (
-    <Grid sx={{width:"100%",mt:3, ml:2}} >
+    <Grid sx={{width:"100%", height:"100%", mt:3, ml:2}} >
       {status && <Card sx={{ textAlign: 'left', mb: 2, backgroundColor:"#F9FAFB" }}> <Typography>Status : {status}</Typography> </Card>}
       {Object.keys(inputData.entries).length != 0 &&
         <Grid >
