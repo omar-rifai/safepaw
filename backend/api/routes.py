@@ -178,9 +178,9 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
     try:
         db_entry = session.exec(select(Job).where(Job.id == job_id)).one()
         opt_id = db_entry.opt_id
-
+        input_data = get_input_elements(session, queue)
+        
         if opt_id is None:
-            input_data = get_input_elements(session)
             return JSONResponse(status_code=202, content={"status": "pending", "input_data": input_data})
 
         job = RQJob.fetch(opt_id, connection=redis)
@@ -192,20 +192,17 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
                 save_instance_into_db(params, session)
             except FileNotFoundError:
                 pass 
-            input_data = get_input_elements(session)
+            
             return JSONResponse(status_code=202, content={"status": "pending", "input_data": input_data})
 
         if job_status == JobStatus.STARTED:
             params = load_params(job_id) 
             save_instance_into_db(params, session)
-            input_data = get_input_elements(session)
             return JSONResponse(status_code=200, content={"status": db_entry.status, "input_data": input_data})
                 
         if job_status == JobStatus.FINISHED :
-
             params = load_params(job_id) 
             save_instance_into_db(params, session)
-            input_data = get_input_elements(session)
             results = job.result
             optimization_status = results[0]
 
@@ -220,7 +217,10 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
                 output_data = {}
             
             return JSONResponse(status_code=200, content = {"status": db_entry.status, "input_data": input_data, "output_data": output_data})
-
+        else:
+            params = load_params(job_id) 
+            save_instance_into_db(params, session)
+            return JSONResponse(status_code=200, content = {"status": job_status, "input_data": input_data, "output_data": {}})
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=repr(e))
@@ -242,7 +242,7 @@ def generate(payload: dict = Body(...), session: Session = Depends(get_session))
     
         save_instance_into_db(params , session)
 
-        response = get_input_elements(session)
+        response = get_input_elements(session, queue)
 
         return JSONResponse(
             status_code=200,
@@ -298,7 +298,7 @@ def read_file(params: dict = Body(...), session:Session = Depends(get_session)) 
 
     try:
         save_instance_into_db(params, session)
-        response = get_input_elements(session)
+        response = get_input_elements(session, queue)
 
         return JSONResponse(
             status_code=200,
@@ -320,7 +320,7 @@ def load_state(job_id: str, session: Session = Depends(get_session)):
     try:
         params = load_params(job_id) 
         save_instance_into_db(params, session)
-        response = get_input_elements(session)
+        response = get_input_elements(session, queue)
 
         return response
 
@@ -336,7 +336,7 @@ def get_state(session: Session = Depends(get_session)):
     from backend.api.services import get_input_elements
 
     try:
-        response = get_input_elements(session)
+        response = get_input_elements(session, queue)
         return response
 
     except Exception:

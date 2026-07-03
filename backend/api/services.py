@@ -8,6 +8,8 @@ from backend.core.data_models.jobs_model import Job
 from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region, FacilityResources
 from backend.core.data_models.output_models import FacilityCapacity, InstanceData
 from sqlalchemy import func
+from rq import Queue
+
 
 logging.basicConfig(level=logging.DEBUG)
 redis = Redis(host="localhost", port=6379)
@@ -133,12 +135,11 @@ def save_instance_into_db(params:dict , session: Session):
     session.commit()
     return 
 
-def get_input_elements(session: Session) -> dict:
-
+def get_input_elements(session: Session, queue: Queue) -> dict:
     facilities_capacities = get_facilities_capacities(session)
     data_grid_entries = get_DataGridEntries(session)
     instance_data = get_InstanceData(session)
-    jobs_list = getJobs(session)
+    jobs_list = getJobs(session, queue)
     return { "facilities_capacities":[f.model_dump() for f in facilities_capacities],
              "entries": data_grid_entries,
              "instance_data": instance_data,
@@ -146,8 +147,17 @@ def get_input_elements(session: Session) -> dict:
              "jobs": [j.model_dump(mode="json") for j in jobs_list]
             }
 
-def getJobs(session:Session):
+def getJobs(session:Session, queue: Queue):
+    from rq.registry import FailedJobRegistry,CanceledJobRegistry
+
+    canceled_registry = CanceledJobRegistry(queue=queue)
+    failed_registry =FailedJobRegistry(queue=queue)
     jobs_list = session.exec(select(Job)).all()
+    for job in jobs_list:
+        in_failed_registry = job.opt_id in failed_registry or job.opt_id in canceled_registry
+        is_status_outdated = job.status != "Failed"
+        if in_failed_registry and is_status_outdated:
+            job.status = "Failed"
     return jobs_list
 
 def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
