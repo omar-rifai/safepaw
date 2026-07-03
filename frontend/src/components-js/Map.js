@@ -46,10 +46,6 @@ export default function customMap() {
     return () => cancelAnimationFrame(raf);
   }, [pickedLocation]);
 
-  const isSameView = (a, b, eps = 1e-6) =>
-    Math.abs(a.longitude - b.longitude) < eps &&
-    Math.abs(a.latitude - b.latitude) < eps &&
-    Math.abs(a.zoom - b.zoom) < eps;
 
   useEffect(() => {
     if (!regionGeoJSON) return;
