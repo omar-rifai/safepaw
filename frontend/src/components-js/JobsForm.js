@@ -5,10 +5,11 @@ import { useContext, useEffect, useState } from "react";
 
 export default function JobsForm() {
 
-    const { setInputData, setOutputData, setIsOptimizing, inputData, setIsLoading } = useContext(DataContext);
+    const { setInputData, setOutputData, inputData, isLoading, setIsLoading } = useContext(DataContext);
     const { setOpenJobsPanel } = useContext(UIContext);
     const [loadingJobID, setLoadingJobID] = useState(null)
     const [isDeleting, setIsDeleting] = useState(false)
+    const [pendingClose, setPendingClose] = useState(false);
 
     const statusColors = {
         Optimal: "success",
@@ -33,6 +34,7 @@ export default function JobsForm() {
     const retrieveJob = async (job_id) => {
         setLoadingJobID(job_id)
         setIsLoading(true)
+        setPendingClose(true)
         const retrieve_response = await fetch(`/api/retrieve_job/${job_id}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" }
@@ -41,9 +43,9 @@ export default function JobsForm() {
         if (!retrieve_response.ok) {
             console.log("not setting InputData")
             alert("No data to display.");
-            setIsOptimizing(false)
             setLoadingJobID(null)
             setIsLoading(false)
+            setPendingClose(false);
             return
         }
 
@@ -51,17 +53,23 @@ export default function JobsForm() {
         if (payload_retrieve["status"] == "Infeasible") {
             setInputData(payload_retrieve["input_data"])
             setOutputData({})
-            setIsOptimizing(false)
             return
         }
         console.log("setting output data to:", payload_retrieve["output_data"])
         setOutputData(payload_retrieve["output_data"])
         setInputData(payload_retrieve["input_data"])
-        setLoadingJobID(null)
-        setIsLoading(false)
-        setOpenJobsPanel(false)
+        
         console.log("in jobs forms after retrieve job, inputData:", payload_retrieve["input_data"])
     }
+
+
+    useEffect(() => {
+        if (pendingClose && !isLoading) {
+            setOpenJobsPanel(false);
+            setPendingClose(false);
+            setLoadingJobID(null)
+        }
+    }, [isLoading, pendingClose]);
 
     async function loadState() {
         const res = await fetch("/api/get_state");
@@ -107,7 +115,7 @@ export default function JobsForm() {
                         </Typography>
 
                         <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1, gap: 1 }}>
-                            <Button size="small" variant="text" onClick={() => retrieveJob(job.id)} loading={loadingJobID==job.id}> Load </Button>
+                            <Button size="small" variant="text" onClick={() => retrieveJob(job.id)} loading={loadingJobID == job.id}> Load </Button>
                             <Button size="small" variant="text" loading={isDeleting} onClick={() => deleteJob(job.id)}> Delete </Button>
                         </Stack>
 

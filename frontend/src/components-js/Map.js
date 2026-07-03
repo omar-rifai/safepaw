@@ -15,7 +15,7 @@ import { newLocationLayer } from './map-layers/NewLocationLayer';
 
 export default function customMap() {
 
-  const { inputData, outputData } = useContext(DataContext);
+  const { inputData, outputData, setIsLoading } = useContext(DataContext);
   const { selectedFacilityID, setSelectedFacilityID, pickedLocation, setPickedLocation, setIsPickingLocation, isPickingLocation } = useContext(UIContext);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -46,6 +46,10 @@ export default function customMap() {
     return () => cancelAnimationFrame(raf);
   }, [pickedLocation]);
 
+  const isSameView = (a, b, eps = 1e-6) =>
+    Math.abs(a.longitude - b.longitude) < eps &&
+    Math.abs(a.latitude - b.latitude) < eps &&
+    Math.abs(a.zoom - b.zoom) < eps;
 
   useEffect(() => {
     if (!regionGeoJSON) return;
@@ -54,6 +58,7 @@ export default function customMap() {
       ...newView,
       transitionDuration: 1000,
       transitionInterpolator: new FlyToInterpolator(),
+      onTransitionEnd: () => { setTimeout(() => setIsLoading(false), 600); },
     });
   }, [regionGeoJSON, size.width, size.height]);
 
@@ -123,14 +128,14 @@ export default function customMap() {
   }, [inputData, inputData.facilities_capacities, selectedFacilityID]);
 
 
-  const highlightLayer = useMemo(()=> {
+  const highlightLayer = useMemo(() => {
     if (selectedFacilityID == null) return null;
-    
+
     return HighlightLayer({
-      facilities: inputData?.facilities_capacities || [],
+      facilities: inputData?.facilities_capacities || [],
       selectedFacilityID
     });
-  },[inputData, selectedFacilityID])
+  }, [inputData, selectedFacilityID])
 
 
   useEffect(() => {
@@ -150,7 +155,7 @@ export default function customMap() {
 
   const layers = useMemo(
     () => [...(output_layers?.length > 0 ? output_layers : input_layers),
-           highlightLayer].filter(Boolean),
+      highlightLayer].filter(Boolean),
     [input_layers, output_layers, highlightLayer]
   );
 
@@ -218,8 +223,7 @@ export default function customMap() {
               if (!info.object) {
                 setSelectedFacilityID(null);
               }
-            }}
-          >
+            }}>
 
             <Map
               reuseMaps
