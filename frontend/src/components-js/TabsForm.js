@@ -1,5 +1,4 @@
 
-import './forms.css'
 import { Grid, Box, Tabs, Tab } from "@mui/material";
 import FacilitiesForm from './tabs/FacilitiesForm';
 import PathwaysForm from './tabs/PathwaysForm';

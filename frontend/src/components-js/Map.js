@@ -15,7 +15,7 @@ import { newLocationLayer } from './map-layers/NewLocationLayer';
 
 export default function customMap() {
 
-  const { inputData, outputData, setIsLoading } = useContext(DataContext);
+  const { inputData, outputData } = useContext(DataContext);
   const { selectedFacilityID, setSelectedFacilityID, pickedLocation, setPickedLocation, setIsPickingLocation, isPickingLocation } = useContext(UIContext);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -54,7 +54,6 @@ export default function customMap() {
       ...newView,
       transitionDuration: 1000,
       transitionInterpolator: new FlyToInterpolator(),
-      onTransitionEnd: () => { setTimeout(() => setIsLoading(false), 600); },
     });
   }, [regionGeoJSON, size.width, size.height]);
 
@@ -63,6 +62,8 @@ export default function customMap() {
     "facilities-capacity": getFacilityCapacityToolTip,
     "region-to-facility": getRegionFacilityToolTip
   };
+
+
 
   function getTooltip(info) {
     if (!info.object) return null;
@@ -219,7 +220,7 @@ export default function customMap() {
               if (!info.object) {
                 setSelectedFacilityID(null);
               }
-            }}>
+            }} >
 
             <Map
               reuseMaps

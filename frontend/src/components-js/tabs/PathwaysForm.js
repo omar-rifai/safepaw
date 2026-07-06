@@ -11,9 +11,9 @@ export default function PathwaysForm() {
 
     const pathways = inputData.entries?.pathways || inputData.instance?.pathways || [];
     const columns = [
-        { field: 'pathway_id', headerName: 'Pathway ID', width: 120},
-        { field: 'group_id', headerName: 'Patients Group', width: 140},
-        { field: "activities", headerName: "Activities List", width: 280 }
+        { field: 'pathway_id', headerName: 'Pathway ID', width: 120 },
+        { field: 'group_id', headerName: 'Patients Group', width: 140 },
+        { field: "activities", headerName: "Activities List", width: 280, valueGetter: (_, row) => row.activities?.map(activity => activity.id).join(', '), }
     ];
 
     const rows = selectedFacilityID ?
@@ -25,7 +25,7 @@ export default function PathwaysForm() {
         r => r.pathway_id === row.pathway_id && r.pathway_id === row.pathway_id && r.group_id === row.group_id)
     )
 
-    function handleRowClick(obj){
+    function handleRowClick(obj) {
         setSelectedPathwayID(obj.row.pathway_id + obj.row.group_id)
     }
 
@@ -34,22 +34,10 @@ export default function PathwaysForm() {
     }
 
     return (
-        <Box sx={{flexGrow: 1, minWidth: 0, width: "100%", ml: 5}}>
+        <Box sx={{ flexGrow: 1, minWidth: 0, width: "100%", ml: 5 }}>
 
-            <DataGrid
-                rows={unique_rows}
-                columns={columns}
-                initialState={{
-                    pagination: {
-                        paginationModel: {
-                            pageSize: 15,
-                        },
-                    },
-                }}
-                getRowId={getRowId}
-                pageSizeOptions={[5]}
-                onRowClick={handleRowClick}
-            />
+            <DataGrid rows={unique_rows} columns={columns} initialState={{ pagination: { paginationModel: { pageSize: 15 } } }} getRowId={getRowId}
+                pageSizeOptions={[5]} onRowClick={handleRowClick} />
 
         </Box >
     );

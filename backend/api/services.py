@@ -162,7 +162,7 @@ def getJobs(session:Session, queue: Queue):
 
 def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
     from backend.core.data_models.output_models import FacilityRow, FacilityPathwaysRow, FacilityGroupsRow, FacilityResourceRow, DataGridEntries
-    from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources
+    from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources, ActivityResources
     """Returns the data for the Datagrid components in frontend"""
 
     query_facilities = select(Facility)
@@ -177,8 +177,10 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     if facility_ids:
         query_pathways = query_pathways.where(FacilityPathways.facility_id.in_(facility_ids)).distinct()
     pathways = session.exec(query_pathways).unique().all()
+
+    activity_resources = session.exec(select(ActivityResources)).all()
     pathways_entries = [FacilityPathwaysRow(facility_id= facility_id, pathway_id=p.id, group_id=p.group_id, quality_level=p.quality_level,
-                                    group_benefit=p.group_benefit, activities=[a.id for a in p.activities]) for p, facility_id in pathways]
+                                    group_benefit=p.group_benefit, activities=[{"id": a.id,"transferable": a.transferable, "transfer_to":a.transfer_to, "resources": getActivityResources(activity_resources, a.id, a.pathway_id, a.group_id)} for a in p.activities]) for p, facility_id in pathways]
 
     query_resources = select(FacilityResources)
     if facility_ids:
@@ -206,6 +208,15 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
             instance = instance_entry
         )
     return entry.model_dump() if instance_entry else {}
+
+
+def getActivityResources(activity_resources:list, activity_id: str, pathway_id: str,group_id: str):
+    list_resources = []
+    for ar in activity_resources:
+        if ar.activity_id == activity_id and ar.pathway_id == pathway_id and ar.group_id == group_id:
+            list_resources.append({"id": ar.resource_id, "required_capacity": ar.required_capacity})
+    return list_resources
+
 
 def getFacilitiesInfo(list_finess) -> dict:
     import pandas as pd
@@ -382,7 +393,7 @@ def submit_generate(job_id, instance_type, dep_code):
             #instance = session.exec(select(Instance)).one()
             
             save_params_into_file(job_id, params)
-            print(f"saving dataa for department {params["dep_code"]} into {job_id}")
+            print(f"saving data for department {params["dep_code"]} into {job_id}")
             update_job_status(session, job_id, "Running")
             return params
         

@@ -72,7 +72,7 @@ function App() {
                 <DataGridForm activeTab={activeTab} setActiveTab={setActiveTab} />
               </Panel>
               <Separator style={{ height: "2px", minHeight: "2px", backgroundColor: "#c8cdd6ff", cursor: "row-resize", flexShrink: 0 }} />
-              <Panel>
+              <Panel defaultSize={400} minSize={150}>
                 {inputData?.entries && <ResultsForm />}
               </Panel>
             </Group>

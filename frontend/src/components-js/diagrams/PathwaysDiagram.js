@@ -19,20 +19,13 @@ export default function PathwaysChart() {
 
 
     const activities = selectedPathway?.activities ?? []
-    const chart =
-        [
-            "graph TD",
-            "START((Start))",
-            "END((End))",
-            ...activities.map((a, i) => `A${i}["${String(a)}"]`),
-            "START --> A0",
-            ...activities.slice(1).map((_, i) => `A${i} --> A${i + 1}`),
-            `A${activities.length - 1} --> END`,
-        ].join("\n");
+
     return (
-        <Stack container direction="column" alignItems="center" sx={{ width: "95%", height:300 }}>
+        <Stack direction="column" alignItems="center" sx={{ width: "95%", height: "100%", minHeight: 0 }}>
             <Typography>Patients Pathway</Typography>
-            <FlowDiagram />
+            <div style={{ width: '100%', height:"100%", flex: 1, minHeight: 0 }}>
+                <FlowDiagram activities={activities} />
+            </div>
         </Stack>
     );
 }

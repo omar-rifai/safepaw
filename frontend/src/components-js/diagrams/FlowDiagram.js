@@ -1,52 +1,69 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   applyNodeChanges,
+  ControlButton,
 } from '@xyflow/react';
+import {Dialog, DialogContent} from '@mui/material';
 import '@xyflow/react/dist/style.css';
+import { getInitialNodes, nodeTypes } from "./nodes"
+import { getInitialEdges } from "./edges"
 
-const initialNodes = [
-  {
-    id: '1',
-    position: { x: 0, y: 0 },
-    data: { label: 'Input Node' },
-  },
-  {
-    id: '2',
-    position: { x: 40, y: 80 },
-    data: { label: 'Output Node' },
-  },
-];
 
-const initialEdges = [
-  {
-    id: 'e1-2',
-    source: '1',
-    target: '2',
-  },
-];
 
-export default function FlowDiagram() {
-  const [nodes, setNodes] = useState(initialNodes);
+export default function FlowDiagram({ activities }) {
+  const [nodes, setNodes] = useState([]);
+  const [edges, setEdges] = useState([])
+  const [openDialog, setOpenDialog] = useState(false)
+
+  function handleOpenDialog(){
+    setOpenDialog(true)
+  }
+
+  function handleCloseDialog(){
+    setOpenDialog(false)
+  }
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
     []
   );
 
+  useEffect(() => {
+    const new_nodes = getInitialNodes(activities)
+    const new_edges = getInitialEdges(activities)
+    setNodes(new_nodes)
+    setEdges(new_edges)
+  }, [activities])
+
+
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+      <div style={{ width: '500px', height: '300px', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
       <ReactFlow
         nodes={nodes}
-        edges={initialEdges}
+        edges={edges}
         onNodesChange={onNodesChange}
+        nodeTypes={nodeTypes}
+
+        panOnScroll={true}
         fitView
-        fitViewOptions={{padding: 0, maxZoom: 1}}>
+        fitViewOptions={{ padding: 0.3 }}
+        minZoom={0.8}
+        maxZoom={2}
+        translateExtent={[[-1000, -1000], [2000, 2000]]}
+        nodeExtent={[[-1000, -1000], [2000, 2000]]}
+        proOptions={{ hideAttribution: true }}
+      >
         <Background />
-        <Controls />
+        <Controls  style={{ position: 'absolute', bottom: 20, left: 10 }}>
+          <ControlButton onClick={handleOpenDialog}> test</ControlButton>
+        </Controls>
       </ReactFlow>
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogContent>test</DialogContent>
+      </Dialog>
     </div>
   );
 }

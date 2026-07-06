@@ -1,7 +1,7 @@
 import { DataGrid } from '@mui/x-data-grid';
 import { useCallback, useMemo } from 'react';
 import { Box, Button } from '@mui/material'
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useState } from 'react';
 import { DataContext, UIContext } from '../../App';
 import FacilityDialog from './FacilityDialogForm';
 

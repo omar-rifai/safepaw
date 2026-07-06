@@ -9,7 +9,7 @@ export default function JobsForm() {
     const { setOpenJobsPanel } = useContext(UIContext);
     const [loadingJobID, setLoadingJobID] = useState(null)
     const [isDeleting, setIsDeleting] = useState(false)
-    const [pendingClose, setPendingClose] = useState(false);
+
 
     const statusColors = {
         Optimal: "success",
@@ -34,7 +34,6 @@ export default function JobsForm() {
     const retrieveJob = async (job_id) => {
         setLoadingJobID(job_id)
         setIsLoading(true)
-        setPendingClose(true)
         const retrieve_response = await fetch(`/api/retrieve_job/${job_id}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" }
@@ -45,7 +44,6 @@ export default function JobsForm() {
             alert("No data to display.");
             setLoadingJobID(null)
             setIsLoading(false)
-            setPendingClose(false);
             return
         }
 
@@ -58,18 +56,11 @@ export default function JobsForm() {
         console.log("setting output data to:", payload_retrieve["output_data"])
         setOutputData(payload_retrieve["output_data"])
         setInputData(payload_retrieve["input_data"])
-        
+        setIsLoading(false)
+        setOpenJobsPanel(false)
         console.log("in jobs forms after retrieve job, inputData:", payload_retrieve["input_data"])
     }
 
-
-    useEffect(() => {
-        if (pendingClose && !isLoading) {
-            setOpenJobsPanel(false);
-            setPendingClose(false);
-            setLoadingJobID(null)
-        }
-    }, [isLoading, pendingClose]);
 
     async function loadState() {
         const res = await fetch("/api/get_state");

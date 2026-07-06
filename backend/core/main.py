@@ -1,8 +1,6 @@
 import pulp
 from backend.core.optimization import declare_constraints, set_obj_fn
-print("import package_results, get_results")
 from backend.core.utils.data_utils import package_results, get_results
-print("typer", flush=True)
 import typer
 import os
 from typing import Any
