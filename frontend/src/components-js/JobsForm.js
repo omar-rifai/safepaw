@@ -21,11 +21,14 @@ export default function JobsForm() {
 
 
     useEffect(() => {
+        if (isLoading){
+            return
+        }
         const interval = setInterval(async () => {
-            const res = await fetch("/api/get_state");
-            const data = await res.json();
+            const res = await fetch("/api/get_jobs");
+            const jobs_list = await res.json();
 
-            setInputData(data);
+            setInputData(prev => ({ ...prev, jobs: jobs_list }));
         }, 2000);
 
         return () => clearInterval(interval);
@@ -40,7 +43,6 @@ export default function JobsForm() {
         })
 
         if (!retrieve_response.ok) {
-            console.log("not setting InputData")
             alert("No data to display.");
             setLoadingJobID(null)
             setIsLoading(false)
@@ -48,17 +50,21 @@ export default function JobsForm() {
         }
 
         const payload_retrieve = await retrieve_response.json()
+        console.log("retrieved input_data bbox:", payload_retrieve["input_data"]?.bbox);
         if (payload_retrieve["status"] == "Infeasible") {
+            alert("The job is infeasible. No output data to display.")
+        
             setInputData(payload_retrieve["input_data"])
             setOutputData({})
+            setIsLoading(false)
+            setOpenJobsPanel(false)
             return
         }
-        console.log("setting output data to:", payload_retrieve["output_data"])
-        setOutputData(payload_retrieve["output_data"])
+
         setInputData(payload_retrieve["input_data"])
+        setOutputData(payload_retrieve["output_data"])
         setIsLoading(false)
         setOpenJobsPanel(false)
-        console.log("in jobs forms after retrieve job, inputData:", payload_retrieve["input_data"])
     }
 
 
@@ -83,7 +89,7 @@ export default function JobsForm() {
             </Typography>
 
             {inputData.jobs?.map((job) => (
-                <Card variant="outlined" sx={{ mb: 1 }}>
+                <Card key={job.id} variant="outlined" sx={{ mb: 1 }}>
                     <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
 
                         <Stack direction="row" justifyContent="space-between">

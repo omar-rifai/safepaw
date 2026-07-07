@@ -58,11 +58,11 @@ export default function FlowDiagram({ activities }) {
       >
         <Background />
         <Controls  style={{ position: 'absolute', bottom: 20, left: 10 }}>
-          <ControlButton onClick={handleOpenDialog}> test</ControlButton>
+          <ControlButton onClick={handleOpenDialog}> Add</ControlButton>
         </Controls>
       </ReactFlow>
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogContent>test</DialogContent>
+        <DialogContent>Not implemented</DialogContent>
       </Dialog>
     </div>
   );

@@ -24,7 +24,6 @@ export default function customMap() {
 
   const selectedInfo = inputData.entries?.facilities?.find((e) => e.facility_id == selectedFacilityID)
 
-  const regionGeoJSON = inputData?.bbox;
   const [viewState, setViewState] = useState({
     longitude: 2.5,
     latitude: 46.7,
@@ -48,14 +47,15 @@ export default function customMap() {
 
 
   useEffect(() => {
-    if (!regionGeoJSON) return;
-    const newView = getInitializeViewFromGeoJSON(regionGeoJSON, size.width, size.height);
+    console.log("use Effect has fired")
+    if (!inputData?.bbox) return;
+    const newView = getInitializeViewFromGeoJSON(inputData?.bbox, size.width, size.height);
     setViewState({
       ...newView,
       transitionDuration: 1000,
       transitionInterpolator: new FlyToInterpolator(),
     });
-  }, [regionGeoJSON, size.width, size.height]);
+  }, [size.width, size.height, JSON.stringify(inputData?.bbox)]);
 
   const tooltipMap = {
     "facilities-volume": getFacilityToolTip,
@@ -63,7 +63,9 @@ export default function customMap() {
     "region-to-facility": getRegionFacilityToolTip
   };
 
-
+  useEffect(() => {
+    console.log("Map received bbox:", inputData?.bbox);
+  }, [inputData]);
 
   function getTooltip(info) {
     if (!info.object) return null;

@@ -37,6 +37,7 @@ export default function FacilityDialog({ openDialog, setOpenDialog }) {
 
 
     useEffect(()=>{
+        if (!openDialog) return;
         async function loadIDSuggestion() {
             const res = await fetch("/api/newFacillityID");
             const data = await res.json()

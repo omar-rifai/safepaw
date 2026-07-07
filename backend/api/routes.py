@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
-from backend.core.data_models.input_models import FacilityResources, Facility, FacilityAffinity,FacilityPathways, Pathway, Resource
+from backend.core.data_models.input_models import FacilityResources, Facility, FacilityAffinity, LinkedFacilities, FacilityPathways, Pathway, Resource
 from backend.core.data_models.jobs_model import Job
 from backend.api.services import get_facilities_capacities, get_DataGridEntries
 from rq import Queue
@@ -130,10 +130,12 @@ def delete_facility(facility_id: str, session: Session = Depends(get_session)) -
         stmt_facilityResources = delete(FacilityResources).where(FacilityResources.facility_id == facility_id)
         stmt_facilityPathways = delete(FacilityPathways).where(FacilityPathways.facility_id == facility_id)
         stmt_facilityAffinities = delete(FacilityAffinity).where(FacilityAffinity.facility_id == facility_id)
+        stmt_linkedFacilities = delete(LinkedFacilities).where(LinkedFacilities.facility_id == facility_id)
         stmt_facility = delete(Facility).where(Facility.id == facility_id)
         session.exec(stmt_facilityResources)
         session.exec(stmt_facilityPathways)
         session.exec(stmt_facilityAffinities)
+        session.exec(stmt_linkedFacilities)
         session.exec(stmt_facility)
         session.commit()
         return JSONResponse(status_code=200, content={"message":"Facility and associated tables deleted"})
@@ -152,6 +154,7 @@ def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)
     import uuid
     try: 
         job_id = str(uuid.uuid4())
+        print("submitting job with instance parameters:", payload["instance"])
         update_instance(session, payload["instance"])
         create_job_db_entry(session, job_id, mode=payload["mode"], dep_code= payload["dep_code"])
         job = queue.enqueue(submit_optimization, job_id, job_timeout=-1,  result_ttl=86400 )
@@ -178,8 +181,9 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
     try:
         db_entry = session.exec(select(Job).where(Job.id == job_id)).one()
         opt_id = db_entry.opt_id
+        params = load_params(job_id)
+        save_instance_into_db(params, session)
         input_data = get_input_elements(session, queue)
-        
         if opt_id is None:
             return JSONResponse(status_code=202, content={"status": "pending", "input_data": input_data})
 
@@ -187,22 +191,14 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
         job_status = job.get_status()
 
         if job_status == JobStatus.QUEUED:
-            try:
-                params = load_params(job_id)
-                save_instance_into_db(params, session)
-            except FileNotFoundError:
-                pass 
-            
+    
             return JSONResponse(status_code=202, content={"status": "pending", "input_data": input_data})
 
         if job_status == JobStatus.STARTED:
-            params = load_params(job_id) 
-            save_instance_into_db(params, session)
+
             return JSONResponse(status_code=200, content={"status": db_entry.status, "input_data": input_data})
                 
         if job_status == JobStatus.FINISHED :
-            params = load_params(job_id) 
-            save_instance_into_db(params, session)
             results = job.result
             optimization_status = results[0]
 
@@ -218,8 +214,6 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
             
             return JSONResponse(status_code=200, content = {"status": db_entry.status, "input_data": input_data, "output_data": output_data})
         else:
-            params = load_params(job_id) 
-            save_instance_into_db(params, session)
             return JSONResponse(status_code=200, content = {"status": job_status, "input_data": input_data, "output_data": {}})
     except Exception as e:
         traceback.print_exc()
@@ -341,6 +335,22 @@ def get_state(session: Session = Depends(get_session)):
 
     except Exception:
         print("Error in api.get_state route:")
+        session.rollback() 
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+
+@api.get("/get_jobs")
+def get_jobs(session: Session = Depends(get_session)):
+    from backend.api.services import getJobs
+
+    try:
+        jobs_list = getJobs(session, queue)
+        return [j.model_dump(mode="json") for j in jobs_list]
+
+    except Exception:
+        print("Error in api.get_jobs route:")
         session.rollback() 
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")

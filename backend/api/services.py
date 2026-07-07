@@ -14,6 +14,24 @@ from rq import Queue
 logging.basicConfig(level=logging.DEBUG)
 redis = Redis(host="localhost", port=6379)
 
+_finess_df = None
+
+def _load_finess_df():
+    global _finess_df
+    if _finess_df is None:
+        import pandas as pd
+        cols = ["rslongue", "voie", "codepostal", "liblongcategetab", "siret", "liblongmft"]
+        df = pd.read_csv(
+            "backend/data/open_data/finess_2018.csv", sep=";", encoding="latin1",
+            usecols=["nofinesset"] + cols, dtype={"coordx": str, "coordy": str},
+            low_memory=False
+        )
+        df["nofinesset"] = df["nofinesset"].astype(str)
+        df = df.astype(object).where(pd.notnull(df), None)
+        _finess_df = df.set_index("nofinesset")
+    return _finess_df
+
+
 class ExecutableNotFound(Exception):
     pass
 
@@ -136,10 +154,12 @@ def save_instance_into_db(params:dict , session: Session):
     return 
 
 def get_input_elements(session: Session, queue: Queue) -> dict:
+
     facilities_capacities = get_facilities_capacities(session)
     data_grid_entries = get_DataGridEntries(session)
     instance_data = get_InstanceData(session)
     jobs_list = getJobs(session, queue)
+
     return { "facilities_capacities":[f.model_dump() for f in facilities_capacities],
              "entries": data_grid_entries,
              "instance_data": instance_data,
@@ -163,6 +183,7 @@ def getJobs(session:Session, queue: Queue):
 def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
     from backend.core.data_models.output_models import FacilityRow, FacilityPathwaysRow, FacilityGroupsRow, FacilityResourceRow, DataGridEntries
     from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources, ActivityResources
+    from collections import defaultdict
     """Returns the data for the Datagrid components in frontend"""
 
     query_facilities = select(Facility)
@@ -179,8 +200,13 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     pathways = session.exec(query_pathways).unique().all()
 
     activity_resources = session.exec(select(ActivityResources)).all()
+    resources_by_key = defaultdict(list)
+    for ar in activity_resources:
+        resources_by_key[(ar.activity_id, ar.pathway_id, ar.group_id)].append(
+            {"id": ar.resource_id, "required_capacity": ar.required_capacity}
+        )
     pathways_entries = [FacilityPathwaysRow(facility_id= facility_id, pathway_id=p.id, group_id=p.group_id, quality_level=p.quality_level,
-                                    group_benefit=p.group_benefit, activities=[{"id": a.id,"transferable": a.transferable, "transfer_to":a.transfer_to, "resources": getActivityResources(activity_resources, a.id, a.pathway_id, a.group_id)} for a in p.activities]) for p, facility_id in pathways]
+                                    group_benefit=p.group_benefit, activities=[{"id": a.id,"transferable": a.transferable, "transfer_to":a.transfer_to, "resources": resources_by_key.get((a.id, a.pathway_id, a.group_id), [])} for a in p.activities]) for p, facility_id in pathways]
 
     query_resources = select(FacilityResources)
     if facility_ids:
@@ -210,27 +236,11 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     return entry.model_dump() if instance_entry else {}
 
 
-def getActivityResources(activity_resources:list, activity_id: str, pathway_id: str,group_id: str):
-    list_resources = []
-    for ar in activity_resources:
-        if ar.activity_id == activity_id and ar.pathway_id == pathway_id and ar.group_id == group_id:
-            list_resources.append({"id": ar.resource_id, "required_capacity": ar.required_capacity})
-    return list_resources
-
-
 def getFacilitiesInfo(list_finess) -> dict:
     import pandas as pd
-    import numpy as np 
-    cols = ["rslongue", "voie", "codepostal", "liblongcategetab", "siret", "liblongmft"]
-    df = pd.read_csv("backend/data/open_data/finess_2018.csv", sep=";", encoding="latin1",\
-                            usecols=["nofinesset"] + cols,  dtype={"coordx": str, "coordy": str},\
-                            low_memory=False)
-    df["nofinesset"] = df["nofinesset"].astype(str)
-    df = df.set_index("nofinesset")
-    
-
-    return df.reindex(list_finess)[cols].replace({np.nan: None}).to_dict(orient="index")
-
+    df = _load_finess_df() 
+    subset = df.loc[df.index.intersection(list_finess)]
+    return subset.to_dict(orient="index")
 
 def getClosestRegion(session, lat, lon):
     import math
@@ -297,7 +307,7 @@ def getAffinity(region: Region, facility_point):
 
 def clear_all_tables(session):
     from sqlmodel import text, SQLModel
-    session.exec(text("PRAGMA foreign_keys=OFF"))  # SQLite only
+    session.exec(text("PRAGMA foreign_keys=OFF")) 
     try:
         for table in reversed(SQLModel.metadata.sorted_tables):
             if table.name != "job":
@@ -305,6 +315,8 @@ def clear_all_tables(session):
     except Exception:
         print("Exception in table deletion...")
         session.rollback()
+    finally:
+        session.exec(text("PRAGMA foreign_keys=ON"))
      
 
 
@@ -371,6 +383,7 @@ def submit_optimization(job_id) -> Tuple:
 
     with Session(engine) as session:
         params = convert_dm_to_json(session)
+        print("parameters used in optimization:", params["global_multiplier_capacity"], params["global_multiplier_demand"])
         save_params_into_file(job_id, params)
         status, _, vars_system = run_optimization(params)
         update_job_status(session, job_id, status)

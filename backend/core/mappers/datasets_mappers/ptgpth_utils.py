@@ -25,6 +25,13 @@ df_mco_flag_fields = {"CSC": "PCAR", "DERMA": "PDER", "RHUMA": "PRHU",
                             "URO": "PTRUE", "ORL": "PTRUE"}
 
 
+def rescale_costs(finance_costs: dict)-> dict:
+    """Rescale the finance cost from euros to k euros for better numerical stability"""
+    for g, gl in finance_costs.items():
+        for a, cost in gl.items():
+            finance_costs[g][a] = round(cost/1000,5)
+    return finance_costs 
+
 def get_FacilityAffinity(list_Facilities: list[Facility], gdf_summary: pd.DataFrame):
     list_finess = [x.id for x in list_Facilities]
     affinities = get_region_affinities(gdf_summary, list_Facilities)
@@ -38,8 +45,8 @@ def get_FacilityResources(t_gkal: dict, list_resources_ids: list,df_mco : pd.Dat
     list_finess = list(df_finess["nofinesset"].unique()) + ["DOM"]
     m_hl = get_resources_capacities(t_gkal, list_finess, df_types_parcours, df_ssr, df_mco, multiplier)
     
-    max_transferable_in = {l: 0 if l != "finance" else 1000 for l in list_resources_ids }
-    max_transferable_out = {l: 0 if l != "finance" else 1000 for l in list_resources_ids }
+    max_transferable_in = {l: 0 if l != "finance" else 3 for l in list_resources_ids }
+    max_transferable_out = {l: 0 if l != "finance" else 3 for l in list_resources_ids }
     list_facility_resources = [FacilityResources(facility_id=h, resource_id=l, capacity=m_hl[h][l],
                                max_transferable_in=max_transferable_in[l], max_transferable_out=max_transferable_out[l])
                             for h in m_hl.keys() for l in list_resources_ids]
@@ -490,6 +497,7 @@ def get_required_resources(A_idx, list_resources_ids):
     """Return a dictionary of dims groups x pathways x activities with required resources of each type"""
     default_activities_consumption = {"CHIR/ORTHO_pre": 1, "ANES": 1, "CHIR/ORTHO_post": 1} | {x : 1 for x in specialities}
     dict_required_resources = {}
+    finance_costs_rescaled = rescale_costs(finance_costs.copy())
     for g in A_idx.keys():
         main_group = g.split("_")[0]
         dict_required_resources[g] = {}
@@ -502,17 +510,17 @@ def get_required_resources(A_idx, list_resources_ids):
                 else: l = a
                 if a in default_activities_consumption :
                     dict_required_resources[g][k][a][l] = default_activities_consumption[a]
-                    dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
+                    dict_required_resources[g][k][a]["finance"] = finance_costs_rescaled[main_group][a]
                 elif a in post_op_scenarios:
                     dict_required_resources[g][k][a][l] = post_op_scenarios[a][ main_group + "_" + k]
-                    dict_required_resources[g][k][a]["finance"] = post_op_scenarios[a][ main_group + "_" + k] * finance_costs[main_group][a]
+                    dict_required_resources[g][k][a]["finance"] = post_op_scenarios[a][ main_group + "_" + k] * finance_costs_rescaled[main_group][a]
                 elif a == "KINE_MCO":
                     dict_required_resources[g][k][a][l] = nb_kine_preop[main_group]
-                    dict_required_resources[g][k][a]["finance"] = nb_kine_preop[main_group] * finance_costs[main_group][a]
+                    dict_required_resources[g][k][a]["finance"] = nb_kine_preop[main_group] * finance_costs_rescaled[main_group][a]
                 elif a == "CHIR/ORTHO+ANES":
                     dict_required_resources[g][k][a]["CHIR/ORTHO"] += 1
                     dict_required_resources[g][k][a]["ANES"] += 1
-                    dict_required_resources[g][k][a]["finance"] = finance_costs[main_group][a]
+                    dict_required_resources[g][k][a]["finance"] = finance_costs_rescaled[main_group][a]
 
     return dict_required_resources
 

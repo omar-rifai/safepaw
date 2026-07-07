@@ -179,12 +179,12 @@ def reconstruct_N_gka(list_activities: list, params_system: dict):
     params_system["N_gka_2"] = N
     return params_system
 
-def reconstruct_m_hl(list_facilities: list, capacity_mult, params_system: dict) -> dict:
+def reconstruct_m_hl(list_facilities: list, params_system: dict) -> dict:
     """ Adds m_hl (Total capacity of resource type l in healthcare facilities h) to params_system"""
     m = {}
     
     for h in list_facilities:
-        m[h.id] = {l: v * capacity_mult for l, v in h.resources_capacity.items()}
+        m[h.id] = {l: v for l, v in h.resources_capacity.items()}
     params_system["m_hl"] = m
     return params_system
 
@@ -228,13 +228,13 @@ def create_json_from_activities(list_activities: list, params_system: dict) -> d
     params_system = reconstruct_N_gka(list_activities, params_system)
     return params_system
 
-def create_json_from_facilities(list_facilities: list, capacity_mult, params_system: dict) -> dict:
+def create_json_from_facilities(list_facilities: list, params_system: dict) -> dict:
     """Adds json parameters (H, O_gk, J_h, b_hl, m_hl) associated with a Faciliy Object to params_system"""
     params_system["H"] = [x.id for x in list_facilities]
     params_system = reconstruct_O_gk(list_facilities, params_system)
     params_system = reconstruct_J_h(list_facilities, params_system)
     params_system = reconstruct_b_hl(list_facilities, params_system)
-    params_system = reconstruct_m_hl(list_facilities, capacity_mult, params_system)
+    params_system = reconstruct_m_hl(list_facilities, params_system)
     return params_system
 
 
@@ -251,7 +251,7 @@ def create_json_from_instance(instance: Instance,  params_system: dict) -> dict:
     """ Adds json parameters ("D", mode, "p_transf" and "alpha")
     associated with an Instance object to params_system
     """
-    params_system["D"] = instance.total_demand * instance.global_multiplier_demand
+    params_system["D"] = instance.total_demand
     params_system["alpha"] = instance.alpha
     params_system["mode"] = instance.id
     params_system["dep_code"] = instance.dep_code
@@ -324,13 +324,13 @@ def convert_dm_to_json(session, params_system: dict | None = None) -> dict:
     list_case_mix_ratios = session.exec(select(CaseMixRatios)).all()
     list_quality_bounds = session.exec(select(QualityBounds)).all()
     list_treatment_bounds = session.exec(select(TreatmentBounds)).all()
-    capacity_mult = list_instances[0].global_multiplier_capacity
+
 
     params_system = create_json_from_patients(list_patients, params_system)
     params_system = create_json_from_regions(list_regions, params_system)
     params_system = create_json_from_resources(list_resources, params_system)
     params_system = create_json_from_pathways(list_pathways, params_system)
-    params_system = create_json_from_facilities(list_facilities, capacity_mult, params_system)
+    params_system = create_json_from_facilities(list_facilities, params_system)
     params_system = create_json_from_activities(list_activities, params_system)
     params_system = create_json_from_instance(list_instances[0], params_system)
     params_system = create_json_fromCaseMixRatios(list_case_mix_ratios, params_system)

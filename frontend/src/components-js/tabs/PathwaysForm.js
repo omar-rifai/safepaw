@@ -12,8 +12,8 @@ export default function PathwaysForm() {
     const pathways = inputData.entries?.pathways || inputData.instance?.pathways || [];
     const columns = [
         { field: 'pathway_id', headerName: 'Pathway ID', width: 120 },
-        { field: 'group_id', headerName: 'Patients Group', width: 140 },
-        { field: "activities", headerName: "Activities List", width: 280, valueGetter: (_, row) => row.activities?.map(activity => activity.id).join(', '), }
+        { field: 'group_id', headerName: 'Patients Group', width: 240 },
+        //{ field: "activities", headerName: "Activities List", width: 280, valueGetter: (_, row) => row.activities?.map(activity => activity.id).join(', '), }
     ];
 
     const rows = selectedFacilityID ?
