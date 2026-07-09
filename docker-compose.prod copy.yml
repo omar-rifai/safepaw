@@ -3,7 +3,7 @@ services:
     image: redis:7
     restart: unless-stopped
 
-  web:
+  safepaw:
     build: .
     command: pixi run -m backend python -m uvicorn backend.run:app --host 0.0.0.0 --port 5000
     expose:
@@ -12,6 +12,7 @@ services:
       - redis
     restart: unless-stopped
     environment:
+      DATABASE_URL: sqlite:////app/data/database.sqlite
       REDIS_HOST: redis
     networks:
       - default
