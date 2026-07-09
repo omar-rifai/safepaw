@@ -9,11 +9,11 @@ from backend.core.data_models.input_models import Facility, Pathway, PatientsGro
 from backend.core.data_models.output_models import FacilityCapacity, InstanceData
 from sqlalchemy import func
 from rq import Queue
-
+import os
 
 logging.basicConfig(level=logging.DEBUG)
-redis = Redis(host="localhost", port=6379)
-
+redis = Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
+    
 _finess_df = None
 
 def _load_finess_df():
@@ -383,7 +383,6 @@ def submit_optimization(job_id) -> Tuple:
 
     with Session(engine) as session:
         params = convert_dm_to_json(session)
-        print("parameters used in optimization:", params["global_multiplier_capacity"], params["global_multiplier_demand"])
         save_params_into_file(job_id, params)
         status, _, vars_system = run_optimization(params)
         update_job_status(session, job_id, status)

@@ -1,33 +1,38 @@
 services:
   redis:
     image: redis:7
-    container_name: safepaw-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
 
   web:
     build: .
     command: pixi run -m backend python -m uvicorn backend.run:app --host 0.0.0.0 --port 5000
-    environment:
-      REDIS_HOST: redis
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     depends_on:
       - redis
     restart: unless-stopped
+    environment:
+      REDIS_HOST: redis
+    networks:
+      - default
+      - web
     volumes:
-      - ./data:/app/data
-      - ./experiments:/app/experiments
+    - ./data:/app/data
+    - ./experiments:/app/experiments
 
   worker:
     build: .
     command: rq worker -u redis://redis:6379 safepaw
-    environment:
-      REDIS_HOST: redis
     depends_on:
       - redis
     restart: unless-stopped
+    environment:
+      REDIS_HOST: redis
     volumes:
-      - ./data:/app/data
-      - ./experiments:/app/experiments
+    - ./data:/app/data
+    - ./experiments:/app/experiments
+
+networks:
+  web:
+    external: true
+    name: debian_web

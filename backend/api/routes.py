@@ -15,6 +15,7 @@ import traceback
 api = APIRouter()
 
 
+print("REDIS_HOST ENV =", os.getenv("REDIS_HOST"))
 redis = Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
 queue = Queue("safepaw", connection=redis)
 
