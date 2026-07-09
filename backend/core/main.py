@@ -22,7 +22,6 @@ class OptVars(BaseModel):
 
 def run_driver(params_system):
     LP = pulp.LpProblem('regional_case_mix', pulp.LpMaximize)
-    updateParams(params_system)
 
     P = {g: {k: {r: {a: {h: pulp.LpVariable(f"P_{g}_{k}_{r}_{a}_{h}", lowBound=0, upBound=0 if h not in params_system["O_gk"][g][k] else None)
                          for h in params_system["H"]}
@@ -115,13 +114,6 @@ def main(params_file : Path = typer.Argument(..., help="Path to JSON parameters 
     get_results(dict_results, params_system, objective, out_file)
     return status
 
-
-
-def updateParams(params_system):
-    """Updates params_system with multipliers"""
-    params_system["D"] = params_system["D"] * params_system["global_multiplier_demand"]
-    params_system["m_hl"] = {h: {l: v * params_system["global_multiplier_capacity"] for l, v in params_system["m_hl"][h].items()} for h in params_system["H"]}
-    return params_system
 
 if __name__ == "__main__":
     typer.run(main)

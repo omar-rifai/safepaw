@@ -63,7 +63,7 @@ def get_bounding_box(session):
         ]
     }
 
-def get_InstanceData(session: Session) -> InstanceData:
+def _get_InstanceData(session: Session) -> InstanceData:
 
     nbr_facilities = session.exec(select(func.count()).select_from(Facility)).one()
     nbr_pathways = session.exec(select(func.count()).select_from(Pathway)).one()
@@ -72,7 +72,7 @@ def get_InstanceData(session: Session) -> InstanceData:
     instance = session.exec(select(Instance)).one_or_none()
     case_mix = [c.model_dump() for c in case_mix]
     if instance:
-        instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=int(instance.total_demand), case_mix=case_mix)
+        instance_data = InstanceData(instance_mode =instance.id, dep_code=instance.dep_code, nbr_facilities=nbr_facilities, nbr_pathways=nbr_pathways, nbr_patients_groups=nbr_groups, total_demand=int(instance.total_demand*instance.global_multiplier_demand), case_mix=case_mix)
     return instance_data.model_dump() if instance else {}
 
 
@@ -118,10 +118,10 @@ def update_instance(session: Session, new_instance):
     facility_resources = session.exec(select(FacilityResources)).all()
     for key, _ in instance: 
         setattr(instance, key, new_instance[key])
-        if key == "global_multiplier_transfers":
+        if key == "global_perc_transfers":
             for fr in facility_resources:
-                setattr(fr, "max_transferable_out", new_instance["global_multiplier_transfers"])
-                if new_instance["global_multiplier_transfers"] > 0:
+                setattr(fr, "max_transferable_out", new_instance["global_perc_transfers"])
+                if new_instance["global_perc_transfers"] > 0:
                     setattr(fr, "max_transferable_in", 10)
                 else:
                     setattr(fr, "max_transferable_in", 0)
@@ -129,8 +129,10 @@ def update_instance(session: Session, new_instance):
     session.refresh(instance)
 
 
-def get_facilities_capacities(session: Session, facility_ids: list | None = None) -> list[FacilityCapacity]:
-
+def _get_facilities_capacities(session: Session, facility_ids: list | None = None, global_multiplier_capacity: float = 1.0) -> list[FacilityCapacity]:
+    
+    instance = session.exec(select(Instance)).one_or_none() 
+    global_multiplier_capacity = instance.global_multiplier_capacity if instance else 1.0
     query = select(Facility).options(selectinload(Facility.facility_resources))
     if facility_ids:
         query = query.where(Facility.id.in_(facility_ids))
@@ -141,9 +143,9 @@ def get_facilities_capacities(session: Session, facility_ids: list | None = None
             facility_id=f.id,
             coordinates=[f.lat, f.lon],
             facility_type=f.facility_type,
-            resources_capacity= f.resources_capacity if f.facility_resources else {})
+            resources_capacity= {k: v* global_multiplier_capacity for k, v in f.resources_capacity.items() } if f.facility_resources else {})
         for f in facilities
-    ]
+    ]   
 
 
 def save_instance_into_db(params:dict , session: Session):
@@ -154,10 +156,9 @@ def save_instance_into_db(params:dict , session: Session):
     return 
 
 def get_input_elements(session: Session, queue: Queue) -> dict:
-
-    facilities_capacities = get_facilities_capacities(session)
-    data_grid_entries = get_DataGridEntries(session)
-    instance_data = get_InstanceData(session)
+    facilities_capacities = _get_facilities_capacities(session)
+    data_grid_entries = _get_DataGridEntries(session)
+    instance_data = _get_InstanceData(session)
     jobs_list = getJobs(session, queue)
 
     return { "facilities_capacities":[f.model_dump() for f in facilities_capacities],
@@ -180,12 +181,14 @@ def getJobs(session:Session, queue: Queue):
             job.status = "Failed"
     return jobs_list
 
-def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
+def _get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
     from backend.core.data_models.output_models import FacilityRow, FacilityPathwaysRow, FacilityGroupsRow, FacilityResourceRow, DataGridEntries
     from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources, ActivityResources
     from collections import defaultdict
     """Returns the data for the Datagrid components in frontend"""
-
+    instance = session.exec(select(Instance)).one_or_none() 
+    global_multiplier_capacity = instance.global_multiplier_capacity if instance else 1.0
+    global_perc_transfers = instance.global_perc_transfers if instance else 0.0
     query_facilities = select(Facility)
     if facility_ids:
         query_facilities = query_facilities.where(Facility.id.in_(facility_ids))
@@ -212,8 +215,8 @@ def get_DataGridEntries(session: Session, facility_ids: list | None = None) -> d
     if facility_ids:
         query_resources = query_resources.where(FacilityResources.facility_id.in_(facility_ids))
     resources = session.exec(query_resources).all()
-    resources_entries = [FacilityResourceRow(facility_id = fr.facility_id, resource_id=fr.resource_id, capacity=fr.capacity,
-                                              max_transferable_in=fr.max_transferable_in, max_transferable_out=fr.max_transferable_out) for fr in resources]
+    resources_entries = [FacilityResourceRow(facility_id = fr.facility_id, resource_id=fr.resource_id, capacity=fr.capacity * global_multiplier_capacity,
+                                              max_transferable_in=1 if global_perc_transfers > 0 else 0, max_transferable_out=global_perc_transfers) for fr in resources]
   
     query_groups = select(PatientsGroup, FacilityPathways.facility_id)\
         .join(Pathway, Pathway.group_id == PatientsGroup.id)\
@@ -376,6 +379,13 @@ def load_results(job_id: str) -> dict:
     return results
 
 
+def updateParams(params_system):
+    """Updates params_system with multipliers"""
+    params_system["D"] = params_system["D"] * params_system["global_multiplier_demand"]
+    params_system["m_hl"] = {h: {l: v * params_system["global_multiplier_capacity"] for l, v in params_system["m_hl"][h].items()} for h in params_system["H"]}
+    return params_system
+
+
 def submit_optimization(job_id) -> Tuple:
 
     from backend.db import engine
@@ -384,6 +394,7 @@ def submit_optimization(job_id) -> Tuple:
     with Session(engine) as session:
         params = convert_dm_to_json(session)
         save_params_into_file(job_id, params)
+        params = updateParams(params)
         status, _, vars_system = run_optimization(params)
         update_job_status(session, job_id, status)
         return status, vars_system

@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from "react";
 
 export default function JobsForm() {
 
-    const { setInputData, setOutputData, inputData, isLoading, setIsLoading } = useContext(DataContext);
+    const { setInputData, setOutputData, inputData, isLoading, setIsLoading, setActiveTab } = useContext(DataContext);
     const { setOpenJobsPanel } = useContext(UIContext);
     const [loadingJobID, setLoadingJobID] = useState(null)
     const [isDeleting, setIsDeleting] = useState(false)
@@ -63,6 +63,7 @@ export default function JobsForm() {
 
         setInputData(payload_retrieve["input_data"])
         setOutputData(payload_retrieve["output_data"])
+        setActiveTab("tab-resources")
         setIsLoading(false)
         setOpenJobsPanel(false)
     }

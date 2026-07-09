@@ -5,7 +5,6 @@ from backend.db import get_session
 from sqlmodel import Session, select
 from backend.core.data_models.input_models import FacilityResources, Facility, FacilityAffinity, LinkedFacilities, FacilityPathways, Pathway, Resource
 from backend.core.data_models.jobs_model import Job
-from backend.api.services import get_facilities_capacities, get_DataGridEntries
 from rq import Queue
 from rq.job import Job as RQJob
 import os
@@ -155,13 +154,10 @@ def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)
     import uuid
     try: 
         job_id = str(uuid.uuid4())
-        print("submitting job with instance parameters:", payload["instance"])
         update_instance(session, payload["instance"])
         create_job_db_entry(session, job_id, mode=payload["mode"], dep_code= payload["dep_code"])
         job = queue.enqueue(submit_optimization, job_id, job_timeout=-1,  result_ttl=86400 )
         update_job_optid(session, job_id, job.id)
-
-        
         return JSONResponse(status_code=200, content = {"job_id": job.id})
 
     except ExecutableNotFound as e:
@@ -175,7 +171,7 @@ def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)
 @api.get("/retrieve_job/{job_id}")
 def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONResponse:
     from backend.core.mappers.output_mappers import create_facilityLoad
-    from backend.api.services import load_params, load_results, save_results, save_instance_into_db, get_input_elements
+    from backend.api.services import load_params, load_results, save_results, save_instance_into_db, get_input_elements, updateParams
     from backend.core.utils.data_utils import package_results
     from rq.job import Job as RQJob, JobStatus
 
@@ -207,6 +203,7 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
             save_results(job_id, optimization_status, dict_results )
             if optimization_status == "Optimal":
                 dict_results = load_results(job_id)
+                params = updateParams(params)
                 list_facility_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params)]
                 list_facility_region_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params, by_region=True)]
                 output_data = {"facilities_loads": list_facility_load, "facilities_regions_loads": list_facility_region_load}
@@ -253,7 +250,7 @@ def generate(payload: dict = Body(...), session: Session = Depends(get_session))
 
 @api.put("/update_FacilityResources")
 def update_facility_type(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
-    
+    from backend.api.services import get_input_elements
     try:
         facilityResource = session.exec(select(FacilityResources)\
              .where(FacilityResources.facility_id == payload["facility_id"])\
@@ -266,14 +263,13 @@ def update_facility_type(payload: dict = Body(...), session:Session = Depends(ge
         session.commit()
         session.refresh(facilityResource)
 
-        data_grid_entries = get_DataGridEntries(session)
-        facilities_capacities = get_facilities_capacities(session)
+        input_data = get_input_elements(session, queue)
 
         return JSONResponse(
             status_code=200,
             content={
-                "facilities_capacities":[f.model_dump() for f in facilities_capacities],
-                "entries": data_grid_entries,
+                "facilities_capacities":input_data["facilities_capacities"],
+                "entries": input_data["entries"],
             },
         )
 
