@@ -18,8 +18,8 @@ services:
       - default
       - web
     volumes:
-    - ./data:/app/data
-    - ./experiments:/app/experiments
+      - app_data:/app/data/
+      - experiments_data:/app/experiments
 
   worker:
     build: .
@@ -30,10 +30,14 @@ services:
     environment:
       REDIS_HOST: redis
     volumes:
-    - ./data:/app/data
-    - ./experiments:/app/experiments
+      - app_data:/app/data/
+      - experiments_data:/app/experiments
 
 networks:
   web:
     external: true
     name: debian_web
+
+volumes:
+  app_data:
+  experiments_data:
