@@ -12,7 +12,7 @@ website:
       - href: instance_maternities.qmd
         text: Maternity Wards
       - href: instance_pthptg.qmd
-        text : Hip and Knee Protheses
+        text : Hip and Knee Arthoplasty
       - about.qmd
       
     

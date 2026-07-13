@@ -2,8 +2,8 @@
 title: Maternity Instances
 ---
 
-Our main testing instance for demo purpose uses open data from the French maternity wards. Below we detail how the datasets were curated and the hypothese
-made to fit the datasets to our optimization model.
+Instances based on data of French maternity wards and communes-level labors statistics. Since the data used is public, several simplifying hypotheses are made.
+Particularly, labor is represented as a unique activity abstracting the details of the different interventions. We detail below the hypotheses made.
 
 ## Data Sources
 Several open data sources were used to construct  instances for our optimization problem.

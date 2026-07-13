@@ -299,8 +299,8 @@ def _get_specialities_cap(m_hl: dict, df_mco: pd.DataFrame, df_types_parcours: p
 def _get_resource_capacity(m_hl_init: dict, list_finess: list, df_activity: pd.DataFrame, df_types_parcours: pd.DataFrame,
                            resource_name: str, resource_table_field: str, resource_consumption: dict) -> dict:
     """ 
-    Calculates capacity of resource using a proxy of total departmental number of visits times
-    the proportion of resource available at a facility (we assume that visit consumes ``resource_consumption'' resources
+    Facilities resource capacity calculated as total department consumption `total_consumption_resource` times
+    the proportion of the facility's resource capacity over the total department resource capacity.
     # Hypothesis: all resources except specialists are present in all facilities by type either MCO or SSR   
     """
     import math

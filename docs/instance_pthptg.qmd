@@ -1,53 +1,73 @@
 
 ---
-title: Hip and Knee Protheses
+title: Hip and Knee Arthopasty
 ---
 
-This instance both public and private data to study the patient pathways for hip and knee replacements surgeries[^1] .
+
+
+This instance uses both public and private data to study the patient pathways for hip and knee replacements surgeries.
+ We assume patients trajectories follow a general pathway illustrated below.
+
+
+::: {style="text-align: center;"}
+```{mermaid}
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '18px', 'fontFamily': 'Inter'}}}%%
+graph TD
+  A["Orthopedic Surgeon Consultation"] --> B["Anesthesiologist Consultation"]
+  B --> C["(Optional) Specialist Physician Consultations"]
+  C --> D["Physical Therapy Sessions"]
+  D --> E["Surgery (w. Orthopedic Surgeon and Anesthesiologist)"]
+  E --> F1["Scenario 0: Physiotherapy as Inpatient (FH)"]
+  E --> F2["Scenario 1: Physiotherapy at home only (HH)"]
+  E --> F3["Scenario 2: Inpatient + Day Hospitalization Sessions (FH+DH)"]
+  E --> F4["Scenario 3: Day Hospitalization Sessions (DH)"]
+  F1 --> G["Orthopedic Surgeon Consultation"]
+  F2 --> G
+  F3 --> G
+  F4 --> G
+  
+ %% Styling
+  classDef default fill:#d6eaf8,stroke:#1b4f72,stroke-width:2px,color:#000;
+  classDef optional fill:#d5f5e3,stroke:#145a32,stroke-width:2px,color:#000;
+  classDef scenario fill:#fef9e7,stroke:#7d6608,stroke-width:2px,color:#000;
+
+  class A,B,D,E,G default;
+  class C,F1,F2,F3,F4 scenario;
+```
+:::
+
+
+## Data Sources
+The private datasets were extracted from PMSI and contain information on both medical facilities and visits statistics.
+Specifically the three files available are:  
+
+
 
 ```{python}
 #| echo: false
+#| output: false
 #| results: asis
 
 import pandas as pd
-
-# types_parcours_fields
 types_parcours_fields = {
-    "BEN_RES_DPT": "Patient department of residence",
-    "sej_type": "Type of hospital stay (e.g., PTG, PTH)",
-    "type_parcours": "Care pathway type",
-    "SSR_TYPE": "Type of post-acute care (DOM, HC, HDJ, etc.)",
-    "nb": "Number of patients"
+    "BEN_RES_DPT": "French department code (of residence)",
+    "sej_type": "Type of hospital stay (PTG= total knee arthoplasty / PTH=total hip arthoplasty)",
+    "type_parcours": "Care pathway type (specialists visits)",
+    "SSR_TYPE": "Type of post-acute care (DOM=home care, HC=in-patient stay, HDJ=day care, HC+HDJ)",
+    "nb": "Number of visits recorded"
 }
 
-# ssr_fields
 ssr_fields = {
-    "BOR": "Type of activity (SSR)",
-    "AN": "Year",
-    "FI": "Patient FINESS number",
-    "FI_EJ": "Facility FINESS number",
-    "GDE": "SSR group/type (e.g., SSR_A)",
-    "AUT": "Other info",
-    "LIT": "Number of beds",
-    "PLA": "Number of places",
-    "APEC": "Unknown (could be specialized activity)",
-    "SEJHC": "Hospital days",
-    "JOUHC": "Hospital stays",
-    "SEJ3M": "3-month stays",
-    "JOUHP": "Other hospital stay counts"
+    "FI_EJ": "Legal entity FINESS number",
+    "GDE": "SSR group/type (filter on adults=SSR_A visits)",
+    "JOUHC": "Number of total hospitalization days of presences (used as a proxy to distribute `DAY_HC` resources to facilities)",
+    "JOUHP": "Number of partial hospitalization days of presence (used as a proxy to distribute `KINE_SSR` resources)"
 }
 
-# mco_fields (shortened example; expand as needed)
 mco_fields = {
-    "BOR": "Activity type",
-    "AN": "Year",
-    "FI_EJ": "Legal FINESS ID / Facility identifier",
-    "LIT_MED": "Beds (Medicine)",
-    "JLI_MED": "Bed-days (Medicine)",
-    "SEJHC_MED": "Full inpatient stays (Medicine)",
-    "SEJ0_MED": "Day stays (Medicine)",
-    "JOU_MED": "Hospital days (Medicine)"
-    # ... continue adding the rest of the mco_fields entries here
+    "FI_EJ": "Legal entity FINESS number",
+    "JLI_CHI": "Capacity in bed-days (used as a proxy to distribute `standard` resources to facilities)",
+    "ACTCLI_PM": "Clinical activity indicator (used as a proxy to distribute `specialization`resources to facilities)",
 }
 
 # Convert to DataFrames
@@ -79,34 +99,142 @@ display(HTML(html_mco))
 
 ```
 
-We can illustrate the general pathway of patients with the following graph:
+#### Types de parcours
 
-::: {style="text-align: center;"}
-```{mermaid}
-%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '18px', 'fontFamily': 'Inter'}}}%%
-graph TD
-  A["Orthopedic Surgeon Consultation"] --> B["Anesthesiologist Consultation"]
-  B --> C["(Optional) Specialist Physician Consultations"]
-  C --> D["Physical Therapy Sessions"]
-  D --> E["Surgery (w. Orthopedic Surgeon and Anesthesiologist)"]
-  E --> F1["Scenario 0: Physiotherapy as Inpatient (FH)"]
-  E --> F2["Scenario 1: Physiotherapy at home only (HH)"]
-  E --> F3["Scenario 2: Inpatient + Day Hospitalization Sessions (FH+DH)"]
-  E --> F4["Scenario 3: Day Hospitalization Sessions (DH)"]
-  F1 --> G["Orthopedic Surgeon Consultation"]
-  F2 --> G
-  F3 --> G
-  F4 --> G
-  
- %% Styling
-  classDef default fill:#d6eaf8,stroke:#1b4f72,stroke-width:2px,color:#000;
-  classDef optional fill:#d5f5e3,stroke:#145a32,stroke-width:2px,color:#000;
-  classDef scenario fill:#fef9e7,stroke:#7d6608,stroke-width:2px,color:#000;
+`types_parcours.csv` summarizes patient care pathways.
 
-  class A,B,D,E,G default;
-  class C,F1,F2,F3,F4 scenario;
+```{python}
+#| echo: false
+#| results: asis
+
+HTML(html_types_parcours)
 ```
-:::
+
+#### SSR 2018
+
+`ssr_2018r.csv` contains post-acute care activity information.
+
+```{python}
+#| echo: false
+#| results: asis
+
+HTML(html_ssr)
+```
+
+#### MCO 2018
+
+`mco_2018.csv` contains acute-care hospital activity information.
+
+```{python}
+#| echo: false
+#| results: asis
+
+HTML(html_mco)
+```
 
 
-[^1]:a footnote
+
+## Hypotheses
+
+Some hypotheses are made to convert our datasets into our model parameters
+
+
+
+### Case-mix {#sec:casemix-per-region}
+In this instance, patient groups $g$ are defined based on the type of arthoplasty (knee vs hip) and the medical specialists patients consult throughout their pathway. As such 
+we calculate the case mix fractions $d_{gr}$ as the fraction of visits of that specific group $g$  (obtained from `types_parcours.csv`) times the fraction of of the population at risk in a canton. We defined
+the population at risk as the population which is over 65 years of age.
+
+
+### Optimization parameters details
+```{python}
+#| echo: false
+#| results: asis
+import pandas as pd
+from IPython.display import display, Markdown
+params = {
+    "Parameter": [
+        "$G$",
+        "$K$",
+        "$R$",
+        "$H$",
+        "$L$",
+        "$U_g$",
+        "$A_{gk}$",
+        "$I_{gu}$",
+        "$O_{gk}$",
+        "$J_h$",
+        "$N_{gka2}$",
+        "$N_{gka1}$",
+        "$D$",
+        "$d_{gr}$",
+        "$w_{rh}$",
+        "$\\underline{q}_g$ / $\\overline{q}_g$",
+        "$\\underline{q}_{gu}$ / $\\overline{q}_{gu}$",
+        "$c_{gk}$",
+        "$m_{hl}$",
+        "$t_{gkal}$",
+        "$\\delta_l$",
+        "$b_{hl_{in}}$ $b_{hl_{out}}$",
+        "$f$",
+        "$\\alpha$"
+    ],
+    "Meaning": [
+        "Patients groups",
+        "Available pathways",
+        "Regions",
+        "Facilities",
+        "Resources",
+        "Quality levels for group $g$",
+        "Number of activities for group $g$ pathway $k$",
+        "Pathways available for group $g$ quality level $u$",
+        "Facilities able to handle deliveries of type $g$",
+        "Facilities transferable to from facility $h$",
+        "Next activity",
+        "All activities considered for potential transfer",
+        "Total demand over service area",
+        "Minimum deliveries of type $g$ in region $r$",
+        "Preference for patients from region $r$ to deliver in facility $h$",
+        "Minimum and maximum proportions of group $g$ to be treated",
+        "Minimum and maximum proportions of group $g$ to be treated under quality $u$",
+        "Benefit score of assigning a patient from group $g$ with the care pathway $k$",
+        "Total capacity of resource type l in healthcare facilities h",
+        "Consumption of resource required to perform activity $a$ of group/pathway $g$/$k$",
+        "Transfer unit between healthcare facilities for each resource",
+        "Maximum proportions of resource type l transferable in and out of facility $h$",
+        "Maximum allowable percentage of patients who may be transferred between facilities",
+        "Weight of objective function"
+    ],
+    "Value": [
+        "Defined by arthoplasty type and specialists consulted",
+        "Rehabilitation options",
+        "French cantons",
+        "MCO and SSR facilities and Home-stay",
+        "Standard resources of the general pathway as well as specialists visited",
+        "Quality levels can used to differentiate rehabilitation options",
+        "Set of general pathway activities along with specialists and rehabilitation activities ",
+        "Currently trivial as we have one unique pathway and quality level",
+        "Facility pathways are defined based on activity availability fields in MCO table (e.g dermatologist: PDER, rhumatologist: PRHU, etc..)",
+        "All facilities",
+        "Transfers can occur for all activities save the last",
+        "Transfers only occur to the next activity in the predefined pathway",
+        "Total visits in the department of interest",
+        "Casemix calculated as per explanation above",
+        "Affinities between regions (french departments) and facilities calculated as 1/distance (km) from the facilitiy to the center of the canton",
+        "Not constrained by default",
+        "Not constrained by default",
+        "",
+        "Total capacity needed (calculated as number of visits * activity consumption) distributed over facilities",
+        "",
+        "",
+        "",
+        "",
+        ""
+    ]
+}
+
+# Create DataFrame
+df_params = pd.DataFrame(params)
+df_params = df_params.replace(r"\n", " ", regex=True)
+display(Markdown(df_params.to_markdown(index=False)))
+```
