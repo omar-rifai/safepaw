@@ -66,12 +66,13 @@ def get_Facilities(df_instance: pd.DataFrame) -> list[Facility]:
 
 
 
-def get_Instance(df_instance:dict, dep_code:str) -> Instance:
+def get_Instance(df_instance:dict, region_code: str, dep_code:str) -> Instance:
     """Returns object to store optimization instance parameters"""
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")    
     return Instance(
             id= "maternities",
+            region_code = region_code,
             dep_code = dep_code,
             total_demand =int(df_instance["deliveries_per_facility"].sum()),
             perc_transfers= 0,
@@ -116,7 +117,7 @@ def get_PatientPathways(groups_ids: list) -> list[Pathway]:
     
 
 
-def serialize_maternity_core(df_instance:dict, dep_code:str, save_params: bool = False) -> Union[dict, dict]:
+def serialize_maternity_core(df_instance:dict, region_code:str, dep_code:str, save_params: bool = False) -> Union[dict, dict]:
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     import json, os
     from backend.core.data_models.input_models import FacilityAffinity
@@ -124,6 +125,12 @@ def serialize_maternity_core(df_instance:dict, dep_code:str, save_params: bool =
     from backend.core.mappers.datasets_mappers.maternities_utils import  get_FacilityAffinity, get_FacilityResources, get_FacilityPathways, get_LinkedFacilities,\
     get_ActivityResources, get_CaseMixRatios, get_TreatmentBounds, get_QualityBounds
     from sqlmodel import Session, create_engine,  SQLModel
+
+    df_communes = DF_GEO_COMMS_METERS
+    if region_code:
+        df_communes = df_communes[df_communes["region_code"]==region_code]
+    if dep_code:
+        df_communes = df_communes[df_communes["departement"]==dep_code]
 
 
     DATABASE_URL = "sqlite://"
@@ -137,9 +144,9 @@ def serialize_maternity_core(df_instance:dict, dep_code:str, save_params: bool =
         list_patients = get_PatientsGroups(FACILITY_TYPES)
         list_pathways = get_PatientPathways(FACILITY_TYPES)
         list_activities = get_Activities(FACILITY_TYPES)
-        instance = get_Instance(df_instance, dep_code)
+        instance = get_Instance(df_instance, region_code, dep_code)
         list_qualities = list(set([k.quality_level for k in list_pathways]))
-        list_facility_affinities_rows = get_FacilityAffinity(df_instance, DF_GEO_COMMS_METERS)
+        list_facility_affinities_rows = get_FacilityAffinity(df_instance, df_communes, dep_code)
         list_facility_resources = get_FacilityResources(df_instance, max_transferable_in=10, max_transferable_out=1, RESOURCE_ID=RESOURCE_ID)
         list_facility_pathways = get_FacilityPathways(list_facilities)
         list_linked_facilities = get_LinkedFacilities(list_facilities)
@@ -186,7 +193,7 @@ def serialize_maternities(
         beds=("beds", "first")))
     df_instance = df_instance.drop_duplicates(subset=["nofinesset"], keep="first")
 
-    return serialize_maternity_core(df_instance, dep_code, save_params)
+    return serialize_maternity_core(df_instance, region_code, dep_code, save_params)
 
 
 if __name__ == "__main__":

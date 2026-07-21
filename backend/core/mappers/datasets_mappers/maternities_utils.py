@@ -5,29 +5,36 @@ from backend.core.data_models.input_models import FacilityResources, FacilityPat
 
 
 
-def  get_FacilityAffinity(df_instance: pd.DataFrame, df_geo_comms: pd.DataFrame):
+def  get_FacilityAffinity(df_instance: pd.DataFrame, df_geo_comms: pd.DataFrame, dep_code: str,
+                           osrm_distances_file="backend/data/open_data/distances_maternities.parquet"):
     from shapely.geometry import Point
     from shapely import distance
     import geopandas as gpd
     import numpy as np
+    
+    if dep_code:
+        df_distances = pd.read_parquet(osrm_distances_file)
+        df_distances = df_distances[df_distances["dep_code"] == dep_code]
+        distances = df_distances.pivot(values="distance", index="nofinesset", columns="region").to_numpy()
+        print("Using OSRM distance succesfully")
+    else:    
+        print(f"No department selected fallback to geodesic distance") 
+        distances = np.zeros((len(df_instance), len(df_geo_comms)))
+        facilities_points = gpd.GeoSeries([Point(c) for c in df_instance["coords"]], crs="EPSG:4326").to_crs(df_geo_comms.crs)
+        facility_geoms = np.asarray(facilities_points.values)
+        region_geoms = np.asarray(df_geo_comms.geometry.values)
+        distances = distance(facility_geoms[:, None], region_geoms[None,:])
 
-    distances = np.zeros((len(df_instance), len(df_geo_comms)))
-    facilities_points = gpd.GeoSeries([Point(c) for c in df_instance["coords"]], crs="EPSG:4326").to_crs(df_geo_comms.crs)
-    facility_geoms = np.asarray(facilities_points.values)
-    region_geoms = np.asarray(df_geo_comms.geometry.values)
-
-    distances = distance(facility_geoms[:, None], region_geoms[None,:])
-  
     scores = 1 / np.where(distances == 0, 100, distances)
     facility_ids = df_instance["nofinesset"].to_numpy()
     region_ids = df_geo_comms["code"].to_numpy()
-
 
     rows = [{"facility_id": facility_ids[i], "region_id": region_ids[j], "affinity_score": float(scores[i, j]),}
     for i in range(len(facility_ids))
     for j in range(len(region_ids))]
 
     return rows
+
 
 
 def get_FacilityResources(df_instance: pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1, RESOURCE_ID="bed/days"):
