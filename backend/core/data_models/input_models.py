@@ -185,6 +185,7 @@ class Activity(SQLModel, table=True):
 
 class Instance(SQLModel, table=True):
     id: str = Field(default="default",primary_key=True) # the optimization ``mode'' we want to run
+    region_code: str | None
     dep_code: str | None
     total_demand: float
     perc_transfers: float
