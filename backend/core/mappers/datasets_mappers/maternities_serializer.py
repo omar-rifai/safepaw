@@ -48,7 +48,7 @@ def get_Facilities(df_instance: pd.DataFrame) -> list[Facility]:
     """
     Creates Facility objects corresponding to unique nofinesset ids with (bed/days) as resource 
     and availiable pathways dependent on to the facility type (1,2a,2b,3). We average the number of deliveries
-    per facility across the yearsand take the latest number of beds recorded
+    per facility across the year sand take the latest number of beds recorded
     """
     def row_to_facility(row):
         return Facility(
