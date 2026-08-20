@@ -20,6 +20,9 @@ experiments/pub/*
 experiments/jobs*
 docs/*.pdf 
 docs/*.html
+docs/.quarto/
+docs/**/*.quarto_ipynb
+docs/_site/
 
 # npm logs
 npm-debug.log*
