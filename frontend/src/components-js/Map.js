@@ -47,7 +47,6 @@ export default function customMap() {
 
 
   useEffect(() => {
-    console.log("use Effect has fired")
     if (!inputData?.bbox) return;
     const newView = getInitializeViewFromGeoJSON(inputData?.bbox, size.width, size.height);
     setViewState({

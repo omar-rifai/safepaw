@@ -240,12 +240,12 @@ def _get_DataGridEntries(session: Session, facility_ids: list | None = None) -> 
 
 
 def getFacilitiesInfo(list_finess) -> dict:
-    import pandas as pd
     df = _load_finess_df() 
     subset = df.loc[df.index.intersection(list_finess)]
     return subset.to_dict(orient="index")
 
 def getClosestRegion(session, lat, lon):
+    """Used when adding a new Facility to select the closest region based on coordinates"""
     import math
     min_distance = math.inf
     closest_region = None
@@ -321,8 +321,6 @@ def clear_all_tables(session):
     finally:
         session.exec(text("PRAGMA foreign_keys=ON"))
      
-
-
 
 def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     """Returns status, objective function as str and a dict of result variables"""

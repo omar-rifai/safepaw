@@ -5,7 +5,6 @@ export function RegionFacilityLoadLayer({ loads, selectedFacilityID }) {
     const facilityLoads = (loads || [])
         .filter(d => (d["facility_id"]==selectedFacilityID))
         .filter(d => (d["load"]>0))
-    console.log("facilityLoads is ", facilityLoads, loads, selectedFacilityID)
     if (facilityLoads.length === 0) {
         return null;
     }
