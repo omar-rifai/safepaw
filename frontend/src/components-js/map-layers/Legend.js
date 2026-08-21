@@ -23,9 +23,18 @@ export default function Legend({ inputData, outputData }) {
 
     if (outputData && Object.keys(outputData).length !== 0) {
 
-        return (<div style={{ position: 'absolute', bottom: 0, right: 0 }}>
-            <div>± resources usage</div>
-            <div style={{ width: 120, height: 20, background: 'linear-gradient(to right,rgba(0,0,255,0.1),rgba(255,0,0,0.7))' }}></div> </div>)
+        return (<div>
+                    <div style={{ position: 'absolute', bottom: 10, right: 0 }}>
+                        <div>± resources usage</div>
+                        <div style={{ width: 120, height: 20, background: 'linear-gradient(to right,rgba(0,0,255,0.1),rgba(255,0,0,0.7))' }}></div> 
+                    </div>
+                
+                    <div style={{ position: 'absolute', bottom: 10, left: 5 }}>
+                            <div> Average distance: {outputData?.average_distance?.toFixed(2) || 0} km</div>
+                    </div>
+                 </div>
+            
+        )
     }
     else if (inputData) {
 
