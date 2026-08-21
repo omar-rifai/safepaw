@@ -101,8 +101,10 @@ def get_average_distance(results, params_system):
     w_rh_flat = pd.Series({(r, h): val 
                            for r, facility_item in w_rh.items() 
                            for h, val in facility_item.items()})
-    distance = df_loads.set_index(["region", "facility"])["load"] / w_rh_flat
-    avg_distance = distance.sum()    
+    loads = df_loads.set_index(["region", "facility"])["load"]
+    assert set(loads.index) == set(w_rh_flat.index), "Mismatch between load data and distance weights"
+    distance = loads / w_rh_flat.reindex(loads.index)
+    avg_distance = distance.sum()  / loads.sum()  # Weighted average distance in meters  
     return round(avg_distance/1000,1)
 
 

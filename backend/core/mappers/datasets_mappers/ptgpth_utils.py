@@ -419,16 +419,31 @@ def summarize_geo_data(gdf_cantons: gpd.GeoDataFrame, df_pop65p:pd.DataFrame, de
 
     return gdf_geo
 
-def get_region_affinities(gdf_summary: pd.DataFrame, list_Facilities: list[Facility]) -> dict:
+def get_region_affinities(gdf_summary: pd.DataFrame, list_Facilities: list[Facility], method: str ="OSRM") -> dict:
     """Returns a dict with the affinities of each facility to each region"""
     import numpy as np
-    gdf_proj = gdf_summary.to_crs("EPSG:2154") 
-    longitudes = [x.lon for x in list_Facilities]
-    latitudes = [x.lat for x in list_Facilities]
-    facilities = gpd.GeoSeries(gpd.points_from_xy(longitudes, latitudes), crs="EPSG:4326").to_crs("EPSG:2154") 
-    centroids = gdf_proj.geometry.centroid 
-    dist_matrix = np.column_stack([facilities.distance(c) for c in centroids]) 
-    w_rh = {can: dict(zip([x.id for x in list_Facilities], 1/dist_matrix[:, i])) for i, can in enumerate(gdf_proj.can_code)}
+
+    if method == "OSRM":
+        print("Using OSRM distances to compute affinities")
+        df_distances = pd.read_parquet("backend/data/open_data/distances_pthptg.parquet")
+        df_dep_distances = df_distances[df_distances["dep_code"].isin(gdf_summary["dep_code"].unique())]
+        w_rh = {can: dict(zip([x for x in df_dep_distances["nofinesset"].unique()], 1 / df_dep_distances[df_dep_distances["region"]==can]["distance"].values))\
+                for can in df_dep_distances["region"].unique()}
+        added = [f for f in list_Facilities if f.id not in df_dep_distances.nofinesset.unique()]
+        gdf_proj = gdf_summary.to_crs(2154)
+        added_coords = gpd.GeoSeries(gpd.points_from_xy([added[0].lon], [added[0].lat]), crs=4326).to_crs(2154).iloc[0]
+
+        for r, c in zip(gdf_proj.can_code, gdf_proj.geometry.centroid):
+            w_rh.get(r, {}).update({f.id: 1 / added_coords.distance(c) for f in added})
+    else:
+        print("Using Euclidean distances to compute affinities")
+        gdf_proj = gdf_summary.to_crs("EPSG:2154") 
+        longitudes = [x.lon for x in list_Facilities]
+        latitudes = [x.lat for x in list_Facilities]
+        facilities = gpd.GeoSeries(gpd.points_from_xy(longitudes, latitudes), crs="EPSG:4326").to_crs("EPSG:2154") 
+        centroids = gdf_proj.geometry.centroid 
+        dist_matrix = np.column_stack([facilities.distance(c) for c in centroids]) 
+        w_rh = {can: dict(zip([x.id for x in list_Facilities], 1 / dist_matrix[:, i])) for i, can in enumerate(gdf_proj.can_code)}
     return w_rh
 
 

@@ -171,6 +171,7 @@ def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)
 @api.get("/retrieve_job/{job_id}")
 def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONResponse:
     from backend.core.mappers.output_mappers import create_facilityLoad
+    from backend.core.mappers.output_mappers import get_average_distance
     from backend.api.services import load_params, load_results, save_results, save_instance_into_db, get_input_elements, updateParams
     from backend.core.utils.data_utils import package_results
     from rq.job import Job as RQJob, JobStatus
@@ -206,7 +207,8 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
                 params = updateParams(params)
                 list_facility_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params)]
                 list_facility_region_load = [f.model_dump() for f in  create_facilityLoad(dict_results, params, by_region=True)]
-                output_data = {"facilities_loads": list_facility_load, "facilities_regions_loads": list_facility_region_load}
+                average_distance = get_average_distance(dict_results, params)
+                output_data = {"facilities_loads": list_facility_load, "facilities_regions_loads": list_facility_region_load, "average_distance": average_distance}
             else: 
                 output_data = {}
             
