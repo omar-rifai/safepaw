@@ -1,3 +1,16 @@
+
+import pandas as pd
+import geopandas as gpd
+import ast
+
+
+DF_GEO_COMMS = gpd.read_parquet("backend/data/open_data/communes-50m.parquet")
+DF_GEO_COMMS_METERS= DF_GEO_COMMS.to_crs(epsg=2154)
+centroids_m = DF_GEO_COMMS_METERS.geometry.centroid
+centroids_wgs84 = centroids_m.to_crs(epsg=4326)
+
+
+
 def osrm_distance_matrix(df_facilities, df_regions, chunk_size = 50):
     import requests
     import numpy as np
@@ -42,16 +55,6 @@ def convert_to_df(distances:np.array, dep_code, list_finess, list_regions):
        
         df_distances = pd.concat([df_distances, df_temp], ignore_index=True)
     return df_distances
-
-import pandas as pd
-import geopandas as gpd
-import ast
-
-
-DF_GEO_COMMS = gpd.read_parquet("backend/data/open_data/communes-50m.parquet")
-DF_GEO_COMMS_METERS= DF_GEO_COMMS.to_crs(epsg=2154)
-centroids_m = DF_GEO_COMMS_METERS.geometry.centroid
-centroids_wgs84 = centroids_m.to_crs(epsg=4326)
 
 
 def pad_single(dep_code: str):

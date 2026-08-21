@@ -100,7 +100,7 @@ def get_CaseMixRatios(gdf_summary: pd.DataFrame, df_types_parcours: pd.DataFrame
         for _, gdf_row in gdf_summary.iterrows():
             can_code = gdf_row["can_code"]
             frac_pop = gdf_row["pop65p"] / gdf_summary["pop65p"].sum()   
-            d_gr[group][can_code] = float( frac_visits * frac_pop)/2
+            d_gr[group][can_code] = float( frac_visits * frac_pop) / 2
     return [CaseMixRatios(group_id=g, region_id=r, ratio=d_gr[g][r]) for g in d_gr.keys() for r in d_gr[g].keys()]
 
 def get_TreatmentBounds(list_groups) -> list:

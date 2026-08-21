@@ -172,7 +172,7 @@ def getJobs(session:Session, queue: Queue):
     from rq.registry import FailedJobRegistry,CanceledJobRegistry
 
     canceled_registry = CanceledJobRegistry(queue=queue)
-    failed_registry =FailedJobRegistry(queue=queue)
+    failed_registry = FailedJobRegistry(queue=queue)
     jobs_list = session.exec(select(Job)).all()
     for job in jobs_list:
         in_failed_registry = job.opt_id in failed_registry or job.opt_id in canceled_registry
