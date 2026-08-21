@@ -107,3 +107,27 @@ def get_regions_pthptg(dep_code: str = None):
     df_cantons["coords"] = df_cantons["geometry"].to_crs(epsg=2154).centroid.to_crs(epsg=4326).apply(lambda x: (x.x, x.y))
     df_cantons = df_cantons[["can_code", "dep_code","coords"]].rename(columns={"can_code":"code"})
     return df_cantons 
+
+def save_distances_matrix(instance_type: str = "maternities"):
+    df_deps = pd.read_csv("backend/data/open_data/departements-france.csv")
+    list_deps = list(df_deps["code_departement"].unique())
+    df_all = pd.DataFrame()
+    for dep_code in list_deps:
+        try:
+            if instance_type == "maternities":
+                df_instance = get_instance_maternities(dep_code)
+                df_regions = get_regions_maternities(dep_code)
+            elif instance_type == "pthptg": 
+                df_instance = get_instance_pthptg(dep_code)
+                df_regions = get_regions_pthptg(dep_code)
+            print(f"Adding data for department {dep_code}")
+            distances = osrm_distance_matrix(df_instance, df_regions)
+            df_temp = convert_to_df(distances, dep_code, df_instance["nofinesset"].tolist(), df_regions["code"].tolist())
+            df_all = pd.concat([df_all, df_temp], ignore_index=True)
+        except Exception as e:
+            print("failed with exception", e)
+            continue
+    df_all["dep_code"] = df_all["dep_code"].astype(str)
+    df_all["nofinesset"] = df_all["nofinesset"].astype(str)
+    df_all["region"] = df_all["region"].astype(str)
+    df_all.to_parquet(f"backend/data/open_data/distances_{instance_type}.parquet", index=False)
