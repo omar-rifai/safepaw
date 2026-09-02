@@ -17,17 +17,16 @@ You can then run the experiments with the following command:
  pixi run -m backend/ python -m backend.core.main experiments/<file_name.json>
 ````
 
-Where `file_name.json` is one of the parameter files found in `experiments`. The outputs are stored in `experiments` as wells. For `Burdett` data we need to run
-
-````
- pixi run -m backend python -m backend.core.mappers.datasets_mappers.burdett_serializer
-````
-
-and for PTH PTG data 
-
-````
- pixi run -m backend python -m backend.core.mappers.datasets_mappers.ptgpth_serializer
-````
+Where `file_name.json` is one of the parameter files found in `experiments`.
 
 > [!TIP]
-> Source datasets to use the serializers are available on: https://doi.org/10.5281/zenodo.19589604 on request
+> Ready-to-use anonymized parameter files can be found on the following link : https://doi.org/10.5281/zenodo.20051926
+
+ The outputs are stored in `experiments` as well. Open source datasets on French maternity Facilities are available for testing using: 
+````
+ pixi run -m backend python -m backend.core.mappers.datasets_mappers.maternite_serializer --dep-code <dep_code> (or --region-code <region_code>)
+````
+
+where `<dep_code>` and `<region_code>` are respectively, french department and region code
+
+

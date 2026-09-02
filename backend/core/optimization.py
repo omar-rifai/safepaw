@@ -448,7 +448,7 @@ def def_const_delta_moins_b_hl_out(LP, vars_system, params_system):
 def def_const_demand(LP, vars_system, params_system):
             LP += lpSum(vars_system.P_gk[g][k]
                         for g in params_system["G"]
-                        for k in params_system["K_idx"][g]) * params_system["D"] ==  params_system["D"]*1.118
+                        for k in params_system["K_idx"][g]) * params_system["D"] ==  params_system["D"]*1.115
 
 
 
