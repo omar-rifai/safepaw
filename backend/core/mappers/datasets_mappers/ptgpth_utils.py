@@ -237,7 +237,7 @@ def _get_finance_capacity(m_hl, df_ssr: pd.DataFrame, df_mco: pd.DataFrame,
             ssr_finance += t_gkal[g][k]["DAY_HC"]["finance"] * row["nb"]
        
         
-    m_hl["DOMf"]["finance"] = dom_finance
+    m_hl["DOM"]["finance"] = dom_finance
     for h in df_ssr["FI_ET"].unique():
         m_hl[h]["finance"] = ssr_finance  / len(df_ssr["FI_ET"].unique())
     for h in  df_mco["FI_ET"].unique():
@@ -313,7 +313,7 @@ def _get_resource_capacity(m_hl_init: dict, list_finess: list, df_activity: pd.D
         total_consumption_resource = float((resource_consumption * df_types_parcours["nb"].sum()))
     #case dealing with the stay-at-home patients
     if df_activity is None:
-         m_hl["DOMf"][resource_name] = math.ceil(total_consumption_resource)
+         m_hl["DOM"][resource_name] = math.ceil(total_consumption_resource)
     else:  
         for h in list_finess:
             if h in df_activity["FI_ET"].unique():
