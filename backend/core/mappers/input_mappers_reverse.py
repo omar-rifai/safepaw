@@ -172,9 +172,8 @@ def convert_dm_from_json(params_system: dict, session: Session):
     list_treatment_bounds = create_TreatmentBounds(params_system)
     list_quality_bounds = create_QualityBounds(params_system)
 
-   
-    session.add_all([instance] + list_regions + list_facilities + list_resources + list_patients + list_pathways + list_activities+
-                    list_facility_affinities + list_facility_resources + list_facility_pathways + list_linked_facilities +
-                    list_activity_resources + list_case_mix_ratios + list_treatment_bounds + list_quality_bounds)
-    
+    session.add_all(list_regions + list_facilities + list_resources + list_patients + list_pathways + list_activities)
+    session.flush()
+    session.add_all(list_case_mix_ratios + list_facility_affinities + list_facility_resources + list_facility_pathways + list_linked_facilities +
+                    list_activity_resources +  list_treatment_bounds + list_quality_bounds + [instance])
     return session

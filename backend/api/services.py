@@ -76,10 +76,13 @@ def _get_InstanceData(session: Session) -> InstanceData:
     return instance_data.model_dump() if instance else {}
 
 
-def create_job_db_entry(session: Session, job_id:str, mode, dep_code):
+def create_job_db_entry(session: Session, job_id:str, instance:dict, mode:str, dep_code:str):
     try:
         print(f"Creating job {mode} in {dep_code}")
-        curr_job = Job(id=job_id, status="Running", mode=mode, dep_code=dep_code)
+        curr_job = Job(id=job_id, status="Running", mode=mode, dep_code=dep_code,
+                       global_multiplier_demand=instance["global_multiplier_demand"],
+                       global_multiplier_capacity=instance["global_multiplier_capacity"],
+                       global_perc_transfers=instance["global_perc_transfers"])
         session.add(curr_job)
         session.commit()
         session.refresh(curr_job)
@@ -91,6 +94,7 @@ def create_job_db_entry(session: Session, job_id:str, mode, dep_code):
 
 def update_job_status(session: Session, job_id: str, new_status:str):
     try:
+        print("trying with job id:", job_id)
         job = session.exec(select(Job).where(Job.id == job_id)).one()
         setattr(job, "status", new_status)
         session.add(job)

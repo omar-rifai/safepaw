@@ -44,6 +44,7 @@ export default function JobsForm() {
 
         if (!retrieve_response.ok) {
             alert("No data to display.");
+            console.log("Failed to retrieve job data. Status:", retrieve_response)
             setLoadingJobID(null)
             setIsLoading(false)
             return
@@ -110,6 +111,9 @@ export default function JobsForm() {
                         </Typography>
                         <Typography variant="body2">
                             Department code: {job.dep_code}
+                        </Typography>
+                         <Typography variant="body2">
+                           cap/dem/trf: {job.global_multiplier_capacity} / {job.global_multiplier_demand} / {job.global_perc_transfers}
                         </Typography>
 
                         <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1, gap: 1 }}>

@@ -14,7 +14,7 @@ import traceback
 api = APIRouter()
 
 
-print("REDIS_HOST ENV =", os.getenv("REDIS_HOST"))
+print("REDIS_HOST ENV =", os.getenv("REDIS_HOST", "localhost"))
 redis = Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
 queue = Queue("safepaw", connection=redis)
 
@@ -153,8 +153,8 @@ def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)
     try: 
         job_id = str(uuid.uuid4())
         update_instance(session, payload["instance"])
-        create_job_db_entry(session, job_id, mode=payload["mode"], dep_code= payload["dep_code"])
-        job = queue.enqueue(submit_optimization, job_id, job_timeout=-1,  result_ttl=86400 )
+        create_job_db_entry(session, job_id, instance=payload["instance"], mode=payload["mode"], dep_code= payload["dep_code"])
+        job = queue.enqueue(submit_optimization, job_id, job_timeout=-1,  result_ttl=60*60*24)
         update_job_optid(session, job_id, job.id)
         return JSONResponse(status_code=200, content = {"job_id": job.id})
 
@@ -305,7 +305,7 @@ def read_file(params: dict = Body(...), session:Session = Depends(get_session)) 
 
 @api.get("/load_state/{job_id}")
 def load_state(job_id: str, session: Session = Depends(get_session)):
-    # Load an instance state from a job ID into database for interface use
+    # Load a model instance state from a job ID into database for interface use
     from backend.api.services import save_instance_into_db, get_input_elements, load_params
     
     try:
