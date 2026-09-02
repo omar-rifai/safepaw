@@ -91,7 +91,7 @@ def addFacility(payload: dict = Body(...), session: Session = Depends(get_sessio
 
 @api.delete("/deleteJob/{job_id}")
 def delete_job(job_id: str, session: Session = Depends(get_session)) -> JSONResponse:
-    from sqlalchemy import delete
+    from backend.api.services import cleanup_job_entry
 
     try: 
         redis_job = RQJob.fetch(job_id, connection=redis)
@@ -104,9 +104,7 @@ def delete_job(job_id: str, session: Session = Depends(get_session)) -> JSONResp
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
 
-        stmt = delete(Job).where(Job.id == job_id)
-        session.exec(stmt)
-        session.commit()
+        cleanup_job_entry(session, job_id)
         return JSONResponse(status_code=200, content={"message":"Job sucessfuly deleted"})
         
 
@@ -342,9 +340,16 @@ def get_state(session: Session = Depends(get_session)):
 
 @api.get("/get_jobs")
 def get_jobs(session: Session = Depends(get_session)):
-    from backend.api.services import getJobs
+    from backend.api.services import getJobs, cleanup_job_entry
 
     try:
+        jobs_list = getJobs(session, queue)
+        for job in jobs_list:
+            try:
+                RQJob.fetch(job.opt_id, connection=redis)
+            except Exception:
+                cleanup_job_entry(session, job.id)
+                
         jobs_list = getJobs(session, queue)
         return [j.model_dump(mode="json") for j in jobs_list]
 

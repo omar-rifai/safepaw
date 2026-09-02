@@ -2,7 +2,7 @@
 from typing import Tuple
 import logging
 from redis import Redis
-from sqlmodel import Session, select
+from sqlmodel import Session, select, delete
 from sqlalchemy.orm import selectinload
 from backend.core.data_models.jobs_model import Job
 from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region, FacilityResources
@@ -321,6 +321,24 @@ def clear_all_tables(session):
     finally:
         session.exec(text("PRAGMA foreign_keys=ON"))
      
+def cleanup_job_entry(session: Session, job_id: str) -> None:
+    """Remove entries corresponding to ``job_id'' from the Job Table
+      and delete params file
+    """
+    from shutil import rmtree
+    
+    stmt = delete(Job).where(Job.id == job_id)
+    session.exec(stmt)
+    session.commit()
+
+    
+    path = f"experiments/jobs/job_{job_id}"
+
+    if os.path.exists(path):
+        rmtree(path)
+
+    return job_id
+
 
 def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     """Returns status, objective function as str and a dict of result variables"""
