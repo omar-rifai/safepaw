@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from pathlib import Path
-import os
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from .api.routes import api  # import APIRouter from routes.py
@@ -13,6 +12,7 @@ def create_app() -> FastAPI:
     """
 
     async def lifespan(app:FastAPI):
+        print("TABLES:", SQLModel.metadata.tables.keys())
         SQLModel.metadata.create_all(engine)
         yield
 
