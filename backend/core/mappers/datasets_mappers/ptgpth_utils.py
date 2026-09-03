@@ -427,7 +427,7 @@ def get_region_affinities(gdf_summary: pd.DataFrame, list_Facilities: list[Facil
         print("Using OSRM distances to compute affinities")
         df_distances = pd.read_parquet("backend/data/open_data/distances_pthptg.parquet")
         df_dep_distances = df_distances[df_distances["dep_code"].isin(gdf_summary["dep_code"].unique())]
-        w_rh = {can: dict(zip([x for x in df_dep_distances["nofinesset"].unique()], 1 / df_dep_distances[df_dep_distances["region"]==can]["distance"].values))\
+        w_rh = {can: dict(zip([x for x in df_dep_distances["nofinesset"].unique()], (1 / df_dep_distances[df_dep_distances["region"]==can]["distance"].values).astype(float)))\
                 for can in df_dep_distances["region"].unique()}
         added = [f for f in list_Facilities if f.id not in df_dep_distances.nofinesset.unique()]
         gdf_proj = gdf_summary.to_crs(2154)
