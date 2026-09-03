@@ -31,7 +31,6 @@ def hl_to_records(var_hl, params_system):
 
 def vars_to_records(curr_var, list_dims, params_system):
     records = []
-
     for g in params_system["G"]:
         for k in params_system["K_idx"][g]:
             for r in (params_system["R"] if "region" in list_dims else [None]):
@@ -64,7 +63,7 @@ def package_results(vars_system, params_system):
 
 
 
-def get_results(dict_results, params_system, objective_value, output_path=None):
+def get_summary_results(dict_results, params_system, objective_value, output_path=None):
     """Returns summary file of results"""
     from backend.core.utils.data_utils_Burdett import get_patients_blocking
     import pandas as pd

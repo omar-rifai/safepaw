@@ -94,7 +94,6 @@ def create_job_db_entry(session: Session, job_id:str, instance:dict, mode:str, d
 
 def update_job_status(session: Session, job_id: str, new_status:str):
     try:
-        print("trying with job id:", job_id)
         job = session.exec(select(Job).where(Job.id == job_id)).one()
         setattr(job, "status", new_status)
         session.add(job)

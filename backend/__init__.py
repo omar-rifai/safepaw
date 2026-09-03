@@ -12,7 +12,6 @@ def create_app() -> FastAPI:
     """
 
     async def lifespan(app:FastAPI):
-        print("TABLES:", SQLModel.metadata.tables.keys())
         SQLModel.metadata.create_all(engine)
         yield
 

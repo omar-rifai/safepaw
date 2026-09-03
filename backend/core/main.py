@@ -1,6 +1,6 @@
 import pulp
 from backend.core.optimization import declare_constraints, set_obj_fn
-from backend.core.utils.data_utils import package_results, get_results
+from backend.core.utils.data_utils import package_results, get_summary_results
 import typer
 import os
 from typing import Any
@@ -111,7 +111,7 @@ def main(params_file : Path = typer.Argument(..., help="Path to JSON parameters 
     status, objective, vars_system = run_driver(params_system)
     dict_results = package_results(vars_system, params_system)
 
-    get_results(dict_results, params_system, objective, out_file)
+    get_summary_results(dict_results, params_system, objective, out_file)
     return status
 
 
