@@ -128,7 +128,7 @@ def serialize_maternity_core(df_instance:dict, region_code:str, dep_code:str, sa
 
     df_communes = DF_GEO_COMMS_METERS
     if region_code:
-        df_communes = df_communes[df_communes["region_code"]==region_code]
+        df_communes = df_communes[df_communes["region"]==region_code]
     if dep_code:
         df_communes = df_communes[df_communes["departement"]==dep_code]
 
