@@ -1,7 +1,8 @@
 ## Create Dataclasses
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, ForeignKeyConstraint
-
+from typing import Any
+from pydantic import BaseModel
 
 class FacilityAffinity(SQLModel, table=True):
     facility_id: str  = Field(default = None, foreign_key="facility.id", primary_key=True)
@@ -195,4 +196,13 @@ class Instance(SQLModel, table=True):
     global_perc_transfers: float
     
  
-    
+class OptVars(BaseModel):
+    P : Any
+    P_gk: Any
+    P_gkr: Any
+    Q: Any
+    Delta_plus: Any
+    Delta_moins:Any
+    z_hl_plus: Any
+    z_hl_moins: Any
+    s_hl: Any

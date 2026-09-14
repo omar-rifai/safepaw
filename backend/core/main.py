@@ -1,24 +1,11 @@
 import pulp
+from backend.core.data_models.input_models import OptVars
 from backend.core.optimization import declare_constraints, set_obj_fn
 from backend.core.utils.data_utils import package_results, get_summary_results
 import typer
 import os
-from typing import Any
-from pydantic import BaseModel
 from pathlib import Path
 import time 
-
-
-class OptVars(BaseModel):
-    P : Any
-    P_gk: Any
-    P_gkr: Any
-    Q: Any
-    Delta_plus: Any
-    Delta_moins:Any
-    z_hl_plus: Any
-    z_hl_moins: Any
-    s_hl: Any
 
 def run_driver(params_system):
     LP = pulp.LpProblem('regional_case_mix', pulp.LpMaximize)
