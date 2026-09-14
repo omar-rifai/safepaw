@@ -69,7 +69,8 @@ def add_dom_facility(list_facilities: list[Facility],
 
 
 
-def get_Instance(total_demand: float, capacity_mult:float, p_transf: float, dep_code:str) -> Instance:
+def get_Instance(total_demand: float, p_transf: float, dep_code:str,
+                global_multiplier_demand: float, global_multiplier_capacity: float, global_perc_transfers: float) -> Instance:
     """Returns object to store optimization instance parameters."""
     
     return Instance(
@@ -78,9 +79,9 @@ def get_Instance(total_demand: float, capacity_mult:float, p_transf: float, dep_
             total_demand=total_demand,
             perc_transfers = p_transf,
             alpha = 0.0125,
-            global_multiplier_demand = 1,
-            global_multiplier_capacity = capacity_mult,
-            global_perc_transfers = 0, 
+            global_multiplier_demand = global_multiplier_demand,
+            global_multiplier_capacity = global_multiplier_capacity,
+            global_perc_transfers = global_perc_transfers, 
         )
 
 def get_Resources(list_resources_ids: list) -> list[Resource]:
@@ -140,9 +141,14 @@ def serialize_ptgpth(
         p_orth:float = typer.Option(0, help="Orthopedic center percentage additional resources"),
         resources_mult: float = typer.Option(1, help="Multiplier for the available resources"),
         quality_requirement: bool = typer.Option(False, help="Impose a strict distribution of patients to pathways as described in article."),
+        global_multiplier_demand = typer.Option(1.0, help="Global multiplier for the instance demand"),
+        global_multiplier_capacity = typer.Option(1.0, help="Global multiplier for the instance capacity"),
+        global_perc_transfers = typer.Option(0.0, help=" Global percentage of allowed transfers "),
         save_params: bool = typer.Option(True)
         ):
-    return serialize_ptgpth_core(dep_code, p_transf, p_orth, resources_mult, quality_requirement, save_params)
+    return serialize_ptgpth_core(dep_code, p_transf, p_orth, resources_mult, quality_requirement,
+                                 global_multiplier_demand, global_multiplier_capacity, global_perc_transfers,
+                                 save_params)
 
 
 def serialize_ptgpth_core(
@@ -151,8 +157,21 @@ def serialize_ptgpth_core(
         p_orth:float = 0,
         resources_mult: float = 1,
         quality_requirement: bool = False,
+        global_multiplier_demand: float = 1.0,
+        global_multiplier_capacity: float = 1.0,
+        global_perc_transfers: float = 0.0,
         save_params: bool = True):
-    """Serialize PTG PTH Data and write to file"""
+    
+    """Serialize PTG PTH Data and write to file
+     Parameters
+     -----------
+        p_transf: allowed transfers percentage for patients
+        resources_mult: applies a multiplier factor to the resources on generation
+        
+        global_multiplier_capacity: Saves a multiplier factor for later use (does NOT have direct impact on data)
+        global_perc_transfer: Saves a resources transfers percentage (does NOT have direct impact on data)
+    """
+
     from backend.core.mappers.input_mappers import convert_dm_to_json
     from backend.core.mappers.datasets_mappers.ptgpth_utils import get_ActivityResources, get_FacilityAffinity,\
     get_FacilityResources, get_FacilityPathways, get_LinkedFacilities, get_CaseMixRatios, get_TreatmentBounds, get_QualityBounds
@@ -176,7 +195,8 @@ def serialize_ptgpth_core(
     list_Activities = get_Activities(A_idx)
     list_Facilities = get_Facilities(df_mco, df_ssr, df_finess, dep_code)
     list_Pathways = get_PatientPathways(list_pathways_ids, list_patientGroups_ids, pathway_benefit, quality_levels)
-    instance = get_Instance(int(df_types_parcours["nb"].sum()), resources_mult, p_transf, dep_code)
+    instance = get_Instance(int(df_types_parcours["nb"].sum()), resources_mult, p_transf, dep_code,
+                             global_multiplier_demand, global_multiplier_capacity, global_perc_transfers)
 
     list_facility_resources = get_FacilityResources(t_gkal, list_resources_ids, df_mco, df_ssr, df_finess, df_types_parcours,
                                                     p_orth, resources_mult)

@@ -66,20 +66,22 @@ def get_Facilities(df_instance: pd.DataFrame) -> list[Facility]:
 
 
 
-def get_Instance(df_instance:dict, region_code: str, dep_code:str) -> Instance:
+def get_Instance(df_instance:dict, region_code: str, dep_code:str,
+                 global_multiplier_demand:float = 1.0,
+                 global_multiplier_capacity: float = 1.0,
+                 global_perc_transfers: float = 0.0) -> Instance:
     """Returns object to store optimization instance parameters"""
     from backend.core.utils.data_utils import read_configs
     config = read_configs("data_maternity")    
-    return Instance(
-            id= "maternities",
+    return Instance(id = "maternities",
             region_code = region_code,
             dep_code = dep_code,
             total_demand =int(df_instance["deliveries_per_facility"].sum()),
-            perc_transfers= 0,
+            perc_transfers = 0, # patient transfers
             alpha = config["alpha"],
-            global_multiplier_demand = 1,
-            global_multiplier_capacity = 1,
-            global_perc_transfers = config["allowed_resources_transfer_fraction"],   
+            global_multiplier_demand = global_multiplier_demand,
+            global_multiplier_capacity = global_multiplier_capacity,
+            global_perc_transfers = global_perc_transfers, # global resources transfers
         )
 
 
@@ -117,7 +119,10 @@ def get_PatientPathways(groups_ids: list) -> list[Pathway]:
     
 
 
-def serialize_maternity_core(df_instance:dict, region_code:str, dep_code:str, save_params: bool = False) -> Union[dict, dict]:
+def serialize_maternity_core(df_instance:dict, region_code:str, dep_code:str,
+                            global_multiplier_demand, global_multiplier_capacity, global_perc_transfers,
+                            save_params: bool = False,
+                             ) -> Union[dict, dict]:
     """Serialize maternite objects into dictionaries (params_system.json; params_metadata.json)"""
     import json, os
     from backend.core.data_models.input_models import FacilityAffinity
@@ -144,7 +149,11 @@ def serialize_maternity_core(df_instance:dict, region_code:str, dep_code:str, sa
         list_patients = get_PatientsGroups(FACILITY_TYPES)
         list_pathways = get_PatientPathways(FACILITY_TYPES)
         list_activities = get_Activities(FACILITY_TYPES)
-        instance = get_Instance(df_instance, region_code, dep_code)
+        instance = get_Instance(df_instance, region_code, dep_code,
+                                global_multiplier_demand=global_multiplier_demand,
+                                global_multiplier_capacity=global_multiplier_capacity,
+                                global_perc_transfers=global_perc_transfers)
+        
         list_qualities = list(set([k.quality_level for k in list_pathways]))
         list_facility_affinities_rows = get_FacilityAffinity(df_instance, df_communes, dep_code)
         list_facility_resources = get_FacilityResources(df_instance, max_transferable_in=0, max_transferable_out=0, RESOURCE_ID=RESOURCE_ID)
@@ -174,8 +183,12 @@ def serialize_maternity_core(df_instance:dict, region_code:str, dep_code:str, sa
 def serialize_maternities(
         region_code: str = typer.Option(None, help="French region code (as string)"),
         dep_code: str = typer.Option(None, help="French department code (as string)"),
-        save_params: bool = typer.Option(True)
+        save_params: bool = typer.Option(True),
+        global_multiplier_demand = typer.Option(1.0, help="Global multiplier for the instance demand"),
+        global_multiplier_capacity = typer.Option(1.0, help="Global multiplier for the instance capacity"),
+        global_perc_transfers = typer.Option(0.0, help=" Global percentage of allowed transfers"),
         ):
+    
     import ast
     df_instance = pd.read_csv("backend/data/open_data/summary_maternity_capacity.csv")
     df_instance.loc[df_instance["comm_code"] == "85166", "comm_code"] = "85194"
@@ -188,7 +201,9 @@ def serialize_maternities(
     df_instance = df_instance[df_instance["year"]==2023]
     df_instance = df_instance.drop_duplicates(subset=["nofinesset"], keep="first")
 
-    return serialize_maternity_core(df_instance, region_code, dep_code, save_params)
+    return serialize_maternity_core(df_instance, region_code, dep_code,
+                                    global_multiplier_demand, global_multiplier_capacity, global_perc_transfers,
+                                    save_params)
 
 
 if __name__ == "__main__":
