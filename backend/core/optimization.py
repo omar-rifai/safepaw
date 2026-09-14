@@ -443,7 +443,7 @@ def def_const_delta_moins_b_hl_out(LP, vars_system, params_system):
 
 
 
-# Impose an exact number of patients
+# Impose exactly +11.5% of patients (c.f published article)
 
 def def_const_demand(LP, vars_system, params_system):
             LP += lpSum(vars_system.P_gk[g][k]

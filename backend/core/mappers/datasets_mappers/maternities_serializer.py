@@ -147,7 +147,7 @@ def serialize_maternity_core(df_instance:dict, region_code:str, dep_code:str, sa
         instance = get_Instance(df_instance, region_code, dep_code)
         list_qualities = list(set([k.quality_level for k in list_pathways]))
         list_facility_affinities_rows = get_FacilityAffinity(df_instance, df_communes, dep_code)
-        list_facility_resources = get_FacilityResources(df_instance, max_transferable_in=10, max_transferable_out=1, RESOURCE_ID=RESOURCE_ID)
+        list_facility_resources = get_FacilityResources(df_instance, max_transferable_in=0, max_transferable_out=0, RESOURCE_ID=RESOURCE_ID)
         list_facility_pathways = get_FacilityPathways(list_facilities)
         list_linked_facilities = get_LinkedFacilities(list_facilities)
         list_activity_resources = get_ActivityResources()
@@ -185,12 +185,7 @@ def serialize_maternities(
     if region_code: 
         df_instance = df_instance[df_instance["region_code"].astype(str) == str(region_code)]
     if dep_code: df_instance = df_instance[df_instance["dep_code"] == pad_single(dep_code)]
-    df_instance = (df_instance.groupby(
-        ["nofinesset","region_code", "region_name", "type", "dep_code",
-         "dep_name", "comm_code", "facility_name", "comm_name", "coords"],
-        as_index=False)
-    .agg(deliveries_per_facility=("deliveries_per_facility", "mean"),
-        beds=("beds", "first")))
+    df_instance = df_instance[df_instance["year"]==2023]
     df_instance = df_instance.drop_duplicates(subset=["nofinesset"], keep="first")
 
     return serialize_maternity_core(df_instance, region_code, dep_code, save_params)

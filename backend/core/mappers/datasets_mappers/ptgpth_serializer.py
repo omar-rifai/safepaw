@@ -136,7 +136,7 @@ def get_data(dep_code: str):
 
 def serialize_ptgpth(
         dep_code: str = typer.Option("42", help="department code"),
-        p_transf: float = typer.Option(1, help="Maximum allowed patitiens transfer percentage"),
+        p_transf: float = typer.Option(1, help="Maximum allowed patients transfer percentage"),
         p_orth:float = typer.Option(0, help="Orthopedic center percentage additional resources"),
         resources_mult: float = typer.Option(1, help="Multiplier for the available resources"),
         quality_requirement: bool = typer.Option(False, help="Impose a strict distribution of patients to pathways as described in article."),

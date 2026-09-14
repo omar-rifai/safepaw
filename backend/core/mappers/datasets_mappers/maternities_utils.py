@@ -37,7 +37,7 @@ def  get_FacilityAffinity(df_instance: pd.DataFrame, df_geo_comms: pd.DataFrame,
 
 
 
-def get_FacilityResources(df_instance: pd.DataFrame, max_transferable_in : int = 10, max_transferable_out : int = 1, RESOURCE_ID="bed/days"):
+def get_FacilityResources(df_instance: pd.DataFrame, max_transferable_in : int = 0, max_transferable_out : int = 0, RESOURCE_ID="bed/days"):
    return [FacilityResources(
         facility_id = str(row['nofinesset']),
         resource_id = RESOURCE_ID,
@@ -98,3 +98,85 @@ def get_QualityBounds(list_groups: list, list_qualities: list):
     config = read_configs("data_maternity")    
     return [QualityBounds(group_id=g.id, quality_id=u, min_quality_bound=config["min_quality_bound"], max_quality_bound=config["max_quality_bound"]) 
             for g in list_groups for u in list_qualities]
+
+
+
+
+def create_maternity_capacity_file():
+    from pyproj import Transformer
+    import pandas as pd 
+
+    region_code_map = {'Auvergne-Rhône-Alpes': 84, "Provence-Alpes-Côte d'Azur": 93, 'Île-de-France': 11, 'Normandie': 28,
+    'Occitanie': 76, 'Hauts-de-France': 32, 'Nouvelle-Aquitaine': 75, 'Grand Est': 44, 'Bretagne': 53, 'Centre-Val de Loire': 24,
+    'Bourgogne-Franche-Comté': 27, 'Pays de la Loire': 52, 'Corse': 94
+    }
+
+
+    df_maternites = (
+        pd.read_csv("backend/data/open_data/fichier_maternites_112021.csv", sep=";", low_memory=False)
+            .rename(columns={"FI_ET": "nofinesset"})
+    )
+    
+    
+    df_finess_raw = pd.read_csv("backend/data/open_data/finess_etablissements.csv", sep=";", low_memory=False)
+    t = Transformer.from_crs("EPSG:2154", "EPSG:4326", always_xy=True)
+    lon, lat = t.transform(df_finess_raw["coordxet"].values, df_finess_raw["coordyet"].values)
+ 
+    df_finess = (
+        df_finess_raw
+            .loc[:,["nofinesset", "departement"]]
+            .assign(department = lambda x :  x["departement"].astype(str).str.zfill(2),
+                    coords=[(float(lon_), float(lat_)) for lon_, lat_ in zip(lon, lat)]
+                   )
+    )
+    
+    df_regions = pd.read_json("/data/departments-region.json")
+    df_regions["num_dep"] = df_regions["num_dep"].astype(str)
+    dep_map = df_regions.set_index("num_dep")["dep_name"].to_dict()
+    reg_map = df_regions.set_index("num_dep")["region_name"].to_dict()
+    
+    
+    
+    df = (
+        df_maternites
+            .merge(df_finess, on="nofinesset", how="inner")
+            .assign(region_name = lambda x : x["department"].map(reg_map),
+                    dep_name = lambda x: x["department"].map(dep_map),
+                   )
+            .dropna(subset=["dep_name"])
+    )
+
+    df["region_code"] = df["region_name"].map(region_code_map)
+
+    df = df.rename(columns = {"ANNEE": "year", "NOM_MAT": "facility_name", "TYPE": "type", "department": "dep_code",
+                              "NOMCOM": "comm_name", "COM": "comm_code","ACCTOT":"deliveries_per_facility", "LIT_OBS": "beds"})\
+        [["year", "nofinesset", "facility_name", "type", "region_code", "region_name","dep_code", "dep_name", "comm_code", "comm_name", "coords", "deliveries_per_facility", "beds"]]
+
+    df["dep_code"] = df["dep_code"].astype(str)
+
+    df.to_csv("backend/data/open_data/summary_maternity_capacity.csv")
+
+
+
+def create_maternity_labours_file():
+    import pandas as pd 
+
+    df_labour_raw = pd.read_csv("backend/data/open_data/DS_ETAT_CIVIL_NAIS_COMMUNES_data.csv", sep=";", low_memory=False)
+    df_communes_raw = pd.read_csv("backend/data/open_data/communes-france.csv", sep=";", low_memory=False)
+    
+    df_communes = df_communes_raw.rename(columns={"Année": "year", "Code Officiel Région": "region_code",\
+                                "Code Officiel Département": "dep_code", "Code Officiel Commune": "comm_code"})
+    
+    
+    df_communes["coordinates"] = df_communes["Geo Point"].apply(lambda v: (str(v).split(",")[0],  str(v).split(",")[1]))
+    df_communes = df_communes[["region_code", "dep_code", "comm_code", "coordinates"]]
+    df_communes.drop_duplicates()
+    
+    df_labour = df_labour_raw.loc[df_labour_raw["GEO_OBJECT"] == "COM"]
+    df_labour = df_labour[["GEO","TIME_PERIOD", "OBS_VALUE"]].rename(columns={"GEO": "comm_code", "TIME_PERIOD": "year", "OBS_VALUE": "deliveries_per_comm"})
+    df_labour = df_labour.merge(df_communes, on=["comm_code"], how="left")[["year", "comm_code","dep_code", "region_code", "coordinates", "deliveries_per_comm" ,]]
+    df_labour[["comm_code", "dep_code", "region_code"]] = df_labour[["comm_code", "dep_code", "region_code"]].apply(lambda x: x.astype(str))
+
+    df_labour.to_csv("backend/data/open_data/summary_maternity_labours.csv")
+
+    return 
