@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from .api.routes import api  # import APIRouter from routes.py
+from .api.private_routes import internal_api  # import APIRouter from routes.py
+from .api.public_routes import public_api
 from sqlmodel import SQLModel 
 from backend.db import engine
 
@@ -15,7 +16,7 @@ def create_app() -> FastAPI:
         SQLModel.metadata.create_all(engine)
         yield
 
-    app = FastAPI(title="Optimization API", lifespan=lifespan)
+    app = FastAPI(title="SAFEPAW API", lifespan=lifespan)
 
     # Add CORS middleware
     app.add_middleware(
@@ -27,7 +28,8 @@ def create_app() -> FastAPI:
     )
 
     # Include API routes
-    app.include_router(api, prefix="/api")
+    app.include_router(public_api, prefix="/api")
+    app.include_router(internal_api, prefix="/api/private")
 
     BASE_DIR = Path(__file__).resolve().parent.parent
     STATIC_DIR = BASE_DIR / "frontend" / "build"

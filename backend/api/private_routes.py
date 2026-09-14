@@ -11,19 +11,19 @@ import os
 from redis import Redis
 import traceback
 
-api = APIRouter()
+internal_api = APIRouter(include_in_schema=False)
 
 
 print("REDIS_HOST ENV =", os.getenv("REDIS_HOST", "localhost"))
 redis = Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
 queue = Queue("safepaw", connection=redis)
 
-@api.get("/")
+@internal_api.get("/")
 def health():
     return {"status": "ok"}
     
 
-@api.get("/newFacillityID")
+@internal_api.get("/newFacillityID")
 def newFacilityID(session: Session = Depends(get_session)) -> JSONResponse:
     from sqlalchemy import Integer, func, cast
     try:
@@ -42,7 +42,7 @@ def newFacilityID(session: Session = Depends(get_session)) -> JSONResponse:
     )
 
 
-@api.post("/addFacility")
+@internal_api.post("/addFacility")
 def addFacility(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
     from backend.api.services import createAffinitiesMatrix, createLinkedFacilities, getClosestRegion
     try: 
@@ -89,7 +89,7 @@ def addFacility(payload: dict = Body(...), session: Session = Depends(get_sessio
 
 
 
-@api.delete("/deleteJob/{job_id}")
+@internal_api.delete("/deleteJob/{job_id}")
 def delete_job(job_id: str, session: Session = Depends(get_session)) -> JSONResponse:
     from backend.api.services import cleanup_job_entry
 
@@ -116,7 +116,7 @@ def delete_job(job_id: str, session: Session = Depends(get_session)) -> JSONResp
 
 
 
-@api.delete("/deleteFacility/{facility_id}")
+@internal_api.delete("/deleteFacility/{facility_id}")
 def delete_facility(facility_id: str, session: Session = Depends(get_session)) -> JSONResponse:
     from sqlalchemy import delete
 
@@ -146,7 +146,7 @@ def delete_facility(facility_id: str, session: Session = Depends(get_session)) -
 
 
 
-@api.post("/submit_job")
+@internal_api.post("/submit_job")
 def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     from backend.api.services import submit_optimization, create_job_db_entry, update_job_optid, update_instance
     import uuid
@@ -166,7 +166,7 @@ def submit_job(payload: dict = Body(...), session:Session = Depends(get_session)
         raise HTTPException(status_code=500, detail=repr(e))
 
 
-@api.get("/retrieve_job/{job_id}")
+@internal_api.get("/retrieve_job/{job_id}")
 def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONResponse:
     from backend.core.mappers.output_mappers import create_facilityLoad
     from backend.core.mappers.output_mappers import get_average_distance
@@ -218,7 +218,7 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
         raise HTTPException(status_code=500, detail=repr(e))
 
 
-@api.post("/generate")
+@internal_api.post("/generate")
 def generate(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
     # Generate a new problem instance and save into frontend DB 
 
@@ -228,9 +228,17 @@ def generate(payload: dict = Body(...), session: Session = Depends(get_session))
 
     try:
         print(f"dep_code is {payload["dep_code"]}")
-        if payload["mode"] == "maternities": params = serialize_maternities(region_code = None, dep_code=payload["dep_code"], save_params=False)
+        if payload["mode"] == "maternities": params = serialize_maternities(region_code = None, dep_code=payload["dep_code"], save_params=False,
+                                                                             global_multiplier_demand=1.0,
+                                                                             global_multiplier_capacity=1.0,
+                                                                             global_perc_transfers=0.0)
+            
         elif payload["mode"] == "pthptg": params =serialize_ptgpth(dep_code=payload["dep_code"], p_transf = 1, p_orth= 0,
-                                                                    resources_mult= 1, quality_requirement= False, save_params= False)
+                                                                    resources_mult= 1, quality_requirement= False,
+                                                                    global_multiplier_demand=1.0,
+                                                                    global_multiplier_capacity=1.0,
+                                                                    global_perc_transfers=0.0,
+                                                                    save_params= False)
     
         save_instance_into_db(params , session)
 
@@ -248,7 +256,7 @@ def generate(payload: dict = Body(...), session: Session = Depends(get_session))
 
 
 
-@api.put("/update_FacilityResources")
+@internal_api.put("/update_FacilityResources")
 def update_facility_type(payload: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
     from backend.api.services import get_input_elements
     try:
@@ -282,7 +290,7 @@ def update_facility_type(payload: dict = Body(...), session:Session = Depends(ge
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@api.post("/read_file")
+@internal_api.post("/read_file")
 def read_file(params: dict = Body(...), session:Session = Depends(get_session)) -> JSONResponse:
 
     from backend.api.services import  get_input_elements, save_instance_into_db
@@ -303,7 +311,7 @@ def read_file(params: dict = Body(...), session:Session = Depends(get_session)) 
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@api.get("/load_state/{job_id}")
+@internal_api.get("/load_state/{job_id}")
 def load_state(job_id: str, session: Session = Depends(get_session)):
     # Load a model instance state from a job ID into database for interface use
     from backend.api.services import save_instance_into_db, get_input_elements, load_params
@@ -322,7 +330,7 @@ def load_state(job_id: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@api.get("/get_state")
+@internal_api.get("/get_state")
 def get_state(session: Session = Depends(get_session)):
     from backend.api.services import get_input_elements
 
@@ -338,7 +346,7 @@ def get_state(session: Session = Depends(get_session)):
 
 
 
-@api.get("/get_jobs")
+@internal_api.get("/get_jobs")
 def get_jobs(session: Session = Depends(get_session)):
     from backend.api.services import getJobs, cleanup_job_entry
 

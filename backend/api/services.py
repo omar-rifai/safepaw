@@ -430,9 +430,6 @@ def submit_generate(job_id, instance_type, dep_code):
             if instance_type == "maternities": params = serialize_maternities(region_code = None, dep_code = dep_code, save_params=False)
             elif instance_type == "pthptg": params =serialize_ptgpth(dep_code= dep_code, p_transf = 0, p_orth= 0,
                                                                         resources_mult= 1, quality_requirement= False, save_params= False)
-            #save_instance_into_db(params , session)
-            #update_instance(session, instance)
-            #instance = session.exec(select(Instance)).one()
             
             save_params_into_file(job_id, params)
             print(f"saving data for department {params["dep_code"]} into {job_id}")
