@@ -33,14 +33,14 @@ export default function FacilitiesForm() {
 
 
     async function loadState() {
-        const res = await fetch("/api/get_state");
+        const res = await fetch("/api/private/get_state");
         const data = await res.json()
         setInputData(data)
     }
 
     const deleteFacility = async (facility_id) => {
         if (!facility_id) return;
-        await fetch(`/api/deleteFacility/${facility_id}`, { method: "DELETE" })
+        await fetch(`/api/private/deleteFacility/${facility_id}`, { method: "DELETE" })
         loadState()
         setOutputData({})
     }

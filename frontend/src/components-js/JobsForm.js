@@ -25,7 +25,7 @@ export default function JobsForm() {
             return
         }
         const interval = setInterval(async () => {
-            const res = await fetch("/api/get_jobs");
+            const res = await fetch("/api/private/get_jobs");
             const jobs_list = await res.json();
 
             setInputData(prev => ({ ...prev, jobs: jobs_list }));
@@ -37,7 +37,7 @@ export default function JobsForm() {
     const retrieveJob = async (job_id) => {
         setLoadingJobID(job_id)
         setIsLoading(true)
-        const retrieve_response = await fetch(`/api/retrieve_job/${job_id}`, {
+        const retrieve_response = await fetch(`/api/private/retrieve_job/${job_id}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" }
         })
@@ -71,7 +71,7 @@ export default function JobsForm() {
 
 
     async function loadState() {
-        const res = await fetch("/api/get_state");
+        const res = await fetch("/api/private/get_state");
         const data = await res.json()
         setInputData(data)
     }
@@ -79,7 +79,7 @@ export default function JobsForm() {
     async function deleteJob(job_id) {
         if (!job_id) return;
         setIsDeleting(true)
-        await fetch(`/api/deleteJob/${job_id}`, { method: "DELETE" })
+        await fetch(`/api/private/deleteJob/${job_id}`, { method: "DELETE" })
         loadState()
         setIsDeleting(false)
     }

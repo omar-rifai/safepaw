@@ -1,9 +1,8 @@
 import pandas as pd
 import geopandas as gpd
 from typing import Tuple
-from backend.core.data_models.input_models import FacilityAffinity, FacilityResources, FacilityPathways, LinkedFacilities, ActivityResources,\
+from safepaw_gen.data_models.input_models import Facility, FacilityAffinity, FacilityResources, FacilityPathways, LinkedFacilities, ActivityResources,\
     CaseMixRatios, TreatmentBounds, QualityBounds
-from backend.core.data_models.input_models import Facility
 
 nb_kine_preop = {"PTG":10, "PTH":15}
 specialities = ["CSC", "DERMA", "ENDO", "GASTRO", "GYNECO", "OPH", "ORL", "RHUMA", "URO"]

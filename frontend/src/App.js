@@ -32,7 +32,7 @@ function App() {
 
   useEffect(() => {
     async function loadState() {
-      const res = await fetch("/api/get_state");
+      const res = await fetch("/api/private/get_state");
       const data = await res.json()
       setInputData(data)
     }

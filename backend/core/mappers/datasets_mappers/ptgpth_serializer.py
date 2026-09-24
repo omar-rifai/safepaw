@@ -1,7 +1,7 @@
 import pandas as pd
 import typer
 import os
-from backend.core.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
+from safepaw_gen.data_models.input_models import Facility, Region, Instance, Resource, PatientsGroup, Activity, Pathway
 from backend.core.mappers.datasets_mappers.ptgpth_utils import load_data, get_geo_polygon, summarize_geo_data, get_pop65p,\
     get_finess_info, get_required_resources, get_transfer_to, get_transferable,\
     get_activities_per_group_pathway, list_resources_ids, getFacilityType
@@ -172,7 +172,7 @@ def serialize_ptgpth_core(
         global_perc_transfer: Saves a resources transfers percentage (does NOT have direct impact on data)
     """
 
-    from backend.core.mappers.input_mappers import convert_dm_to_json
+    from safepaw_gen.mappers.input_mappers import convert_dm_to_json
     from backend.core.mappers.datasets_mappers.ptgpth_utils import get_ActivityResources, get_FacilityAffinity,\
     get_FacilityResources, get_FacilityPathways, get_LinkedFacilities, get_CaseMixRatios, get_TreatmentBounds, get_QualityBounds
     import json
@@ -195,7 +195,7 @@ def serialize_ptgpth_core(
     list_Activities = get_Activities(A_idx)
     list_Facilities = get_Facilities(df_mco, df_ssr, df_finess, dep_code)
     list_Pathways = get_PatientPathways(list_pathways_ids, list_patientGroups_ids, pathway_benefit, quality_levels)
-    instance = get_Instance(int(df_types_parcours["nb"].sum()), resources_mult, p_transf, dep_code,
+    instance = get_Instance(int(df_types_parcours["nb"].sum()), p_transf, dep_code,
                              global_multiplier_demand, global_multiplier_capacity, global_perc_transfers)
 
     list_facility_resources = get_FacilityResources(t_gkal, list_resources_ids, df_mco, df_ssr, df_finess, df_types_parcours,

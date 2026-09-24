@@ -21,7 +21,7 @@ export default function ResourcesForm() {
     const handRowUpdate = async (newRow) => {
         setOutputData({})
         console.log("in resources form", selectedFacilityID)
-        const response = await fetch(`/api/update_FacilityResources`, {
+        const response = await fetch(`/api/private/update_FacilityResources`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ "resource_id": newRow.resource_id, "facility_id": newRow.facility_id, "capacity": newRow.capacity })

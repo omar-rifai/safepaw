@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from backend.api.services import  ExecutableNotFound
 from backend.db import get_session
 from sqlmodel import Session, select
-from backend.core.data_models.input_models import FacilityResources, Facility, FacilityAffinity, LinkedFacilities, FacilityPathways, Pathway, Resource
+from safepaw_gen.data_models.input_models import FacilityResources, Facility, FacilityAffinity, LinkedFacilities, FacilityPathways, Pathway, Resource
 from backend.core.data_models.jobs_model import Job
 from rq import Queue
 from rq.job import Job as RQJob
@@ -222,7 +222,7 @@ def retrieve_job(job_id: str, session:Session = Depends(get_session)) -> JSONRes
 def generate(payload: dict = Body(...), session: Session = Depends(get_session)) -> JSONResponse:
     # Generate a new problem instance and save into frontend DB 
 
-    from backend.core.mappers.datasets_mappers.maternities_serializer import serialize_maternities
+    from safepaw_gen.mappers.datasets_mappers.maternities_serializer import serialize_maternities
     from backend.core.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
     from backend.api.services import  save_instance_into_db, get_input_elements
 

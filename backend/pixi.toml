@@ -28,10 +28,14 @@ rq = ">=2.9.1,<3"
 [pypi-dependencies]
 pulp = ">=3.3.0,<4.0.0"
 Gurobipy = ">=13.0.1,<14.0.0"
+safepaw-opt = "*"
+safepaw-gen = "*"
+
 
 [feature.dev.dependencies]
 ipykernel = "*"
 notebook = "*"
+
 
 [environments]
 dev = ["dev"]

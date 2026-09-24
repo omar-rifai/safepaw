@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from backend.core.data_models.input_models import Instance
+from safepaw_gen.data_models.input_models import Instance
 from typing import Optional
 
 

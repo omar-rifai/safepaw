@@ -60,7 +60,7 @@ export default function ToolbarForm() {
         const text = await file.text();
         const jsonData = JSON.parse(text)
 
-        const response = await fetch("/api/read_file", {
+        const response = await fetch("/api/private/read_file", {
             method: "POST",
             body: JSON.stringify(jsonData),
             headers: { "Content-Type": "application/json" }
@@ -83,7 +83,7 @@ export default function ToolbarForm() {
             setDepCode(dep_code)
             setIsGenerating(true)
 
-            const response = await fetch("/api/generate", {
+            const response = await fetch("/api/private/generate", {
                 method: "POST",
                 body: JSON.stringify({ "mode": datasetType, "dep_code": dep_code }),
                 headers: { "Content-Type": "application/json" }
@@ -116,7 +116,7 @@ export default function ToolbarForm() {
         console.log("Calling optimize_instance..")
         setIsOptimizing(true)
 
-        const submit_response = await fetch("/api/submit_job", {
+        const submit_response = await fetch("/api/private/submit_job", {
             method: "POST",
             body: JSON.stringify({ "instance": inputData?.entries?.instance, "mode": datasetType, "dep_code": depCode }),
             headers: { "Content-Type": "application/json" }
@@ -136,7 +136,7 @@ export default function ToolbarForm() {
         setIsOptimizing(false)
 
         async function loadState() {
-            const res = await fetch("/api/get_state");
+            const res = await fetch("/api/private/get_state");
             const data = await res.json()
             setInputData(data)
         }

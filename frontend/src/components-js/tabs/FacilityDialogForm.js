@@ -39,7 +39,7 @@ export default function FacilityDialog({ openDialog, setOpenDialog }) {
     useEffect(()=>{
         if (!openDialog) return;
         async function loadIDSuggestion() {
-            const res = await fetch("/api/newFacillityID");
+            const res = await fetch("/api/private/newFacillityID");
             const data = await res.json()
             setNewFacilityID(data.id)
         }
@@ -70,13 +70,13 @@ export default function FacilityDialog({ openDialog, setOpenDialog }) {
             lon: Object.values(pickedLocation)[1] ?? 2.2137,
         };
 
-        await fetch("/api/addFacility", {
+        await fetch("/api/private/addFacility", {
             method: "POST",
             body: JSON.stringify(payload),
             headers: { "Content-Type": "application/json" }
 
         })
-        const res = await fetch("/api/get_state");
+        const res = await fetch("/api/private/get_state");
         const data = await res.json();
         setInputData(data);
         setOpenDialog(false);

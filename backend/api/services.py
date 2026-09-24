@@ -5,7 +5,7 @@ from redis import Redis
 from sqlmodel import Session, select, delete
 from sqlalchemy.orm import selectinload
 from backend.core.data_models.jobs_model import Job
-from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region, FacilityResources
+from safepaw_gen.data_models.input_models import Facility, Pathway, PatientsGroup, CaseMixRatios, Instance, Region, FacilityResources
 from backend.core.data_models.output_models import FacilityCapacity, InstanceData
 from sqlalchemy import func
 from rq import Queue
@@ -152,7 +152,7 @@ def _get_facilities_capacities(session: Session, facility_ids: list | None = Non
 
 
 def save_instance_into_db(params:dict , session: Session):
-    from backend.core.mappers.input_mappers_reverse import convert_dm_from_json
+    from safepaw_gen.mappers.input_mappers_reverse import convert_dm_from_json
     clear_all_tables(session)
     convert_dm_from_json(params, session)
     session.commit()
@@ -177,16 +177,18 @@ def getJobs(session:Session, queue: Queue):
     canceled_registry = CanceledJobRegistry(queue=queue)
     failed_registry = FailedJobRegistry(queue=queue)
     jobs_list = session.exec(select(Job)).all()
+
     for job in jobs_list:
-        in_failed_registry = job.opt_id in failed_registry or job.opt_id in canceled_registry
-        is_status_outdated = job.status != "Failed"
-        if in_failed_registry and is_status_outdated:
-            job.status = "Failed"
+        if job.opt_id:
+            in_failed_registry = job.opt_id in failed_registry or job.opt_id in canceled_registry
+            is_status_outdated = job.status != "Failed"
+            if in_failed_registry and is_status_outdated:
+                job.status = "Failed"
     return jobs_list
 
 def _get_DataGridEntries(session: Session, facility_ids: list | None = None) -> dict:
     from backend.core.data_models.output_models import FacilityRow, FacilityPathwaysRow, FacilityGroupsRow, FacilityResourceRow, DataGridEntries
-    from backend.core.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources, ActivityResources
+    from safepaw_gen.data_models.input_models import Facility, Pathway, PatientsGroup, FacilityPathways, FacilityResources, ActivityResources
     from collections import defaultdict
     """Returns the data for the Datagrid components in frontend"""
     instance = session.exec(select(Instance)).one_or_none() 
@@ -266,7 +268,7 @@ def getClosestRegion(session, lat, lon):
 
 
 def createLinkedFacilities(session, new_facility):
-    from backend.core.data_models.input_models import LinkedFacilities
+    from safepaw_gen.data_models.input_models import LinkedFacilities
 
     linked_facilities = []
     facilities = session.exec(select(Facility)).all()
@@ -278,7 +280,7 @@ def createLinkedFacilities(session, new_facility):
 
 
 def createAffinitiesMatrix(session, new_facility):
-    from backend.core.data_models.input_models import FacilityAffinity
+    from safepaw_gen.data_models.input_models import FacilityAffinity
 
     regions = session.exec(select(Region)).all()    
     affinities = []
@@ -345,7 +347,7 @@ def cleanup_job_entry(session: Session, job_id: str) -> None:
 
 def run_optimization(params: dict) -> Tuple[str, str, list, dict]:
     """Returns status, objective function as str and a dict of result variables"""
-    from backend.core.main import run_driver
+    from safepaw_opt.core.main import run_driver
     
     check_executable()
     print("Starting optimization driver...")
@@ -408,7 +410,7 @@ def updateParams(params_system):
 def submit_optimization(job_id) -> Tuple:
 
     from backend.db import engine
-    from backend.core.mappers.input_mappers import convert_dm_to_json
+    from safepaw_gen.mappers.input_mappers import convert_dm_to_json
 
     with Session(engine) as session:
         params = convert_dm_to_json(session)
@@ -422,8 +424,8 @@ def submit_optimization(job_id) -> Tuple:
 def submit_generate(job_id, instance_type, dep_code):
     from backend.db import engine
 
-    from backend.core.mappers.datasets_mappers.maternities_serializer import serialize_maternities
-    from backend.core.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
+    from safepaw_gen.mappers.datasets_mappers.maternities_serializer import serialize_maternities
+    from safepaw_gen.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
 
     with Session(engine) as session:
         try:

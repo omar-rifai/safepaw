@@ -2,8 +2,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Any, Literal, Optional
-from backend.core.utils.data_utils import package_results
-from backend.core.main import run_driver
+from safepaw_opt.core.utils.data_utils import package_results
+from safepaw_opt.core.main import run_driver
 public_api = APIRouter(tags=["Public API"])
 
 
@@ -47,7 +47,7 @@ def optimize(request: OptimizationRequest):
 
 @public_api.post("/generate", response_model=GenerateResponse)
 def generate(request: GenerateRequest):
-    from backend.core.mappers.datasets_mappers.maternities_serializer import serialize_maternities
+    from safepaw_gen.mappers.datasets_mappers.maternities_serializer import serialize_maternities
     from backend.core.mappers.datasets_mappers.ptgpth_serializer import serialize_ptgpth
 
     try:
