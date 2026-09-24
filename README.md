@@ -28,5 +28,3 @@ Where `file_name.json` is one of the parameter files found in `experiments`.
 ````
 
 where `<dep_code>` and `<region_code>` are respectively, french department and region code
-
-

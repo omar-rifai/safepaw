@@ -1002,6 +1002,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/sqlmodel-0.0.38-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/stack_data-0.6.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.50.0-pyhfdc7a7d_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/tabulate-0.10.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/terminado-0.18.1-pyhc90fa1f_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.6.0-pyhecae5ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tinycss2-1.4.0-pyhd8ed1ab_0.conda
@@ -1047,7 +1048,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_6.conda
       - pypi: https://files.pythonhosted.org/packages/30/ce/b62840162e24e03bd55fc265882fb9eb602d47a4dc27a9b7775c4741993e/gurobipy-13.0.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/dd/6e/d674f1dde91c71e2ac19e5e5cf1ee6d5845e3aefecd9c39ed9c4b0c9a696/pulp-3.3.2-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a0/c7/73bdb33a29cd5ff8d1ceec916cb6edd60971350ed76e27899e604214ac3b/safepaw_gen-0.0.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/ae/38/183810a1d956feb27c322b89674ae2b1640e752dca2bd4504823a92e6ae5/safepaw_gen-1.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/76/fc/76574d75e6c30cd2bafbcdc83474e8efa87f68dcfb2a28f500120479f5ca/safepaw_opt-0.0.1-py3-none-any.whl
       osx-64:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/_openmp_mutex-4.5-7_kmp_llvm.conda
@@ -1341,6 +1342,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/sqlmodel-0.0.38-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/stack_data-0.6.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.50.0-pyhfdc7a7d_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/tabulate-0.10.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/terminado-0.18.1-pyhc90fa1f_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.6.0-pyhecae5ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tinycss2-1.4.0-pyhd8ed1ab_0.conda
@@ -1381,7 +1383,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.7-h3eecb57_6.conda
       - pypi: https://files.pythonhosted.org/packages/83/ae/0481b8f6d883b1907713bb9f92313257d3f1b7608f02d73f27d6c39516ae/gurobipy-13.0.2-cp314-cp314-macosx_10_15_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/dd/6e/d674f1dde91c71e2ac19e5e5cf1ee6d5845e3aefecd9c39ed9c4b0c9a696/pulp-3.3.2-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a0/c7/73bdb33a29cd5ff8d1ceec916cb6edd60971350ed76e27899e604214ac3b/safepaw_gen-0.0.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/ae/38/183810a1d956feb27c322b89674ae2b1640e752dca2bd4504823a92e6ae5/safepaw_gen-1.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/76/fc/76574d75e6c30cd2bafbcdc83474e8efa87f68dcfb2a28f500120479f5ca/safepaw_opt-0.0.1-py3-none-any.whl
       osx-arm64:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/_openmp_mutex-4.5-7_kmp_llvm.conda
@@ -1675,6 +1677,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/sqlmodel-0.0.38-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/stack_data-0.6.3-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/starlette-0.50.0-pyhfdc7a7d_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/tabulate-0.10.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/terminado-0.18.1-pyhc90fa1f_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.6.0-pyhecae5ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tinycss2-1.4.0-pyhd8ed1ab_0.conda
@@ -1715,7 +1718,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hbf9d68e_6.conda
       - pypi: https://files.pythonhosted.org/packages/83/ae/0481b8f6d883b1907713bb9f92313257d3f1b7608f02d73f27d6c39516ae/gurobipy-13.0.2-cp314-cp314-macosx_10_15_universal2.whl
       - pypi: https://files.pythonhosted.org/packages/dd/6e/d674f1dde91c71e2ac19e5e5cf1ee6d5845e3aefecd9c39ed9c4b0c9a696/pulp-3.3.2-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a0/c7/73bdb33a29cd5ff8d1ceec916cb6edd60971350ed76e27899e604214ac3b/safepaw_gen-0.0.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/ae/38/183810a1d956feb27c322b89674ae2b1640e752dca2bd4504823a92e6ae5/safepaw_gen-1.0.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/76/fc/76574d75e6c30cd2bafbcdc83474e8efa87f68dcfb2a28f500120479f5ca/safepaw_opt-0.0.1-py3-none-any.whl
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -14095,6 +14098,25 @@ packages:
   - sqlmodel>=0.0.38,<0.0.39
   - typer>=0.21.1,<0.22.0
   requires_python: '>=3.9'
+- pypi: https://files.pythonhosted.org/packages/ae/38/183810a1d956feb27c322b89674ae2b1640e752dca2bd4504823a92e6ae5/safepaw_gen-1.0.0-py3-none-any.whl
+  name: safepaw-gen
+  version: 1.0.0
+  sha256: eb330c9c4bf6b37c9f009b193b81dd695babf37e133ff0e346e3f533c956615f
+  requires_dist:
+  - fastapi>=0.123.7,<0.124.0
+  - geopandas>=1.1.1,<2.0.0
+  - lark>=1.3.1,<2
+  - numpy>=2.3.5,<3.0.0
+  - pandas>=2.3.3,<3.0.0
+  - pyarrow>=23.0.0,<24.0.0
+  - pydantic>=2.12.5,<3.0.0
+  - pyproj>=3.6.0,<4.0.0
+  - python-multipart>=0.0.20,<0.0.21
+  - pyyaml>=6.0.3,<7.0.0
+  - shapely>=2.1.2,<3.0.0
+  - sqlmodel>=0.0.38,<0.0.39
+  - typer>=0.21.1,<0.22.0
+  requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/76/fc/76574d75e6c30cd2bafbcdc83474e8efa87f68dcfb2a28f500120479f5ca/safepaw_opt-0.0.1-py3-none-any.whl
   name: safepaw-opt
   version: 0.0.1
@@ -14765,6 +14787,18 @@ packages:
   - pkg:pypi/starlette?source=hash-mapping
   size: 64760
   timestamp: 1762016292582
+- conda: https://conda.anaconda.org/conda-forge/noarch/tabulate-0.10.0-pyhcf101f3_0.conda
+  sha256: 3f661e98a09f976775a494488beb3d35ebb00f535b169c6bd891f2e280d55783
+  md5: 3b887b7b3468b0f494b4fad40178b043
+  depends:
+  - python >=3.10
+  - python
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/tabulate?source=hash-mapping
+  size: 43964
+  timestamp: 1772732795746
 - conda: https://conda.anaconda.org/conda-forge/noarch/terminado-0.18.1-pyhc90fa1f_1.conda
   sha256: 6b6727a13d1ca6a23de5e6686500d0669081a117736a87c8abf444d60c1e40eb
   md5: 17b43cee5cc84969529d5d0b0309b2cb

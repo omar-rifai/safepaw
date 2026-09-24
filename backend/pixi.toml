@@ -35,6 +35,7 @@ safepaw-gen = "*"
 [feature.dev.dependencies]
 ipykernel = "*"
 notebook = "*"
+tabulate = ">=0.10.0,<0.11"
 
 
 [environments]
